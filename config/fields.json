@@ -1,0 +1,164 @@
+{
+  "fields": {
+    "time": {
+      "required": true,
+      "description": "Timestamp of the event",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "result": {
+      "required": false,
+      "description": "Result or status of the event",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "ip": {
+      "required": false,
+      "description": "IP address associated with the event",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "eventId": {
+      "required": true,
+      "description": "Unique identifier for the event",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "userAgent": {
+      "required": false,
+      "description": "User agent string from the client",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "device.sourceInfo.os": {
+      "required": false,
+      "description": "Operating system of the source device",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "device.sourceInfo.deviceName": {
+      "required": false,
+      "description": "Name of the source device",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "device.sourceInfo.msftEntraDeviceId": {
+      "required": false,
+      "description": "Microsoft Entra Device ID",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "jointDesc": {
+      "required": false,
+      "description": "Primary description of the event",
+      "type": "string",
+      "defaultMode": "complex"
+    },
+    "jointDescAdditional": {
+      "required": true,
+      "description": "Additional descriptive information about the event",
+      "type": "string",
+      "defaultMode": "complex"
+    },
+    "recommendation": {
+      "required": false,
+      "description": "Recommended actions or additional context",
+      "type": "string",
+      "defaultMode": "complex"
+    },
+    "type": {
+      "required": false,
+      "description": "Type or category of the event",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "alertStatus": {
+      "required": true,
+      "description": "Status of the alert",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "name": {
+      "required": false,
+      "description": "Name associated with the event",
+      "type": "string",
+      "defaultMode": "complex"
+    },
+    "email": {
+      "required": false,
+      "description": "Email address associated with the event",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "lastSignIn": {
+      "required": false,
+      "description": "Last sign-in timestamp",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "user.name": {
+      "required": false,
+      "description": "Username associated with the event",
+      "type": "string",
+      "defaultMode": "complex"
+    },
+    "accountKey.field": {
+      "required": true,
+      "description": "Field path for account identification",
+      "type": "string",
+      "defaultMode": "complex"
+    },
+    "accountKey.type": {
+      "required": true,
+      "description": "Type of account key (e.g., 'id')",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "dateKeyField": {
+      "required": true,
+      "description": "Field path for event timestamp",
+      "type": "string",
+      "defaultMode": "simple"
+    },
+    "endpointId": {
+      "required": true,
+      "description": "Identifier for the endpoint",
+      "type": "number"
+    },
+    "endpointName": {
+      "required": true,
+      "description": "Name of the endpoint (e.g., 'logs', 'events')",
+      "type": "string"
+    },
+    "eventType": {
+      "required": true,
+      "description": "Type of event (e.g., 'LOGIN_SUCCESS')",
+      "type": "string"
+    },
+    "eventTypeKey": {
+      "required": true,
+      "description": "Key identifier for event type",
+      "type": "string"
+    },
+    "productRef.__ref__": {
+      "required": true,
+      "description": "Reference to product configuration",
+      "type": "string"
+    },
+    "productType": {
+      "required": true,
+      "description": "Type of product (e.g., 'ROCKET_CYBER', 'OKTA')",
+      "type": "string"
+    },
+    "userKeyField": {
+      "required": true,
+      "description": "Field path for user identification",
+      "type": "string"
+    },
+    "eventFilter": {
+      "required": true,
+      "description": "Query filter for events",
+      "type": "string"
+    }
+  }
+} 

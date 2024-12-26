@@ -1,0 +1,1348 @@
+{
+	"info": {
+		"_postman_id": "2c78c6b4-de43-4bb4-b154-c32e862b1d32",
+		"name": "Kaseya - RocketCyber",
+		"description": "The RocketCyber Customer API provides insight into our data without having to interact with the browser application.\n\n**Most Current Version**: v3\n\nInstructions on finding your API Token in the RocketCyber application can be found here:  \n[https://helpdesk.kaseya.com/hc/en-gb/articles/9239984991505-Customer-API-Finding-Access-Token](https://helpdesk.kaseya.com/hc/en-gb/articles/9239984991505-Customer-API-Finding-Access-Token)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18237491",
+		"_collection_link": "https://saasalerts.postman.co/workspace/Team-Workspace~9fea409b-5522-4056-8f78-b5439fb4f1d4/collection/18237491-2c78c6b4-de43-4bb4-b154-c32e862b1d32?action=share&source=collection_link&creator=18237491"
+	},
+	"item": [
+		{
+			"name": "v3",
+			"item": [
+				{
+					"name": "/account",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{CUSTOMER_API_URL}}/v3/account?details=true",
+							"host": [
+								"{{CUSTOMER_API_URL}}"
+							],
+							"path": [
+								"v3",
+								"account"
+							],
+							"query": [
+								{
+									"key": "accountId",
+									"value": "12345",
+									"description": "[Optional] The account ID to pull data for.\nNOTE: If not provided, data will be pulled for all accounts accessible by the bearer token.",
+									"disabled": true
+								},
+								{
+									"key": "details",
+									"value": "true",
+									"description": "[Optional] Should the additional details for each sub-accounts be displayed included in the return data.\ndefault: false"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CUSTOMER_API_URL}}/v3/account",
+									"host": [
+										"{{CUSTOMER_API_URL}}"
+									],
+									"path": [
+										"v3",
+										"account"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "626"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"272-0udep0+0JXxx2zbMm/3cwsBxJ04\""
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 16 Sep 2022 20:21:12 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"name\": \"Musical Solutions\",\n    \"hierarchy\": \"Kaseya Production Account Management -> Musical Solutions\",\n    \"accountPath\": \"9578.8675309\",\n    \"type\": \"Provider\",\n    \"address\": {\n        \"street1\": \"123 Real Street\",\n        \"street2\": \"Suite A\",\n        \"city\": \"Dallas\",\n        \"state\": \"TX\",\n        \"country\": \"United States of America\",\n        \"zipCode\": \"75243\"\n    },\n    \"status\": \"Active\",\n    \"emails\": null,\n    \"customers\": [\n        20,\n        353,\n        444\n    ]\n}"
+						},
+						{
+							"name": "Success with details=true",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CUSTOMER_API_URL}}/v3/account?accountId=14559&details=true",
+									"host": [
+										"{{CUSTOMER_API_URL}}"
+									],
+									"path": [
+										"v3",
+										"account"
+									],
+									"query": [
+										{
+											"key": "accountId",
+											"value": "14559",
+											"description": "[Optional] The account ID to pull data for.\nNOTE: If not provided, data will be pulled for all data accessible by the bearer token."
+										},
+										{
+											"key": "details",
+											"value": "true",
+											"description": "[Optional] Should the additional details for each sub-accounts be displayed included in the return data.\ndefault: false"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "5599"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"15df-h7RpJR0sLo7dZ6p/QjLTcOPtZKk\""
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 16 Sep 2022 20:20:16 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"name\": \"Musical Solutions\",\n    \"hierarchy\": \"Kaseya Production Account Management -> Musical Solutions\",\n    \"accountPath\": \"9578.8675309\",\n    \"type\": \"Provider\",\n    \"address\": {\n        \"street1\": \"123 Real Street\",\n        \"street2\": \"Suite A\",\n        \"city\": \"Dallas\",\n        \"state\": \"TX\",\n        \"country\": \"United States of America\",\n        \"zipCode\": \"75243\"\n    },\n    \"status\": \"Active\",\n    \"emails\": null,\n    \"customers\": [\n        {\n            \"accountId\": 20,\n            \"accountName\": \"Musical Internal\",\n            \"accountPath\": \"9578.8675309.20\",\n            \"status\": \"Active\"\n        },\n        {\n            \"accountId\": 353,\n            \"accountName\": \"Big Spin Disco\",\n            \"accountPath\": \"9578.8675309.353\",\n            \"status\": \"Active\"\n        },\n        {\n            \"accountId\": 444,\n            \"accountName\": \"NAM Industry\",\n            \"accountPath\": \"9578.8675309.444\",\n            \"status\": \"Active\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "/agents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{CUSTOMER_API_URL}}/v3/agents",
+							"host": [
+								"{{CUSTOMER_API_URL}}"
+							],
+							"path": [
+								"v3",
+								"agents"
+							],
+							"query": [
+								{
+									"key": "accountId",
+									"value": "12345",
+									"description": "[Optional] The account id associated to the device.",
+									"disabled": true
+								},
+								{
+									"key": "id",
+									"value": "e9487ac5443c1b514f8f2c7ca256bb46",
+									"description": "[Optional] The agent id.",
+									"disabled": true
+								},
+								{
+									"key": "hostname",
+									"value": "SHN-01",
+									"description": "[Optional] The device hostname.",
+									"disabled": true
+								},
+								{
+									"key": "ip",
+									"value": "33.16.121.49",
+									"description": "[Optional] The IP address tied to the device.",
+									"disabled": true
+								},
+								{
+									"key": "created",
+									"value": "2022-05-09T00:33:38.245Z|2022-05-10T23:59:38.245Z",
+									"description": "[Optional] The date range for when agents were created.",
+									"disabled": true
+								},
+								{
+									"key": "os",
+									"value": "Windows*",
+									"description": "[Optional] The OS used by the device.",
+									"disabled": true
+								},
+								{
+									"key": "version",
+									"value": "*Server 2019*",
+									"description": "[Optional] The agent version.",
+									"disabled": true
+								},
+								{
+									"key": "connectivity",
+									"value": "online",
+									"description": "[Optional] The connectivity status of the agent.\nOptions: online,offline,isolated",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "[Optional] The target page of data. This is used with pageSize parameter to determine how many and which items to return.\n[Default] 1",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "1000",
+									"description": "[Optional] The number of items to return from the data set. This is used with the parameter size to determine how many and which items to return.\n[Default] 1000\n[Maximum] 1000",
+									"disabled": true
+								},
+								{
+									"key": "sort",
+									"value": "accountId:desc",
+									"description": "[Optional] The sort order for the items queried.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "The agents endpoint returns all the device information for all devices associated to the account ID provided."
+					},
+					"response": [
+						{
+							"name": "example",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CUSTOMER_API_URL}}/v3/agents?accountId=18555&accountId=10038&id=e9487ac5443c1b514f8f2c7ca256bb46&id=b2e23414a7ffb6196d527c92b523f5b9&hostname=*-REL-*&hostname=PAXIT-PC&ip=172.16.21.49&created=|2022-05-10T05:33:38.245Z&os=Windows*&version=Server 2019&connectivity=online&sort=accountId:desc&sort=connectivity&page=1&pageSize=300&connectivity=offline",
+									"host": [
+										"{{CUSTOMER_API_URL}}"
+									],
+									"path": [
+										"v3",
+										"agents"
+									],
+									"query": [
+										{
+											"key": "accountId",
+											"value": "18555"
+										},
+										{
+											"key": "accountId",
+											"value": "10038"
+										},
+										{
+											"key": "id",
+											"value": "e9487ac5443c1b514f8f2c7ca256bb46"
+										},
+										{
+											"key": "id",
+											"value": "b2e23414a7ffb6196d527c92b523f5b9"
+										},
+										{
+											"key": "hostname",
+											"value": "*-REL-*"
+										},
+										{
+											"key": "hostname",
+											"value": "PAXIT-PC"
+										},
+										{
+											"key": "ip",
+											"value": "172.16.21.49"
+										},
+										{
+											"key": "created",
+											"value": "|2022-05-10T05:33:38.245Z"
+										},
+										{
+											"key": "os",
+											"value": "Windows*"
+										},
+										{
+											"key": "version",
+											"value": "Server 2019"
+										},
+										{
+											"key": "connectivity",
+											"value": "online"
+										},
+										{
+											"key": "sort",
+											"value": "accountId:desc"
+										},
+										{
+											"key": "sort",
+											"value": "connectivity"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "pageSize",
+											"value": "300"
+										},
+										{
+											"key": "connectivity",
+											"value": "offline"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1408"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"580-qSDWSyHpUtRgwUT2PUSR1e2E/j8\""
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 25 May 2022 16:14:16 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"totalCount\": 1,\n    \"currentPage\": 1,\n    \"totalPages\": 1,\n    \"dataCount\": 1,\n    \"data\": [\n        {\n            \"id\": \"e9487ac5443c1b514f8f2c7ca256bb46\",\n            \"customerId\": 18770,\n            \"hostname\": \"RCH-REL-WMS01\",\n            \"ipv4Address\": \"172.16.21.49\",\n            \"macAddress\": \"00:1D:D8:B7:1C:13\",\n            \"createdAt\": \"2021-10-09T23:18:22.865Z\",\n            \"platform\": \"Microsoft\",\n            \"family\": \"Windows\",\n            \"version\": \"Server 2019\",\n            \"edition\": \"Server Datacenter (full installation)\",\n            \"architecture\": \"64-bit\",\n            \"build\": \"17763\",\n            \"release\": \"1809\",\n            \"accountPath\": \"9578.18555.18770\",\n            \"agentVersion\": \"v1.5 \\\"Release\\\" Build (22409)\",\n            \"connectivity\": \"online\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "/apps",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{CUSTOMER_API_URL}}/v3/apps",
+							"host": [
+								"{{CUSTOMER_API_URL}}"
+							],
+							"path": [
+								"v3",
+								"apps"
+							],
+							"query": [
+								{
+									"key": "accountId",
+									"value": "12345",
+									"description": "[Optional] The account ID to pull data for.\nNOTE: If not provided, data will be pulled for all data accessible by the bearer token.",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "active",
+									"description": "[Optional] The type of apps to request.\nDefault: active\nOptions: active, inactive",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CUSTOMER_API_URL}}/v3/apps?accountId=25156&status=inactive",
+									"host": [
+										"{{CUSTOMER_API_URL}}"
+									],
+									"path": [
+										"v3",
+										"apps"
+									],
+									"query": [
+										{
+											"key": "accountId",
+											"value": "25156",
+											"description": "[Optional] The account ID to pull data for.\nNOTE: If not provided, data will be pulled for all data accessible by the bearer token."
+										},
+										{
+											"key": "status",
+											"value": "inactive",
+											"description": "[Optional] The type of apps to request.\nDefault: active\nOptions: active, inactive"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1854"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"73e-XYFfMo6tR39g2pIwhtM+n7LZ6cA\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 17 Sep 2022 03:03:42 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"totalCount\": 7,\n    \"data\": [\n        {\n            \"id\": 24,\n            \"name\": \"Cylance Monitor\",\n            \"description\": \"This app reports on detections from Cylance Protect\"\n        },\n        {\n            \"id\": 11,\n            \"name\": \"Defender Manager\",\n            \"description\": \"This App provides full multi-tenant command and control of Microsoft Defender. Now you have the power to utilize the advanced capabilities found in Microsoft Defender including Attack Surface Reduction, Advanced Ransomware protection and more.\"\n        },\n        {\n            \"id\": 65,\n            \"name\": \"DNS Filter Monitor\",\n            \"description\": \"Collects information from DNS Filter\"\n        },\n        {\n            \"id\": 78,\n            \"name\": \"Log4j Detector\",\n            \"description\": \"Log4j Detector\\r\\n\\r\\nThe Log4j Detector app will look for vulnerable versions of Log4j and active exploitation of CVE-2021-44228 and  CVE-2021-45046\\r\\nwhich allows remote code execution via the Apache Log4j library, a Java-based logging tool.\\r\\n\\r\\nThe vulnerability allows an attacker that can control log messages to execute arbitrary code loaded from attacker-controlled servers.\\r\\n\\r\\nThe Log4j Detector app will do the following:\\r\\n\\r\\n\\t1. Detect vulnerable versions of Log4j prior to version 2.16.0\\r\\n\\t2. Detect the attempted exploitation of Log4j using Yara scripts to scan log files.\\r\\n\"\n        },\n        {\n            \"id\": 66,\n            \"name\": \"Passly Monitor\",\n            \"description\": \"This app will monitor the logon data from Passly.\"\n        },\n        {\n            \"id\": 76,\n            \"name\": \"Print Nightmare Hunt\",\n            \"description\": \"This app performs the following checks for the Windows Remote Code Execution Print Spooler Vulnerability CVE-2021-34527\\r\\n\\r\\n1. Checks if the print spooler service is enabled\\r\\n2. Scans the %SystemRoot%\\\\System32\\\\spool\\\\drivers for suspicious files\\r\\n3. Checks the windows registry for PointAndPrint settings\\r\\n4. Checks for the presence of patches related to CVE-2021-34527\\r\\n\"\n        },\n        {\n            \"id\": 77,\n            \"name\": \"Threat Hunt App\",\n            \"description\": \"This app collects positive threat hunt results from custom hunts or from threat hunt feeds. \"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "/defender",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{CUSTOMER_API_URL}}/v3/defender",
+							"host": [
+								"{{CUSTOMER_API_URL}}"
+							],
+							"path": [
+								"v3",
+								"defender"
+							],
+							"query": [
+								{
+									"key": "accountId",
+									"value": "26700",
+									"description": "[Optional] The account ID to pull data for.\nNOTE: If not provided, data will be pulled for all accounts accessible by the bearer token.",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CUSTOMER_API_URL}}/v3/defender?accountId=25156",
+									"host": [
+										"{{CUSTOMER_API_URL}}"
+									],
+									"path": [
+										"v3",
+										"defender"
+									],
+									"query": [
+										{
+											"key": "accountId",
+											"value": "25156"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "5357"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"14ed-ozJleVwAex1Aenf27qyQ6ei5uuQ\""
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 10 Aug 2022 17:49:33 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"health\": {\n        \"totalDevices\": 205,\n        \"totalHealthy\": 191,\n        \"totalUnhealthy\": 10,\n        \"totalUnknown\": 4\n    },\n    \"risk\": {\n        \"detectionSummary\": {\n            \"totalEvents\": 4036,\n            \"totalMalicious\": 104,\n            \"totalSuspicious\": 3932,\n            \"totalInformational\": 0\n        },\n        \"devicesAtRisk\": {\n            \"total\": 7,\n            \"data\": [\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"1b9926c916a2ce004dd1f3ba9f4eb140\",\n                    \"hostname\": \"VCHECK-LT-149\",\n                    \"ipAddress\": \"192.168.40.197\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    },\n                    \"detections\": {\n                        \"malicious\": 60,\n                        \"suspicious\": 15,\n                        \"informational\": 0\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"3ca59ed89fda224e520ca9eaaabf4d60\",\n                    \"hostname\": \"VCHECK-LT-109\",\n                    \"ipAddress\": \"10.0.0.120\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    },\n                    \"detections\": {\n                        \"malicious\": 7,\n                        \"suspicious\": 22,\n                        \"informational\": 0\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"4d9b72c0e2e7c03176156b2c734e98fe\",\n                    \"hostname\": \"VCHECK-LT-59\",\n                    \"ipAddress\": \"192.168.0.190\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    },\n                    \"detections\": {\n                        \"malicious\": 6,\n                        \"suspicious\": 33,\n                        \"informational\": 0\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"96959aa2087eb921777ca6d8ca36e073\",\n                    \"hostname\": \"VCHECK-LT-123\",\n                    \"ipAddress\": \"192.168.1.5\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    },\n                    \"detections\": {\n                        \"malicious\": 19,\n                        \"suspicious\": 22,\n                        \"informational\": 0\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"9c17823de383d92bdae665cee604980e\",\n                    \"hostname\": \"VCHECK-LT-151\",\n                    \"ipAddress\": \"192.168.0.163\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    },\n                    \"detections\": {\n                        \"malicious\": 5,\n                        \"suspicious\": 0,\n                        \"informational\": 0\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"ad24b95f37c55ac85585ea5def8d4964\",\n                    \"hostname\": \"VCHECK-LT-221\",\n                    \"ipAddress\": \"10.0.0.111\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Pro\"\n                    },\n                    \"detections\": {\n                        \"malicious\": 3,\n                        \"suspicious\": 27,\n                        \"informational\": 0\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"f2b64b0c409ad45be9921579dfba5a9a\",\n                    \"hostname\": \"VCHECK-LT-133\",\n                    \"ipAddress\": \"192.168.1.62\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    },\n                    \"detections\": {\n                        \"malicious\": 4,\n                        \"suspicious\": 10,\n                        \"informational\": 0\n                    }\n                }\n            ]\n        },\n        \"devicesWithPoorHealth\": {\n            \"total\": 10,\n            \"data\": [\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"1a967806748f650335e42b6c66bc8826\",\n                    \"hostname\": \"VCHECK-LT-29\",\n                    \"ipAddress\": \"192.168.1.143\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"1f6013fc0722519410f70cfde0408b4b\",\n                    \"hostname\": \"VCHECK-LT-041\",\n                    \"ipAddress\": \"192.168.0.9\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"6f7d16226a2d74953055f44d2a475b1c\",\n                    \"hostname\": \"VCHECK-WS-037\",\n                    \"ipAddress\": \"192.168.1.15\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"a8c04825f0b379a3536ebb60ed1b1c76\",\n                    \"hostname\": \"VCHECK-LT-15\",\n                    \"ipAddress\": \"192.168.0.7\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"b48a31b779d264ac9f0cd54e8b3cc8ed\",\n                    \"hostname\": \"VCHECK-LT-06\",\n                    \"ipAddress\": \"192.168.1.154\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Pro\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"cf52a25cd5eb0b2119862bb8d8964daa\",\n                    \"hostname\": \"VCHECK-LT-26\",\n                    \"ipAddress\": \"192.168.0.6\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"d3070655d146ab185c66a9aa226daed3\",\n                    \"hostname\": \"VCHECK-LT-09\",\n                    \"ipAddress\": \"10.0.0.76\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"d3d659bd143b743a1f2ec9feed8fdba8\",\n                    \"hostname\": \"VCHECK-LT-176\",\n                    \"ipAddress\": \"192.168.1.133\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"ef861ca4ea58442f6fa17ea7f3e6673c\",\n                    \"hostname\": \"VCHECK-LT-194\",\n                    \"ipAddress\": \"10.9.202.164\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"f7a4902b67f3cc3f83fcbf9271bd0690\",\n                    \"hostname\": \"VCHECK-LT-73\",\n                    \"ipAddress\": \"192.168.1.69\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Pro\"\n                    }\n                }\n            ]\n        },\n        \"devicesWithUnknownHealth\": {\n            \"total\": 4,\n            \"data\": [\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"1646af2edb210fcec7b85b3adbb76692\",\n                    \"hostname\": \"VCHECK-LT-174\",\n                    \"ipAddress\": \"10.9.202.184\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Pro\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"38c29171c3d8f295a74a1796d9e247fd\",\n                    \"hostname\": \"VCHECK-LT-204\",\n                    \"ipAddress\": \"192.168.1.118\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"6060f1ac4fa7d45f3a02ec52998d28b9\",\n                    \"hostname\": \"VCHECK-LT-144\",\n                    \"ipAddress\": \"10.9.202.178\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                },\n                {\n                    \"accountId\": 25156,\n                    \"deviceId\": \"d8a45abca4d96e6d00ea3cac34253355\",\n                    \"hostname\": \"VCHECK-LT-48\",\n                    \"ipAddress\": \"10.9.202.189\",\n                    \"operatingSystem\": {\n                        \"platform\": \"Microsoft\",\n                        \"family\": \"Windows\",\n                        \"version\": \"10\",\n                        \"edition\": \"Enterprise\"\n                    }\n                }\n            ]\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "/events",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{CUSTOMER_API_URL}}/v3/events?appId=1004",
+							"host": [
+								"{{CUSTOMER_API_URL}}"
+							],
+							"path": [
+								"v3",
+								"events"
+							],
+							"query": [
+								{
+									"key": "appId",
+									"value": "1004",
+									"description": "[Required] The app ID."
+								},
+								{
+									"key": "verdict",
+									"value": "suspicious",
+									"description": "[Optional] The verdict of the event.\nOptions: informational,suspicious,malicious",
+									"disabled": true
+								},
+								{
+									"key": "accountId",
+									"value": "45",
+									"description": "[Optional] The account ID to pull data for.\nNOTE: If not provided, data will be pulled for all data accessible by the bearer token.",
+									"disabled": true
+								},
+								{
+									"key": "details",
+									"value": "attributes.location.city:Sydney",
+									"description": "[Optional] This parameter allows users to target specific attributes within the details object.\nNOTE: This requires you to define the attribute path (period separated) and the expected value. The value can include wildcards (*).",
+									"disabled": true
+								},
+								{
+									"key": "dates",
+									"value": "2022-09-11|2022-09-12",
+									"description": "[Optional] The date range for event detections.",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "[Optional] The target page of data. This is used with pageSize parameter to determine how many and which items to return.\n[Default] 1",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "1000",
+									"description": "[Optional] The number of items to return from the data set. This is used with the parameter size to determine how many and which items to return.\n[Default] 1000\n[Maximum] 1000",
+									"disabled": true
+								},
+								{
+									"key": "sort",
+									"value": "accountId:desc",
+									"description": "[Optional] The sort order for the items queried.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "The events endpoint returns event information for all events associated to the account ID provided.\n\nOther than the parameters shown here, app specific parameters vary from app to app, please review the current parameters for each app in this KB article:"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CUSTOMER_API_URL}}/v3/events?appId=20&accountId=12345&details=attributes.location.city:Sydney&dates=2022-09-11|2022-09-12&page=1&pageSize=1000",
+									"host": [
+										"{{CUSTOMER_API_URL}}"
+									],
+									"path": [
+										"v3",
+										"events"
+									],
+									"query": [
+										{
+											"key": "appId",
+											"value": "20",
+											"description": "[Required] The app ID."
+										},
+										{
+											"key": "verdict",
+											"value": "suspicious",
+											"description": "[Optional] The verdict of the event.\nOptions: informational,suspicious,malicious",
+											"disabled": true
+										},
+										{
+											"key": "accountId",
+											"value": "12345",
+											"description": "[Optional] The account ID to pull data for.\nNOTE: If not provided, data will be pulled for all data accessible by the bearer token."
+										},
+										{
+											"key": "details",
+											"value": "attributes.location.city:Sydney",
+											"description": "[Optional] This parameter allows users to target specific attributes within details."
+										},
+										{
+											"key": "dates",
+											"value": "2022-09-11|2022-09-12",
+											"description": "[Optional] The date range for event detections."
+										},
+										{
+											"key": "page",
+											"value": "1",
+											"description": "[Optional] The target page of data. This is used with pageSize parameter to determine how many and which items to return.\n[Default] 1"
+										},
+										{
+											"key": "pageSize",
+											"value": "1000",
+											"description": "[Optional] The number of items to return from the data set. This is used with the parameter size to determine how many and which items to return.\n[Default] 1000\n[Maximum] 1000"
+										},
+										{
+											"key": "sort",
+											"value": "accountId:desc",
+											"description": "[Optional] The sort order for the items queried.",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "2204"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"89c-unKDl2GSdDR+7LMPz81YiPkY13A\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 17 Sep 2022 03:38:56 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"totalCount\": 2,\n    \"currentPage\": 1,\n    \"totalPages\": 1,\n    \"dataCount\": 2,\n    \"data\": [\n        {\n            \"id\": \"5e7c69ec-2a5a-4ede-848a-a1758da6257b\",\n            \"appId\": 20,\n            \"verdict\": 3,\n            \"detectionDate\": \"2022-09-11 01:07:31.000\",\n            \"deviceId\": null,\n            \"accountId\": 123456,\n            \"details\": {\n                \"attributes\": {\n                    \"device_detail\": {\n                        \"appDisplayName\": \"Office 365 Exchange Online\",\n                        \"browser\": \"\",\n                        \"operatingSystem\": \"\"\n                    },\n                    \"location\": {\n                        \"city\": \"Sydney\",\n                        \"countryOrRegion\": \"AU\",\n                        \"ip_address\": \"123.4.58.59\",\n                        \"latitude\": -32.86714,\n                        \"longitude\": 150.2071,\n                        \"source\": \"\",\n                        \"state\": \"New South Wales\",\n                        \"threatsFound\": []\n                    },\n                    \"threat_detail\": {\n                        \"appliedConditionalAccessPolicies\": [],\n                        \"conditionalAccessStatus\": \"notApplied\",\n                        \"detections\": 0,\n                        \"riskDetail\": \"hidden\",\n                        \"riskLevelAggregated\": \"hidden\",\n                        \"riskLevelDuringSignIn\": \"hidden\",\n                        \"riskState\": \"none\"\n                    },\n                    \"user\": {\n                        \"loginAttempt\": \"Failure\",\n                        \"name\": \"Karl McTesten\",\n                        \"principalName\": \"kmctesten@realbusiness.com\"\n                    }\n                },\n                \"msgraph\": {\n                    \"correlationId\": \"00000000-0000-4987-aa8f-153679b8e69a\"\n                },\n                \"priority\": 1,\n                \"rcid\": \"5e7c69ec-2a5a-4ede-848a-a1758da6257b\",\n                \"source\": \"loginAnalyzer\",\n                \"type\": \"signin\"\n            },\n            \"createdAt\": \"2022-09-11 01:23:29.163\",\n            \"updatedAt\": \"2022-09-11 01:23:29.163\",\n            \"accountPath\": \"12345.123456\",\n            \"accountName\": \"Real Business Inc\",\n            \"deviceName\": \"\"\n        },\n        {\n            \"id\": \"a214801c-09ae-48ef-8178-556c0086f9f1\",\n            \"appId\": 20,\n            \"verdict\": 3,\n            \"detectionDate\": \"2022-09-11 01:07:34.000\",\n            \"deviceId\": null,\n            \"accountId\": 12345,\n            \"details\": {\n                \"attributes\": {\n                    \"device_detail\": {\n                        \"appDisplayName\": \"Office 365 Exchange Online\",\n                        \"browser\": \"\",\n                        \"operatingSystem\": \"\"\n                    },\n                    \"location\": {\n                        \"city\": \"Sydney\",\n                        \"countryOrRegion\": \"AU\",\n                        \"ip_address\": \"123.4.58.59\",\n                        \"latitude\": -31.86714,\n                        \"longitude\": 150.2071,\n                        \"source\": \"\",\n                        \"state\": \"New South Wales\",\n                        \"threatsFound\": []\n                    },\n                    \"threat_detail\": {\n                        \"appliedConditionalAccessPolicies\": [],\n                        \"conditionalAccessStatus\": \"notApplied\",\n                        \"detections\": 0,\n                        \"riskDetail\": \"hidden\",\n                        \"riskLevelAggregated\": \"hidden\",\n                        \"riskLevelDuringSignIn\": \"hidden\",\n                        \"riskState\": \"none\"\n                    },\n                    \"user\": {\n                        \"loginAttempt\": \"Failure\",\n                        \"name\": \"Karl McTesten\",\n                        \"principalName\": \"kmctesten@realbusiness.com\"\n                    }\n                },\n                \"msgraph\": {\n                    \"correlationId\": \"00000000-0000-44ac-b671-58ef97991409\"\n                },\n                \"priority\": 1,\n                \"rcid\": \"a214801c-09ae-48ef-8178-556c0086f9f1\",\n                \"source\": \"loginAnalyzer\",\n                \"type\": \"signin\"\n            },\n            \"createdAt\": \"2022-09-11 01:23:29.158\",\n            \"updatedAt\": \"2022-09-11 01:23:29.158\",\n            \"accountPath\": \"12345.123456\",\n            \"accountName\": \"Real Business Inc\",\n            \"deviceName\": \"\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "/events/summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{CUSTOMER_API_URL}}/v3/events/summary",
+							"host": [
+								"{{CUSTOMER_API_URL}}"
+							],
+							"path": [
+								"v3",
+								"events",
+								"summary"
+							],
+							"query": [
+								{
+									"key": "accountId",
+									"value": "19144",
+									"description": "[Optional] The account ID to pull data for.\nNOTE: If not provided, data will be pulled for all data accessible by the bearer token.",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CUSTOMER_API_URL}}/v3/events/summary?accountId=6511",
+									"host": [
+										"{{CUSTOMER_API_URL}}"
+									],
+									"path": [
+										"v3",
+										"events",
+										"summary"
+									],
+									"query": [
+										{
+											"key": "accountId",
+											"value": "6511",
+											"description": "[Optional] The account ID to pull data for.\nNOTE: If not provided, data will be pulled for all data accessible by the bearer token."
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Date",
+									"value": "Tue, 17 Oct 2023 17:38:40 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "114"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "x-powered-by",
+									"value": "Express"
+								},
+								{
+									"key": "access-control-allow-origin",
+									"value": "*"
+								},
+								{
+									"key": "etag",
+									"value": "W/\"72-Y8H/7i/yuFjsUgaEKMsrCYUKC7g\""
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"2\": \"433\",\n    \"4\": \"114,471\",\n    \"5\": \"697,616\",\n    \"7\": \"485\",\n    \"8\": \"4,180\",\n    \"9\": \"116\",\n    \"19\": \"7,079\",\n    \"60\": \"75\",\n    \"64\": \"23\",\n    \"115\": \"2\"\n}"
+						}
+					]
+				},
+				{
+					"name": "/firewalls",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{CUSTOMER_API_URL}}/v3/firewalls",
+							"host": [
+								"{{CUSTOMER_API_URL}}"
+							],
+							"path": [
+								"v3",
+								"firewalls"
+							],
+							"query": [
+								{
+									"key": "accountId",
+									"value": "321913",
+									"description": "[Optional] The account ID associated to the device.",
+									"disabled": true
+								},
+								{
+									"key": "deviceId",
+									"value": "REF60ETK18302119",
+									"description": "[Optional] The device ID tied to the device.",
+									"disabled": true
+								},
+								{
+									"key": "ipAddress",
+									"value": "172.25.5.254",
+									"description": "[Optional] The IP address tied to the device.",
+									"disabled": true
+								},
+								{
+									"key": "macAddress",
+									"value": "ae:b1:69:29:55:24",
+									"description": "[Optional] The MAC address tied to the device.",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "fortinet",
+									"description": "[Optional] The type of device.",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "[Optional] The target page of data. This is used with pageSize parameter to determine how many and which items to return.\n[Default] 1",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "1000",
+									"description": "[Optional] The number of items to return from the data set. This is used with the parameter size to determine how many and which items to return.\n[Default] 1000",
+									"disabled": true
+								},
+								{
+									"key": "sort",
+									"value": "accountId:desc",
+									"description": "[Optional] The sort order for the items queried.",
+									"disabled": true
+								},
+								{
+									"key": "counters",
+									"value": "true",
+									"description": "[Optional] Flag to include additional firewall counter data.\nDefault: false",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CUSTOMER_API_URL}}/v3/firewalls",
+									"host": [
+										"{{CUSTOMER_API_URL}}"
+									],
+									"path": [
+										"v3",
+										"firewalls"
+									],
+									"query": [
+										{
+											"key": "deviceId",
+											"value": "",
+											"description": "string -- details.device_id",
+											"disabled": true
+										},
+										{
+											"key": "ipAddress",
+											"value": "",
+											"description": "string -- details.ip",
+											"disabled": true
+										},
+										{
+											"key": "macAddress",
+											"value": "",
+											"description": "string -- details.mac",
+											"disabled": true
+										},
+										{
+											"key": "type",
+											"value": "",
+											"description": "string -- details.type",
+											"disabled": true
+										},
+										{
+											"key": "accountId",
+											"value": "1032",
+											"description": "string -- listed as account path",
+											"disabled": true
+										},
+										{
+											"key": "config",
+											"value": "true",
+											"description": "boolean (defaults to false if not included in the query params)",
+											"disabled": true
+										},
+										{
+											"key": "page",
+											"value": null,
+											"description": "number (positive) - defaults to 1 if not included in query params",
+											"disabled": true
+										},
+										{
+											"key": "pageSize",
+											"value": null,
+											"description": "number (positive) - defaults to 1000 if not included in query params",
+											"disabled": true
+										},
+										{
+											"key": "sort",
+											"value": null,
+											"description": "[key]:[asc or desc] -- defaults to asc",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "8955"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"22fb-v8/vwZh92fko+WhNxocdJW/P8UM\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 16 Jul 2022 02:04:15 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"totalCount\": 51,\n    \"currentPage\": 1,\n    \"totalPages\": 1,\n    \"dataCount\": 51,\n    \"data\": [\n        {\n            \"id\": \"321913\",\n            \"accountPath\": \"9578.14559.20550\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60ETK18013380\"\n            },\n            \"createdAt\": \"2021-12-13T15:13:40.463Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"218366\",\n            \"accountPath\": \"9578.14559.15915\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FWF60ETK18008566\"\n            },\n            \"createdAt\": \"2021-07-02T17:46:49.362Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"383743\",\n            \"accountPath\": \"9578.14559.19328\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT30E5618024663\"\n            },\n            \"createdAt\": \"2022-02-25T15:19:17.839Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"297791\",\n            \"accountPath\": \"9578.14559.19328\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT30E5618024143\"\n            },\n            \"createdAt\": \"2021-10-26T20:33:14.298Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"297790\",\n            \"accountPath\": \"9578.14559.19310\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FWF30E3U17000084\"\n            },\n            \"createdAt\": \"2021-10-26T20:04:27.699Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"323315\",\n            \"accountPath\": \"9578.14559.19040\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FW30DP3X14000122\"\n            },\n            \"createdAt\": \"2021-12-14T19:22:06.405Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"291905\",\n            \"accountPath\": \"9578.14559.19040\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60ETK18061120\"\n            },\n            \"createdAt\": \"2021-10-14T21:02:21.532Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"321914\",\n            \"accountPath\": \"9578.14559.20552\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK19035455\"\n            },\n            \"createdAt\": \"2021-12-13T15:18:07.688Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"342377\",\n            \"accountPath\": \"9578.14559.19307\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FG100FTK21022674\"\n            },\n            \"createdAt\": \"2022-01-04T22:07:08.008Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"435666\",\n            \"accountPath\": \"9578.14559.16583\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT40FTK2109AKDR\"\n            },\n            \"createdAt\": \"2022-05-02T12:20:35.717Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"468526\",\n            \"accountPath\": \"9578.14559.16583\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT80FTK21034876\"\n            },\n            \"createdAt\": \"2022-06-12T18:58:36.293Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"261764\",\n            \"accountPath\": \"9578.14559.17581\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60ETK18013011\"\n            },\n            \"createdAt\": \"2021-09-03T15:28:02.706Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"307860\",\n            \"accountPath\": \"9578.14559.19863\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FWF60ETK18008767\"\n            },\n            \"createdAt\": \"2021-11-15T19:53:27.729Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"323303\",\n            \"accountPath\": \"9578.14559.19861\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK20075951\"\n            },\n            \"createdAt\": \"2021-12-14T16:14:02.511Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"307858\",\n            \"accountPath\": \"9578.14559.19861\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK19035719\"\n            },\n            \"createdAt\": \"2021-11-15T17:02:17.573Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"307857\",\n            \"accountPath\": \"9578.14559.19859\",\n            \"details\": {\n                \"mac\": \"18:b1:69:29:51:28\",\n                \"type\": \"sonicwall\"\n            },\n            \"createdAt\": \"2021-11-15T16:32:03.813Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"323309\",\n            \"accountPath\": \"9578.14559.15277\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FG100E4Q17022776\"\n            },\n            \"createdAt\": \"2021-12-14T16:35:42.933Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"323310\",\n            \"accountPath\": \"9578.14559.15277\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK20007847\"\n            },\n            \"createdAt\": \"2021-12-14T16:36:10.772Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"235696\",\n            \"accountPath\": \"9578.14559.15277\",\n            \"details\": {\n                \"ip\": \"172.25.5.254\",\n                \"type\": \"zyxel\"\n            },\n            \"createdAt\": \"2021-07-26T19:10:12.663Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"307861\",\n            \"accountPath\": \"9578.14559.19864\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK20009017\"\n            },\n            \"createdAt\": \"2021-11-15T19:54:14.416Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"410410\",\n            \"accountPath\": \"9578.14559.24602\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FWF60ETK18002319\"\n            },\n            \"createdAt\": \"2022-03-31T00:05:58.885Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"325345\",\n            \"accountPath\": \"9578.14559.20935\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FWF60E4Q16000901\"\n            },\n            \"createdAt\": \"2021-12-16T21:19:15.021Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"386889\",\n            \"accountPath\": \"9578.14559.23112\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT30E3U16014238\"\n            },\n            \"createdAt\": \"2022-03-01T15:37:12.024Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"393998\",\n            \"accountPath\": \"9578.14559.19497\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT80FTK21034310\"\n            },\n            \"createdAt\": \"2022-03-12T01:09:30.276Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"410412\",\n            \"accountPath\": \"9578.14559.24600\",\n            \"details\": {\n                \"mac\": \"c0:ea:e4:4c:f0:10\",\n                \"type\": \"sonicwall\"\n            },\n            \"createdAt\": \"2022-03-31T00:16:09.177Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"410414\",\n            \"accountPath\": \"9578.14559.24250\",\n            \"details\": {\n                \"mac\": \"c0:ea:e4:71:ec:8c\",\n                \"type\": \"sonicwall\"\n            },\n            \"createdAt\": \"2022-03-31T00:28:00.096Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"235674\",\n            \"accountPath\": \"9578.14559.16584\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FWF60ETK18008746\"\n            },\n            \"createdAt\": \"2021-07-26T18:05:57.877Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"323302\",\n            \"accountPath\": \"9578.14559.16584\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK19036349\"\n            },\n            \"createdAt\": \"2021-12-14T16:09:33.863Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"323301\",\n            \"accountPath\": \"9578.14559.16584\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FWF60ETK18002680\"\n            },\n            \"createdAt\": \"2021-12-14T16:00:42.395Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"301010\",\n            \"accountPath\": \"9578.14559.19499\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK19036886\"\n            },\n            \"createdAt\": \"2021-11-01T17:13:38.109Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"312771\",\n            \"accountPath\": \"9578.14559.20090\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK19035566\"\n            },\n            \"createdAt\": \"2021-11-24T14:54:13.240Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"463614\",\n            \"accountPath\": \"9578.14559.24605\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT40FTK22004723\"\n            },\n            \"createdAt\": \"2022-06-09T12:45:45.705Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"297789\",\n            \"accountPath\": \"9578.14559.19318\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60ETK18058799\"\n            },\n            \"createdAt\": \"2021-10-26T20:00:22.358Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"312774\",\n            \"accountPath\": \"9578.14559.20091\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60E4Q16089793\"\n            },\n            \"createdAt\": \"2021-11-24T15:09:59.235Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"387823\",\n            \"accountPath\": \"9578.14559.14560\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FG100FTK20012921\"\n            },\n            \"createdAt\": \"2022-03-02T22:30:37.986Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"398290\",\n            \"accountPath\": \"9578.14559.19860\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT40FTK2109AF4G\"\n            },\n            \"createdAt\": \"2022-03-17T18:19:34.559Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"307856\",\n            \"accountPath\": \"9578.14559.19858\",\n            \"details\": {\n                \"mac\": \"c0:ea:e4:8a:7b:60\",\n                \"type\": \"sonicwall\"\n            },\n            \"createdAt\": \"2021-11-15T16:27:24.321Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"400730\",\n            \"accountPath\": \"9578.14559.19862\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT40FTK2109AHKS\"\n            },\n            \"createdAt\": \"2022-03-18T20:25:53.293Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"307862\",\n            \"accountPath\": \"9578.14559.17594\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60E4Q17010432\"\n            },\n            \"createdAt\": \"2021-11-15T21:56:08.950Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"400731\",\n            \"accountPath\": \"9578.14559.19562\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT40FTK2109AH0R\"\n            },\n            \"createdAt\": \"2022-03-18T20:38:49.622Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"410411\",\n            \"accountPath\": \"9578.14559.24603\",\n            \"details\": {\n                \"mac\": \"c0:ea:e4:72:ad:40\",\n                \"type\": \"sonicwall\"\n            },\n            \"createdAt\": \"2022-03-31T00:10:25.866Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"323311\",\n            \"accountPath\": \"9578.14559.14939\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK21028472\"\n            },\n            \"createdAt\": \"2021-12-14T16:52:43.701Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"310555\",\n            \"accountPath\": \"9578.14559.14939\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK21023024\"\n            },\n            \"createdAt\": \"2021-11-19T22:02:58.509Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"386890\",\n            \"accountPath\": \"9578.14559.23114\",\n            \"details\": {\n                \"mac\": \"18:b1:69:06:3a:ec\",\n                \"type\": \"sonicwall\"\n            },\n            \"createdAt\": \"2022-03-01T15:49:25.115Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"187412\",\n            \"accountPath\": \"9578.14559.15053\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60ETK18012538\"\n            },\n            \"createdAt\": \"2021-06-04T19:03:37.251Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"301015\",\n            \"accountPath\": \"9578.14559.19561\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FWF60E4Q16001115\"\n            },\n            \"createdAt\": \"2021-11-01T21:46:46.001Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"434774\",\n            \"accountPath\": \"9578.14559.14566\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT80FTK21035892\"\n            },\n            \"createdAt\": \"2022-04-29T20:40:37.818Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"323312\",\n            \"accountPath\": \"9578.14559.14566\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK19035317\"\n            },\n            \"createdAt\": \"2021-12-14T16:58:19.054Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"323300\",\n            \"accountPath\": \"9578.14559.20551\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK19036350\"\n            },\n            \"createdAt\": \"2021-12-14T15:16:31.515Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"321912\",\n            \"accountPath\": \"9578.14559.20551\",\n            \"details\": {\n                \"type\": \"fortinet\",\n                \"device_id\": \"FGT60FTK19036435\"\n            },\n            \"createdAt\": \"2021-12-13T14:50:19.211Z\",\n            \"instanceType\": \"firewall\"\n        },\n        {\n            \"id\": \"410413\",\n            \"accountPath\": \"9578.14559.24601\",\n            \"details\": {\n                \"mac\": \"c0:ea:e4:64:ab:2c\",\n                \"type\": \"sonicwall\"\n            },\n            \"createdAt\": \"2022-03-31T00:22:23.847Z\",\n            \"instanceType\": \"firewall\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "/incidents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{CUSTOMER_API_URL}}/v3/incidents",
+							"host": [
+								"{{CUSTOMER_API_URL}}"
+							],
+							"path": [
+								"v3",
+								"incidents"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "590444",
+									"description": "[Optional] The RocketCyber incident ID.",
+									"disabled": true
+								},
+								{
+									"key": "title",
+									"value": "*Office*",
+									"description": "[Optional] The title of the incident.",
+									"disabled": true
+								},
+								{
+									"key": "accountId",
+									"value": "14559",
+									"description": "[Optional] The account id associated to the incident.",
+									"disabled": true
+								},
+								{
+									"key": "description",
+									"value": "*administrative*",
+									"description": "[Optional] The description of the incident.\nNOTE: Wildcards are required to search for specific text.",
+									"disabled": true
+								},
+								{
+									"key": "remediation",
+									"value": "*permission.",
+									"description": "[Optional] The remediation for the incident.\nNOTE: Wildcards are required to search for specific text.",
+									"disabled": true
+								},
+								{
+									"key": "resolvedAt",
+									"value": "2021-08-01|",
+									"description": "[Optional] This returns incidents resolved between the start and end date.\nNOTE: Both the start and end dates are optional, but at least one is required to use this parameter.",
+									"disabled": true
+								},
+								{
+									"key": "createdAt",
+									"value": "|2022-09-01",
+									"description": "[Optional] This returns incidents created between the start and end date.\nNOTE: Both the start and end dates are optional, but at least one is required to use this parameter.",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "closed",
+									"description": "[Optional] The type of incidents to request.\nOptions: all, open, closed",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "[Optional] The target page of data. This is used with pageSize parameter to determine how many and which items to return.\n[Default] 1",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "10",
+									"description": "[Optional] The number of items to return from the data set. This is used with the parameter size to determine how many and which items to return.\n[Default] 1000\n[Max] 1000",
+									"disabled": true
+								},
+								{
+									"key": "sort",
+									"value": "id:desc",
+									"description": "[Optional] The sort order for the items queried.",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CUSTOMER_API_URL}}/v3/incidents?pageSize=10",
+									"host": [
+										"{{CUSTOMER_API_URL}}"
+									],
+									"path": [
+										"v3",
+										"incidents"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "590444",
+											"description": "[Optional] The RocketCyber incident ID.",
+											"disabled": true
+										},
+										{
+											"key": "title",
+											"value": "*Office*",
+											"description": "[Optional] The title of the incident.",
+											"disabled": true
+										},
+										{
+											"key": "accountId",
+											"value": "14559",
+											"description": "[Optional] The account id associated to the incident.",
+											"disabled": true
+										},
+										{
+											"key": "description",
+											"value": "*administrative*",
+											"description": "[Optional] The description of the incident.\nNOTE: Wildcards are required to search for specific text.",
+											"disabled": true
+										},
+										{
+											"key": "remediation",
+											"value": "*permission.",
+											"description": "[Optional] The remediation for the incident.\nNOTE: Wildcards are required to search for specific text.",
+											"disabled": true
+										},
+										{
+											"key": "resolvedAt",
+											"value": "2021-08-01|",
+											"description": "[Optional] This returns incidents resolved between the start and end date.\nNOTE: Both the start and end dates are optional, but at least one is required to use this parameter.",
+											"disabled": true
+										},
+										{
+											"key": "createdAt",
+											"value": "|2022-09-01",
+											"description": "[Optional] This returns incidents created between the start and end date.\nNOTE: Both the start and end dates are optional, but at least one is required to use this parameter.",
+											"disabled": true
+										},
+										{
+											"key": "status",
+											"value": "closed",
+											"description": "[Optional] The type of incidents to request.\nOptions: all, open, closed",
+											"disabled": true
+										},
+										{
+											"key": "page",
+											"value": "1",
+											"description": "[Optional] The target page of data. This is used with pageSize parameter to determine how many and which items to return.\n[Default] 1",
+											"disabled": true
+										},
+										{
+											"key": "pageSize",
+											"value": "10",
+											"description": "[Optional] The number of items to return from the data set. This is used with the parameter size to determine how many and which items to return.\n[Default] 1000\n[Max] 1000"
+										},
+										{
+											"key": "sort",
+											"value": "accountId:desc",
+											"description": "[Optional] The sort order for the items queried.",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "9133"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"23ad-1FLmYHfe4LtQgEkKlvvZww59Qsk\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 17 Sep 2022 03:09:27 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"totalCount\": 2830,\n    \"currentPage\": 1,\n    \"totalPages\": 283,\n    \"dataCount\": 10,\n    \"data\": [\n        {\n            \"id\": 179326,\n            \"title\": \"Email Forwarding Rule Detected\",\n            \"description\": \"The following email forwarding rule was detected that forwards email outside of the corporate domain.\",\n            \"remediation\": \"Review the rule.\\r\\nRemove if not authorized.\\r\\n\",\n            \"resolvedAt\": \"2021-05-10T19:11:09.586Z\",\n            \"publishedAt\": \"2021-05-10T08:09:02.380Z\",\n            \"createdAt\": \"2021-05-10T08:02:52.880Z\",\n            \"status\": \"closed\",\n            \"accountId\": 12345,\n            \"eventCount\": 0\n        },\n        {\n            \"id\": 282596,\n            \"title\": \"Sophos Event::Endpoint::NotProtected - high Severity\",\n            \"description\": \"Failed to protect computer: DESKTOP-12345\",\n            \"remediation\": \"Inspect the endpoint services.\\r\\nReinstall if necessary\\r\\n\",\n            \"resolvedAt\": \"2021-08-02T17:05:24.921Z\",\n            \"publishedAt\": \"2021-07-31T21:54:06.763Z\",\n            \"createdAt\": \"2021-07-31T21:48:29.909Z\",\n            \"status\": \"closed\",\n            \"accountId\": 12345,\n            \"eventCount\": 0\n        },\n        {\n            \"id\": 328607,\n            \"title\": \"Office 365 Setup\",\n            \"description\": \"The current Office 365 Configuration does not allow monitoring of Office 365 Logins for this customer. Without the proper licensing, the SOC will not be able to monitor for suspicious login activity. https://help.rocketcyber.com/knowledge/all-microsoft-licenses-required-for-office-365-apps \",\n            \"remediation\": \"The Tenant requires at least one Azure P1 or P2 license to access login data. Follow the instructions below to add the required license. https://support.rocketcyber.com/hc/en-us/articles/360018052038-How-to-Add-Azure-AD-Premium-P1-or-P2 \",\n            \"resolvedAt\": \"2021-11-18T21:41:30.967Z\",\n            \"publishedAt\": \"2021-11-03T17:54:23.729Z\",\n            \"createdAt\": \"2021-11-03T17:47:37.785Z\",\n            \"status\": \"closed\",\n            \"accountId\": 12345,\n            \"eventCount\": 0\n        },\n        {\n            \"id\": 336021,\n            \"title\": \"Office 365 Setup\",\n            \"description\": \"The current Office 365 Configuration does not allow monitoring of Office 365 Logins for this customer. Without the proper licensing, the SOC will not be able to monitor for suspicious login activity. https://help.rocketcyber.com/knowledge/all-microsoft-licenses-required-for-office-365-apps \",\n            \"remediation\": \"The Tenant requires at least one Azure P1 or P2 license to access login data. Follow the instructions below to add the required license. https://support.rocketcyber.com/hc/en-us/articles/360018052038-How-to-Add-Azure-AD-Premium-P1-or-P2 \",\n            \"resolvedAt\": \"2021-11-18T21:45:46.681Z\",\n            \"publishedAt\": \"2021-11-11T18:27:09.956Z\",\n            \"createdAt\": \"2021-11-11T18:23:36.542Z\",\n            \"status\": \"closed\",\n            \"accountId\": 54321,\n            \"eventCount\": 6\n        },\n        {\n            \"id\": 324937,\n            \"title\": \"Suspicious Successful Office 365 Login Detected\",\n            \"description\": \"The following account successfully logged in from United States IP Reputation is known for :[]\",\n            \"remediation\": \"<b>Expected Behavior?</b> If this is expected behavior you may whitelist the alerts for this user from the detected location. From the Incident View, Click on Action/Whitelist to whitelist. <b>Unexpected Behavior?</b> <b>Kill Existing Sessions</b> https://blogs.technet.microsoft.com/cloudyhappypeople/2017/10/05/killing-sessions-to-a-compromised-office-365-account/ <b>Enable 2 Factor Authentication for all users in the Tennant</b> https://docs.microsoft.com/en-us/microsoft-365/admin/security-and-compliance/set-up-multi-factor-authentication?redirectSourcePath=%252fen-us%252farticle%252f8f0454b2-f51a-4d9c-bcde-2c48e41621c6&view=o365-worldwide <b>Add Conditional Access Policies to block by undesired logon regions</b> https://docs.microsoft.com/en-us/azure/active-directory/conditional-access/howto-conditional-access-policy-location \",\n            \"resolvedAt\": \"2021-11-02T19:19:12.158Z\",\n            \"publishedAt\": \"2021-11-02T18:18:14.187Z\",\n            \"createdAt\": \"2021-11-02T17:23:18.109Z\",\n            \"status\": \"closed\",\n            \"accountId\": 12354,\n            \"eventCount\": 1\n        },\n        {\n            \"id\": 232621,\n            \"title\": \"MS Graph Error\",\n            \"description\": \"Calling principal does not have required MSGraph permissions AuditLog.Read.All \",\n            \"remediation\": \"Please verify you have the SecurityReader/SecurityAdmin role. \\r\\nPlease verify you have the required Azure P1 or P2 license. \\r\\n\\r\\nPlease make sure you have the correct permissions and licenses per the help docs provided below: \\r\\nhttps://support.rocketcyber.com/hc/en-us/articles/360018051298-All-Microsoft-Licenses-Required-for-Office-365-Apps \\r\\nhttps://support.rocketcyber.com/hc/en-us/articles/360018051338-What-Permissions-Does-My-Account-Need-for-Office-365-Apps- \\r\\nhttps://support.rocketcyber.com/hc/en-us/articles/360018052038-How-to-Add-Azure-AD-Premium-P1-or-P2 \",\n            \"resolvedAt\": \"2021-05-24T18:30:45.729Z\",\n            \"publishedAt\": \"2021-05-21T14:55:20.270Z\",\n            \"createdAt\": \"2021-05-21T14:55:20.227Z\",\n            \"status\": \"closed\",\n            \"accountId\": 54123,\n            \"eventCount\": 0\n        },\n        {\n            \"id\": 286470,\n            \"title\": \"Office 365 Brute Force Attempt - contact@boomcity.com\",\n            \"description\": \"The account \\\"contact@boomcity.com\\\" is locked, due to the user attempting to sign in too many times with an incorrect user ID or password.\\r\\nThe user is blocked due to repeated sign-in attempts. See https://docs.microsoft.com/azure/active-directory/identity-protection/howto-unblock-user\",\n            \"remediation\": \"Enable 2 Factor Authentication for all users in the Tennant Add Conditional Access Policies to block by undesired logon regions:\\r\\nhttps://docs.microsoft.com/en-us/microsoft-365/admin/security-and-compliance/set-up-multi-factor-authentication?redirectSourcePath=%252fen-us%252farticle%252f8f0454b2-f51a-4d9c-bcde-2c48e41621c6&view=o365-worldwide\\r\\nhttps://docs.microsoft.com/en-us/azure/active-directory/conditional-access/howto-conditional-access-policy-location\\r\\n\\r\\nKill Existing Sessions:\\r\\nhttps://blogs.technet.microsoft.com/cloudyhappypeople/2017/10/05/killing-sessions-to-a-compromised-office-365-account/\\r\\n\\r\\nAdd Conditional Access Policies to block by undesired logon regions\\r\\nhttps://docs.microsoft.com/en-us/azure/active-directory/conditional-access/howto-conditional-access-policy-location\",\n            \"resolvedAt\": \"2021-10-05T19:57:50.229Z\",\n            \"publishedAt\": \"2021-08-12T16:30:38.875Z\",\n            \"createdAt\": \"2021-08-12T16:30:38.673Z\",\n            \"status\": \"closed\",\n            \"accountId\": 24135,\n            \"eventCount\": 0\n        },\n        {\n            \"id\": 277126,\n            \"title\": \"Print Nightmare Vulnerability Alert  - Missing Patch CVE-2021-34527\",\n            \"description\": \"RocketCyber created and enabled the PRINT NIGHTMARE APP. This app performs the following checks for the Windows Remote Code Execution Print Spooler Vulnerability CVE-2021-34527:\\r\\n\\r\\n1. Checks if the print spooler service is enabled. \\r\\n2. Scans the %SystemRoot%\\\\System32\\\\spool\\\\drivers for suspicious files.  \\r\\n3. Checks the windows registry for PointAndPrint settings.  \\r\\n4. Checks for the presence of patches related to CVE-2021-34527.\\r\\n\",\n            \"remediation\": \"1. Install the latest Windows patches. \\r\\n2. Disable print spooler service in domain controllers and systems that do not print. \\r\\n3. If the registry keys documented exist, in order to secure your system, you must confirm that the following registry keys are set to 0 (zero) or are not present: \\r\\nHKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Policies\\\\Microsoft\\\\Windows NT\\\\Printers\\\\PointAndPrint\\r\\nhttps://msrc-blog.microsoft.com/2021/07/08/clarified-guidance-for-cve-2021-34527-windows-print-spooler-vulnerability/\",\n            \"resolvedAt\": \"2021-07-15T22:37:17.145Z\",\n            \"publishedAt\": \"2021-07-14T04:28:06.653Z\",\n            \"createdAt\": \"2021-07-14T04:28:06.631Z\",\n            \"status\": \"closed\",\n            \"accountId\": 24135,\n            \"eventCount\": 0\n        },\n        {\n            \"id\": 338012,\n            \"title\": \"Suspicious Successful Office 365 Login Detected\",\n            \"description\": \"The following account successfully logged in from JM IP Reputation is known for :[]\",\n            \"remediation\": \"<b>Expected Behavior?</b> If this is expected behavior you may whitelist the alerts for this user from the detected location. From the Incident View, Click on Action/Whitelist to whitelist. <b>Unexpected Behavior?</b> <b>Kill Existing Sessions</b> https://blogs.technet.microsoft.com/cloudyhappypeople/2017/10/05/killing-sessions-to-a-compromised-office-365-account/ <b>Enable 2 Factor Authentication for all users in the Tennant</b> https://docs.microsoft.com/en-us/microsoft-365/admin/security-and-compliance/set-up-multi-factor-authentication?redirectSourcePath=%252fen-us%252farticle%252f8f0454b2-f51a-4d9c-bcde-2c48e41621c6&view=o365-worldwide <b>Add Conditional Access Policies to block by undesired logon regions</b> https://docs.microsoft.com/en-us/azure/active-directory/conditional-access/howto-conditional-access-policy-location \",\n            \"resolvedAt\": \"2021-11-15T15:29:00.293Z\",\n            \"publishedAt\": \"2021-11-15T14:54:05.746Z\",\n            \"createdAt\": \"2021-11-15T14:52:10.934Z\",\n            \"status\": \"closed\",\n            \"accountId\": 24135,\n            \"eventCount\": 1\n        },\n        {\n            \"id\": 318796,\n            \"title\": \"Office 365 Setup\",\n            \"description\": \"The current Office 365 Configuration does not allow monitoring of Office 365 Logins for this customer. Without the proper licensing, the SOC will not be able to monitor for suspicious login activity. https://help.rocketcyber.com/knowledge/all-microsoft-licenses-required-for-office-365-apps \",\n            \"remediation\": \"The Tenant requires at least one Azure P1 or P2 license to access login data. Follow the instructions below to add the required license. https://support.rocketcyber.com/hc/en-us/articles/360018052038-How-to-Add-Azure-AD-Premium-P1-or-P2 \",\n            \"resolvedAt\": \"2021-11-18T21:47:27.989Z\",\n            \"publishedAt\": \"2021-10-28T04:54:11.940Z\",\n            \"createdAt\": \"2021-10-28T04:53:35.973Z\",\n            \"status\": \"closed\",\n            \"accountId\": 31245,\n            \"eventCount\": 1\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "/office",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{CUSTOMER_API_URL}}/v3/office",
+							"host": [
+								"{{CUSTOMER_API_URL}}"
+							],
+							"path": [
+								"v3",
+								"office"
+							],
+							"query": [
+								{
+									"key": "accountId",
+									"value": "45",
+									"description": "[Optional] The account ID to pull data for.\nNOTE: If not provided, data will be pulled for all data accessible by the bearer token.",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{CUSTOMER_API_URL}}/v3/office",
+									"host": [
+										"{{CUSTOMER_API_URL}}"
+									],
+									"path": [
+										"v3",
+										"office"
+									],
+									"query": [
+										{
+											"key": "accountId",
+											"value": "3",
+											"disabled": true
+										},
+										{
+											"key": "accountId",
+											"value": "18165",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "99025"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"182d1-6krPVg4QzLuS0Dse58GODt8rY1E\""
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 15 Jul 2022 18:44:45 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"accountId\": 2,\n        \"secureScoreProgress\": {\n            \"startDate\": \"2022-03-11T00:00:00.000Z\",\n            \"endDate\": \"2022-03-12T00:00:00.000Z\",\n            \"totalDays\": 2,\n            \"minScore\": 9.4,\n            \"maxScore\": 23.72,\n            \"averageScore\": 14.17,\n            \"data\": [\n                {\n                    \"accountId\": 3,\n                    \"detectionDate\": \"2022-03-11T00:00:00.000Z\",\n                    \"secureScorePercentage\": 9.4\n                },\n                {\n                    \"accountId\": 12345,\n                    \"detectionDate\": \"2022-03-11T00:00:00.000Z\",\n                    \"secureScorePercentage\": 23.72\n                },\n                {\n                    \"accountId\": 3,\n                    \"detectionDate\": \"2022-03-12T00:00:00.000Z\",\n                    \"secureScorePercentage\": 9.4\n                }\n            ]\n        },\n        \"monitoredAccounts\": {\n            \"total\": 2,\n            \"data\": [\n                {\n                    \"accountId\": \"12345\",\n                    \"id\": \"admin@realplace.com\",\n                    \"mfaStatus\": \"active\",\n                    \"licenses\": [\n                        \"FLOW_FREE\",\n                        \"AAD_PREMIUM\",\n                        \"O365_BUSINESS\",\n                        \"EXCHANGESTANDARD\",\n                        \"TEAMS_EXPLORATORY\"\n                    ]\n                },\n                {\n                    \"accountId\": \"3\",\n                    \"id\": \"test@forreal.com\",\n                    \"mfaStatus\": \"inactive\",\n                    \"licenses\": [\n                        \"AAD_PREMIUM\"\n                    ]\n                }\n            ]\n        },\n        \"secureScoreToDo\": {\n            \"total\": 67,\n            \"data\": [\n                {\n                    \"accountId\": 3,\n                    \"maxScore\": 50,\n                    \"control\": \"AdminMFAV2\",\n                    \"description\": \"Requiring multi-factor authentication (MFA) for all administrative roles makes it harder for attackers to access accounts. Administrative roles have higher permissions than typical users. If any of those accounts are compromised, critical devices and data is open to attack.\\n  \",\n                    \"remediation\": \"Set up Azure Multi-Factor Authentication policies to protect devices and data that are accessible by your users with administrative roles<br><br>In the <a href=\\\"https://go.microsoft.com/fwlink/?linkid=2095010\\\" target=\\\"_blank\\\">Azure portal Conditional Access page</a><br>1. Select + <b>New Policy</b><br>2. Go to Assignments > Users and groups > Include > <b>Select users and groups</b> > check <b>Directory roles</b><br>3. At a minimum, select the following roles:<br><ul><li>Security administrator</li><li>Exchange service administrator</li><li>Global administrator</li><li>Conditional Access Administrator</li><li>SharePoint administrator</li><li>Helpdesk Administrator</li><li>Billing Administrator</li><li>User administrator</li><li>Authentication Administrator</li></ul><br>4. Go to Cloud apps or actions > Cloud apps > Include > select <b>All cloud apps</b> (and don't exclude any apps)<br>5. Under Access controls > Grant > select <b>Grant Access</b> > check <b>Require multi-factor authentication</b> (and nothing else)<br>6. Enable policy > On<br>7. Create\",\n                    \"remediationImpact\": \"First, users with administrative roles need to register for MFA. After each admin is registered, your policies then determine when they're prompted for the additional authenticaion factors.\"\n                }\n                {\n                    \"accountId\": 12345,\n                    \"maxScore\": 50,\n                    \"control\": \"AdminMFAV2\",\n                    \"description\": \"Requiring multi-factor authentication (MFA) for all administrative roles makes it harder for attackers to access accounts. Administrative roles have higher permissions than typical users. If any of those accounts are compromised, critical devices and data is open to attack.\\n  \",\n                    \"remediation\": \"Set up Azure Multi-Factor Authentication policies to protect devices and data that are accessible by your users with administrative roles<br><br>In the <a href=\\\"https://go.microsoft.com/fwlink/?linkid=2095010\\\" target=\\\"_blank\\\">Azure portal Conditional Access page</a><br>1. Select + <b>New Policy</b><br>2. Go to Assignments > Users and groups > Include > <b>Select users and groups</b> > check <b>Directory roles</b><br>3. At a minimum, select the following roles:<br><ul><li>Security administrator</li><li>Exchange service administrator</li><li>Global administrator</li><li>Conditional Access Administrator</li><li>SharePoint administrator</li><li>Helpdesk Administrator</li><li>Billing Administrator</li><li>User administrator</li><li>Authentication Administrator</li></ul><br>4. Go to Cloud apps or actions > Cloud apps > Include > select <b>All cloud apps</b> (and don't exclude any apps)<br>5. Under Access controls > Grant > select <b>Grant Access</b> > check <b>Require multi-factor authentication</b> (and nothing else)<br>6. Enable policy > On<br>7. Create\",\n                    \"remediationImpact\": \"First, users with administrative roles need to register for MFA. After each admin is registered, your policies then determine when they're prompted for the additional authenticaion factors.\"\n                }\n            ]\n        },\n        \"accountIdToNameMap\": {\n            \"3\": \"The Real Place\",\n            \"12345\": \"For Real Company\"\n        }\n    }\n]"
+						}
+					]
+				}
+			],
+			"description": "Customer API v3 allows for MSP-level roll up of data. This means queries can be done for the MSP account to get data across all their customers."
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "43JkfxpynvDnA3zLTpWemGmM",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "CUSTOMER_API_URL",
+			"value": "https://api-us.rocketcyber.com",
+			"type": "default"
+		}
+	]
+}

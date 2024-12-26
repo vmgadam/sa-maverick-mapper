@@ -1,0 +1,16 @@
+{
+  "eventTypes": [
+    "LOGIN_SUCCESS",
+    "LOGIN_FAILURE",
+    "USER_CREATED",
+    "USER_DELETED",
+    "USER_MODIFIED",
+    "ROLE_MODIFIED",
+    "PERMISSION_MODIFIED",
+    "POLICY_MODIFIED",
+    "SECURITY_ALERT",
+    "DATA_ACCESS",
+    "CONFIGURATION_CHANGE",
+    "CUSTOM"
+  ]
+} 
