@@ -61,6 +61,17 @@ class _EventsDisplayScreenState extends State<EventsDisplayScreen> {
   List<Map<String, dynamic>> rcEvents = [];
   List<Map<String, String>> fieldMappings = [];
   List<SaasField> saasFields = [];
+  List<String> sourceFields = [];
+  bool hasUnsavedChanges = false;
+  String _searchQuery = '';
+
+  List<String> get filteredSourceFields {
+    if (_searchQuery.isEmpty) return sourceFields;
+    return sourceFields
+        .where(
+            (field) => field.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
+  }
 
   @override
   void initState() {
@@ -136,6 +147,62 @@ class _EventsDisplayScreenState extends State<EventsDisplayScreen> {
     }
   }
 
+  List<String> _getAllNestedFields(List<dynamic> data, [String prefix = '']) {
+    final fields = <String>{};
+
+    for (var item in data) {
+      if (item is Map<String, dynamic>) {
+        item.forEach((key, value) {
+          final fieldName = prefix.isEmpty ? key : '$prefix.$key';
+          if (value is Map<String, dynamic>) {
+            fields.addAll(_getAllNestedFields([value], fieldName));
+          } else if (value is List) {
+            fields.addAll(_getAllNestedFields(value, fieldName));
+          } else {
+            fields.add(fieldName);
+          }
+        });
+      }
+    }
+
+    return fields.toList()..sort();
+  }
+
+  void _addMapping(String sourceField, String targetField) {
+    setState(() {
+      // Remove any existing mapping for the target field
+      fieldMappings.removeWhere((m) => m['target'] == targetField);
+
+      final mapping = {
+        'source': sourceField,
+        'target': targetField,
+        'isComplex': 'false',
+      };
+
+      fieldMappings.add(mapping);
+      hasUnsavedChanges = true;
+    });
+  }
+
+  Future<void> _saveAndReturn() async {
+    if (widget.selectedAppId != null && hasUnsavedChanges) {
+      final mappingState = Provider.of<MappingState>(context, listen: false);
+      final appName = mappingState.selectedAppName ?? 'Unknown App';
+
+      // Sort mappings to match the order in the mapper screen
+      final sortedMappings = List<Map<String, String>>.from(fieldMappings)
+        ..sort((a, b) => (a['target'] ?? '').compareTo(b['target'] ?? ''));
+
+      // Update state with sorted mappings
+      mappingState.setMappings(widget.selectedAppId!, appName, sortedMappings);
+
+      // Pop with result to update mapper screen
+      Navigator.of(context).pop({'mappingsUpdated': true});
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
+
   Future<void> _loadRcEvents() async {
     try {
       debugPrint('Loading RC events for app ID: ${widget.selectedAppId}');
@@ -148,10 +215,13 @@ class _EventsDisplayScreenState extends State<EventsDisplayScreen> {
         final events = eventsData['data'] as List;
         setState(() {
           rcEvents = events.map((e) => Map<String, dynamic>.from(e)).toList();
+          // Extract source fields from the first event
+          if (events.isNotEmpty) {
+            sourceFields = _getAllNestedFields([events.first]);
+          }
         });
         debugPrint('Loaded ${rcEvents.length} RC events');
-        debugPrint(
-            'First event: ${rcEvents.isNotEmpty ? json.encode(rcEvents.first) : "no events"}');
+        debugPrint('Loaded ${sourceFields.length} source fields');
       } else {
         debugPrint('No events data returned from API');
       }
@@ -207,14 +277,25 @@ class _EventsDisplayScreenState extends State<EventsDisplayScreen> {
     debugPrint(
         'Building UI with ${rcEvents.length} events and ${saasFields.length} fields');
 
-    return WillPopScope(
-      onWillPop: () async => false,
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        _saveAndReturn();
+      },
       child: Scaffold(
         appBar: AppBar(
           title: Text(mappingState.selectedAppName != null
               ? 'Mapped Events - ${mappingState.selectedAppName}'
               : 'Mapped Events'),
           actions: [
+            if (hasUnsavedChanges)
+              TextButton.icon(
+                icon: const Icon(Icons.save),
+                label: const Text('Save and Return'),
+                onPressed: _saveAndReturn,
+                style: TextButton.styleFrom(foregroundColor: Colors.white),
+              ),
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: isLoading ? null : _loadRcEvents,
@@ -303,6 +384,65 @@ class _EventsDisplayScreenState extends State<EventsDisplayScreen> {
                                                 );
                                                 final value = _evaluateMapping(
                                                     event, mapping);
+
+                                                if (value ==
+                                                        'No mapping defined' &&
+                                                    field.defaultMode !=
+                                                        'complex') {
+                                                  return DataCell(
+                                                    PopupMenuButton<String>(
+                                                      itemBuilder: (context) =>
+                                                          [
+                                                        PopupMenuItem(
+                                                          enabled: false,
+                                                          child: SearchBar(
+                                                            hintText:
+                                                                'Search fields...',
+                                                            onChanged: (query) {
+                                                              setState(() {
+                                                                _searchQuery =
+                                                                    query;
+                                                              });
+                                                            },
+                                                          ),
+                                                        ),
+                                                        ...filteredSourceFields
+                                                            .take(
+                                                                100) // Limit initial load
+                                                            .map((sourceField) {
+                                                          final sourceValue =
+                                                              _getNestedValue(
+                                                                  event,
+                                                                  sourceField);
+                                                          return PopupMenuItem(
+                                                            value: sourceField,
+                                                            child: Text(
+                                                              '$sourceField (${sourceValue.toString()})',
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                      ],
+                                                      onSelected:
+                                                          (sourceField) {
+                                                        _addMapping(sourceField,
+                                                            field.name);
+                                                      },
+                                                      child: Text(
+                                                        'Select field',
+                                                        style: TextStyle(
+                                                          color: field.required
+                                                              ? Colors.red
+                                                              : Colors.grey,
+                                                          fontStyle:
+                                                              FontStyle.italic,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
 
                                                 return DataCell(
                                                   Text(

@@ -183,11 +183,12 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
             orElse: () => {'name': 'Unknown App'},
           );
           Provider.of<MappingState>(context, listen: false)
-            .setSelectedApp(appId, appInfo['name']);
+              .setSelectedApp(appId, appInfo['name']);
 
           // Load existing mappings from state
-          final existingMappings = Provider.of<MappingState>(context, listen: false)
-            .getMappings(appId);
+          final existingMappings =
+              Provider.of<MappingState>(context, listen: false)
+                  .getMappings(appId);
           if (existingMappings.isNotEmpty) {
             setState(() {
               mappings.clear();
@@ -292,9 +293,9 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
           (app) => app['id'].toString() == selectedRcAppId,
           orElse: () => {'name': 'Unknown App'},
         );
-        
-        Provider.of<MappingState>(context, listen: false)
-          .setMappings(selectedRcAppId!, appInfo['name'], List.from(mappings));
+
+        Provider.of<MappingState>(context, listen: false).setMappings(
+            selectedRcAppId!, appInfo['name'], List.from(mappings));
       }
 
       if (isComplex) {
@@ -323,7 +324,7 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
 
       // Update state
       Provider.of<MappingState>(context, listen: false)
-        .setMappings(selectedRcAppId!, appInfo['name'], List.from(mappings));
+          .setMappings(selectedRcAppId!, appInfo['name'], List.from(mappings));
 
       setState(() {
         hasUnsavedChanges = false;
@@ -341,8 +342,8 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
           (app) => app['id'].toString() == selectedRcAppId,
           orElse: () => {'name': 'Unknown App'},
         );
-        Provider.of<MappingState>(context, listen: false)
-          .setMappings(selectedRcAppId!, appInfo['name'], List.from(mappings));
+        Provider.of<MappingState>(context, listen: false).setMappings(
+            selectedRcAppId!, appInfo['name'], List.from(mappings));
       }
     });
   }
@@ -1065,7 +1066,7 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
 
   void _exportAsCSV() {
     final csvContent = _generateCSVContent();
-    
+
     // Show the CSV in a dialog instead of downloading
     showDialog(
       context: context,
@@ -1087,7 +1088,7 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
   void _exportAsJSON() {
     final jsonData = _generateJsonPreview();
     final jsonString = const JsonEncoder.withIndent('  ').convert(jsonData);
-    
+
     // Show the JSON in a dialog instead of downloading
     showDialog(
       context: context,
@@ -1429,7 +1430,7 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
 
   String _generateCSVContent() {
     final csvRows = <String>[];
-    
+
     // Add header row
     csvRows.add(
         '"Source App","Source Field","Source Sample Data","Source Record ID",' +
@@ -1465,18 +1466,33 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.preview),
-            onPressed: selectedRcAppId == null ? null : () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EventsDisplayScreen(
-                    apiService: widget.apiService,
-                    saasAlertsApi: widget.saasAlertsApi,
-                    selectedAppId: selectedRcAppId,
-                  ),
-                ),
-              );
-            },
+            onPressed: selectedRcAppId == null
+                ? null
+                : () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EventsDisplayScreen(
+                          apiService: widget.apiService,
+                          saasAlertsApi: widget.saasAlertsApi,
+                          selectedAppId: selectedRcAppId,
+                        ),
+                      ),
+                    );
+
+                    if (result != null && result['mappingsUpdated'] == true) {
+                      // Reload mappings from state
+                      final mappingState =
+                          Provider.of<MappingState>(context, listen: false);
+                      final updatedMappings =
+                          mappingState.getMappings(selectedRcAppId!);
+                      setState(() {
+                        mappings.clear();
+                        mappings.addAll(updatedMappings);
+                        hasUnsavedChanges = false;
+                      });
+                    }
+                  },
             tooltip: 'View Mapped Events',
           ),
         ],

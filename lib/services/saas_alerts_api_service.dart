@@ -304,11 +304,11 @@ class SaasAlertsApiService {
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
         developer.log('Received ${jsonResponse.length} events');
-        developer.log('Response body: ${response.body}');
+        //developer.log('Response body: ${response.body}');
         return jsonResponse;
       } else {
         developer.log('Failed to load report events: ${response.statusCode}');
-        developer.log('Response body: ${response.body}');
+        //developer.log('Response body: ${response.body}');
         throw Exception('Failed to load report events: ${response.statusCode}');
       }
     } catch (e, stackTrace) {
@@ -403,7 +403,8 @@ class SaasAlertsApiService {
 
   Future<Map<String, dynamic>?> getFields() async {
     try {
-      final String jsonString = await rootBundle.loadString('config/fields.json');
+      final String jsonString =
+          await rootBundle.loadString('config/fields.json');
       return json.decode(jsonString) as Map<String, dynamic>;
     } catch (e) {
       debugPrint('Error loading SaaS Alerts fields: $e');

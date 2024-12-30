@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/api_service.dart';
 import 'services/saas_alerts_api_service.dart';
-import 'screens/maverick_mapper_screen.dart';
-import 'config/api_config.dart';
 import 'state/mapping_state.dart';
+import 'screens/mapper_selection_screen.dart';
+import 'config/api_config.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,19 +21,18 @@ class MyApp extends StatelessWidget {
     );
 
     final saasAlertsApi = SaasAlertsApiService(
-      apiKey:
-          'ZjhhYTk1MTctYzYzMS00MTQ1LTlhOWItNjQyZTdmMWI1ZWM5OjVOZHFyWTlHVEg4MDhERkpYaVVF',
+      apiKey: ApiConfig.saasAlertsApiKey,
     );
 
     return ChangeNotifierProvider(
-      create: (_) => MappingState(),
+      create: (context) => MappingState(),
       child: MaterialApp(
         title: 'Maverick Mapper',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
-        home: MaverickMapperScreen(
+        home: MapperSelectionScreen(
           apiService: apiService,
           saasAlertsApi: saasAlertsApi,
         ),

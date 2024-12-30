@@ -25,7 +25,7 @@ class ApiService {
       );
 
       developer.log('Response status: ${response.statusCode}');
-      developer.log('Response body: ${response.body}');
+      //developer.log('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -55,7 +55,7 @@ class ApiService {
       );
 
       developer.log('Response status: ${response.statusCode}');
-      developer.log('Response body: ${response.body}');
+      //developer.log('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
