@@ -722,32 +722,65 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Expanded(
-                                    child: TextField(
-                                      controller: jsonInputController,
-                                      expands: true,
-                                      maxLines: null,
-                                      minLines: null,
-                                      decoration: InputDecoration(
-                                        hintText: selectedJsonMode == 'elastic'
-                                            ? 'Paste Elastic Raw JSON event here...'
-                                            : 'Paste JSON here...',
-                                        border: const OutlineInputBorder(),
-                                        suffix: Align(
-                                          alignment: Alignment.bottomRight,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(
-                                                right: 8.0, bottom: 8.0),
-                                            child: ElevatedButton.icon(
-                                              onPressed: _parseJson,
-                                              icon: const Icon(Icons.check,
-                                                  size: 18),
-                                              label: const Text('Parse'),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        border: Border.all(
+                                            color: Colors.grey.shade300),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Expanded(
+                                            child: SingleChildScrollView(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(16.0),
+                                                child: TextFormField(
+                                                  controller:
+                                                      jsonInputController,
+                                                  maxLines: null,
+                                                  decoration:
+                                                      const InputDecoration
+                                                          .collapsed(
+                                                    hintText:
+                                                        'Paste JSON here...',
+                                                  ),
+                                                  style: const TextStyle(
+                                                    fontFamily: 'monospace',
+                                                    height: 1.5,
+                                                  ),
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        alignLabelWithHint: true,
-                                        contentPadding:
-                                            const EdgeInsets.all(16),
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              border: Border(
+                                                top: BorderSide(
+                                                    color:
+                                                        Colors.grey.shade300),
+                                              ),
+                                            ),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  ElevatedButton.icon(
+                                                    onPressed: _parseJson,
+                                                    icon: const Icon(
+                                                        Icons.check,
+                                                        size: 18),
+                                                    label: const Text('Parse'),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
