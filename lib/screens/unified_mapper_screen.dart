@@ -1202,74 +1202,65 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           Expanded(
             child: rcEvents.isEmpty
                 ? const Center(child: Text('Select an app to view events'))
-                : SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          DataTable(
-                            columns: _buildDataColumns(),
-                            rows: mappings.isEmpty
-                                ? [
-                                    DataRow(
-                                      cells: List.generate(
-                                        _buildDataColumns().length,
-                                        (index) => DataCell(
-                                          index == 0
-                                              ? Center(
-                                                  child: Text(
-                                                    'Map the first field to display data in table view',
-                                                    style: TextStyle(
-                                                      color: Colors.grey[600],
-                                                      fontStyle:
-                                                          FontStyle.italic,
-                                                    ),
-                                                  ),
-                                                )
-                                              : const Text(''),
+                : Stack(
+                    children: [
+                      SingleChildScrollView(
+                        scrollDirection: Axis.vertical,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              DataTable(
+                                columns: _buildDataColumns(),
+                                rows: rcEvents.map((event) {
+                                  final idMapping = mappings.firstWhere(
+                                    (m) => m['target'] == 'id',
+                                    orElse: () => {},
+                                  );
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(
+                                        Text(
+                                          _evaluateMapping(event, idMapping),
                                         ),
                                       ),
-                                    ),
-                                  ]
-                                : rcEvents.map((event) {
-                                    final idMapping = mappings.firstWhere(
-                                      (m) => m['target'] == 'id',
-                                      orElse: () => {},
-                                    );
-                                    return DataRow(
-                                      cells: [
-                                        DataCell(
+                                      ...standardFields
+                                          .where((field) => field.name != 'id')
+                                          .map((field) {
+                                        final mapping = mappings.firstWhere(
+                                          (m) => m['target'] == field.name,
+                                          orElse: () => {},
+                                        );
+                                        final value =
+                                            _evaluateMapping(event, mapping);
+                                        return DataCell(
                                           Text(
-                                            _evaluateMapping(event, idMapping),
+                                            value.isEmpty ? '' : value,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                        ),
-                                        ...standardFields
-                                            .where(
-                                                (field) => field.name != 'id')
-                                            .map((field) {
-                                          final mapping = mappings.firstWhere(
-                                            (m) => m['target'] == field.name,
-                                            orElse: () => {},
-                                          );
-                                          final value =
-                                              _evaluateMapping(event, mapping);
-                                          return DataCell(
-                                            Text(
-                                              value.isEmpty ? '' : value,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          );
-                                        }).toList(),
-                                      ],
-                                    );
-                                  }).toList(),
+                                        );
+                                      }).toList(),
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                      if (mappings.isEmpty)
+                        const Center(
+                          child: Text(
+                            'Map the first field to display data in table view',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
           ),
           const Divider(),
