@@ -34,6 +34,27 @@ class CustomScrollBehavior extends MaterialScrollBehavior {
   }
 
   @override
+  Widget buildScrollbar(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    switch (getPlatform(context)) {
+      case TargetPlatform.linux:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
+        return Scrollbar(
+          controller: details.controller,
+          child: child,
+        );
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
+      case TargetPlatform.iOS:
+        return child;
+    }
+  }
+
+  @override
   Widget buildOverscrollIndicator(
       BuildContext context, Widget child, ScrollableDetails details) {
     return child;
@@ -60,29 +81,19 @@ class SaasField {
   });
 
   factory SaasField.fromJson(String name, Map<String, dynamic> json) {
-    debugPrint('Parsing field $name:');
-    debugPrint('  Raw JSON: ${json.toString()}');
-
     // Parse displayOrder with explicit type checking
     int displayOrder = 999;
     final rawDisplayOrder = json['displayOrder'];
     if (rawDisplayOrder != null) {
-      debugPrint(
-          '  Found displayOrder: $rawDisplayOrder (${rawDisplayOrder.runtimeType})');
       if (rawDisplayOrder is int) {
         displayOrder = rawDisplayOrder;
       } else if (rawDisplayOrder is String) {
         try {
           displayOrder = int.parse(rawDisplayOrder);
         } catch (e) {
-          debugPrint('  Failed to parse displayOrder string: $e');
+          debugPrint('Error parsing displayOrder for $name: $e');
         }
-      } else {
-        debugPrint(
-            '  Unexpected displayOrder type: ${rawDisplayOrder.runtimeType}');
       }
-    } else {
-      debugPrint('  No displayOrder found, using default: 999');
     }
 
     // Parse other fields with explicit type checking
@@ -91,11 +102,6 @@ class SaasField {
     final type = json['type']?.toString() ?? 'string';
     final defaultMode = json['defaultMode']?.toString() ?? 'simple';
     final category = json['category']?.toString() ?? 'Standard';
-
-    debugPrint('  Final parsed values:');
-    debugPrint('    displayOrder: $displayOrder');
-    debugPrint('    required: $required');
-    debugPrint('    category: $category');
 
     return SaasField(
       name: name,
@@ -227,49 +233,17 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   List<SaasField> get standardFields {
-    debugPrint(
-        '\nGetting standard fields from ${saasFields.length} total fields');
-
-    // Show all fields before filtering
-    debugPrint('All fields before filtering:');
-    for (var field in saasFields) {
-      debugPrint(
-          '  ${field.name}: category=${field.category}, order=${field.displayOrder}');
-    }
-
-    final fields = saasFields.where((field) {
-      final isStandard = field.category == 'Standard';
-      debugPrint(
-          '  Checking ${field.name}: category=${field.category}, isStandard=$isStandard');
-      return isStandard;
-    }).toList();
-
-    debugPrint('\nFound ${fields.length} standard fields before sorting');
-    debugPrint('Standard fields before sorting:');
-    for (var field in fields) {
-      debugPrint('  ${field.name}: order=${field.displayOrder}');
-    }
-
+    final fields =
+        saasFields.where((field) => field.category == 'Standard').toList();
     fields.sort((a, b) {
       // First sort by displayOrder
-      final aOrder = a.displayOrder;
-      final bOrder = b.displayOrder;
-
-      if (aOrder != bOrder) {
-        debugPrint(
-            '  Sorting by order: ${a.name}($aOrder) vs ${b.name}($bOrder)');
-        return aOrder.compareTo(bOrder);
+      final orderComparison = a.displayOrder.compareTo(b.displayOrder);
+      if (orderComparison != 0) {
+        return orderComparison;
       }
       // Then sort alphabetically by name
-      debugPrint(
-          '  Sorting by name: ${a.name} vs ${b.name} (same order: $aOrder)');
       return a.name.compareTo(b.name);
     });
-
-    debugPrint('\nFinal sorted standard fields:');
-    for (var field in fields) {
-      debugPrint('  ${field.name}: order=${field.displayOrder}');
-    }
     return fields;
   }
 
@@ -300,32 +274,14 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
   Future<void> _loadSaasFields() async {
     try {
-      debugPrint('Loading SaaS fields from SaasAlertsApiService');
-
       final jsonData = await widget.saasAlertsApi.getFields();
       if (jsonData == null) {
         throw Exception('Failed to load fields from SaasAlertsApiService');
       }
 
       final fields = jsonData['fields'] as Map<String, dynamic>;
-
-      debugPrint('\nFound ${fields.length} fields in configuration');
-      debugPrint('All field names in JSON: ${fields.keys.join(', ')}');
-
-      // Verify each field in the JSON
-      fields.forEach((key, value) {
-        debugPrint('\nVerifying field $key:');
-        debugPrint('  Raw value: ${json.encode(value)}');
-        debugPrint('  displayOrder: ${value['displayOrder']}');
-        debugPrint('  category: ${value['category']}');
-      });
-
       final loadedFields = fields.entries.map((e) {
-        final field = SaasField.fromJson(e.key, e.value);
-        debugPrint('\nLoaded field ${field.name}:');
-        debugPrint('  category: ${field.category}');
-        debugPrint('  displayOrder: ${field.displayOrder}');
-        return field;
+        return SaasField.fromJson(e.key, e.value);
       }).toList();
 
       setState(() {
@@ -368,12 +324,35 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           final existingMappings =
               Provider.of<MappingState>(context, listen: false)
                   .getMappings(appId);
-          if (existingMappings.isNotEmpty) {
-            setState(() {
-              mappings.clear();
-              mappings.addAll(existingMappings);
-            });
-          }
+
+          // Start with existing mappings
+          setState(() {
+            mappings.clear();
+            mappings.addAll(existingMappings);
+
+            // Auto-map matching fields that aren't already mapped
+            for (var sourceField in rcFields) {
+              // Check if this source field matches any unmapped SaaS Alerts field
+              for (var saasField in saasFields) {
+                if (saasField.name == sourceField &&
+                    !mappings.any((m) => m['target'] == saasField.name)) {
+                  debugPrint('Auto-mapping matching field: ${saasField.name}');
+                  mappings.add({
+                    'source': sourceField,
+                    'target': saasField.name,
+                    'isComplex': 'false',
+                  });
+                }
+              }
+            }
+
+            // If mappings were added, save them
+            if (mappings.length > existingMappings.length) {
+              hasUnsavedChanges = true;
+              Provider.of<MappingState>(context, listen: false)
+                  .setMappings(appId, appInfo['name'], List.from(mappings));
+            }
+          });
         }
       }
     } catch (e) {
@@ -656,6 +635,24 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           rcEvents = [currentRcEvent];
           selectedRcAppId = null; // Clear selected app
 
+          // Auto-map matching fields that aren't already mapped
+          for (var sourceField in rcFields) {
+            for (var saasField in saasFields) {
+              final isMatching = saasField.name == sourceField;
+              final isAlreadyMapped =
+                  mappings.any((m) => m['target'] == saasField.name);
+
+              if (isMatching && !isAlreadyMapped) {
+                mappings.add({
+                  'source': sourceField,
+                  'target': saasField.name,
+                  'isComplex': 'false',
+                });
+                hasUnsavedChanges = true;
+              }
+            }
+          }
+
           // Auto-map special fields if they exist
           if (jsonData['_source']?['product']?['endpoint']?['id'] != null) {
             configFields['endpointId'] =
@@ -669,6 +666,24 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           rcFields = _getAllNestedFields([currentRcEvent]);
           rcEvents = [currentRcEvent];
           selectedRcAppId = null; // Clear selected app
+
+          // Auto-map matching fields that aren't already mapped
+          for (var sourceField in rcFields) {
+            for (var saasField in saasFields) {
+              final isMatching = saasField.name == sourceField;
+              final isAlreadyMapped =
+                  mappings.any((m) => m['target'] == saasField.name);
+
+              if (isMatching && !isAlreadyMapped) {
+                mappings.add({
+                  'source': sourceField,
+                  'target': saasField.name,
+                  'isComplex': 'false',
+                });
+                hasUnsavedChanges = true;
+              }
+            }
+          }
         });
       }
     } catch (e) {
@@ -1240,14 +1255,16 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                         behavior: CustomScrollBehavior(),
                         child: SingleChildScrollView(
                           scrollDirection: Axis.vertical,
-                          physics: const ClampingScrollPhysics(),
+                          physics: const AlwaysScrollableScrollPhysics(),
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
-                            physics: const ClampingScrollPhysics(),
+                            physics: const AlwaysScrollableScrollPhysics(),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 DataTable(
+                                  horizontalMargin: 16,
+                                  columnSpacing: 16,
                                   columns: _buildDataColumns(),
                                   rows: rcEvents.map((event) {
                                     return DataRow(

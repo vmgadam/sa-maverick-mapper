@@ -212,10 +212,30 @@ class _EventsDisplayScreenState extends State<EventsDisplayScreen> {
           // Extract source fields from the first event
           if (events.isNotEmpty) {
             sourceFields = _getAllNestedFields([events.first]);
+
+            // Auto-map matching fields that aren't already mapped
+            for (var sourceField in sourceFields) {
+              // Check if this source field matches any unmapped SaaS Alerts field
+              for (var saasField in saasFields) {
+                if (saasField.name == sourceField &&
+                    !fieldMappings.any((m) => m['target'] == saasField.name)) {
+                  debugPrint('Auto-mapping matching field: ${saasField.name}');
+                  fieldMappings.add({
+                    'source': sourceField,
+                    'target': saasField.name,
+                    'isComplex': 'false',
+                  });
+                  hasUnsavedChanges = true;
+                }
+              }
+            }
           }
         });
         debugPrint('Loaded ${rcEvents.length} RC events');
         debugPrint('Loaded ${sourceFields.length} source fields');
+        if (hasUnsavedChanges) {
+          debugPrint('Added automatic mappings for matching fields');
+        }
       } else {
         debugPrint('No events data returned from API');
       }
