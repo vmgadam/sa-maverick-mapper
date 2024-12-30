@@ -3,7 +3,7 @@
 #### **Overall Requirements**
 You are an expert developer. You will look over all existing codebase to make your proposal prior to moving forward. You will utilize existing, popular, well-maintained packages if required. You will remember that this is an MVP and no database work, authentication, or anything fancy needs to be implemented. In the event that state management is required, use Riverpods.
 
-You will save all progress that you make often and for each major function inside a file called `ai/changes.md` so that we can always know where we left off. Also, keep `ai/specs.md` in your memory at all times so you remember what you are building. Also, review `ai/fields.md` for a list of SaaS Alerts fields. The Rocket Cyber Postman collection is located in `Kaseya - RocketCyber.postman_collection.json`.
+You will save all progress that you make often and for each major function inside a file called `ai/changes.md` so that we can always know where we left off. Also, keep `ai/specs.md` in your memory at all times so you remember what you are building. Also, review `config/fields.md` for a list of SaaS Alerts fields. The Rocket Cyber Postman collection is located in `data/Kaseya - RocketCyber.postman_collection.json`.
 
 #### **Purpose**
 The Maverick Mapper mini-application is an internal tool designed to map data between two disparate systems. It facilitates importing data, parsing it, and mapping source fields to SaaS Alerts fields with a user-friendly drag-and-drop interface. The tool will prioritize ease of use, maintainability, and straightforward functionality over aesthetic design. It will be a standalone screen in the application and the default screen at launch.
