@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../state/mapping_state.dart';
 import 'package:flutter/services.dart';
 import '../widgets/complex_mapping_editor.dart';
+import '../widgets/json_preview_widget.dart';
+import '../widgets/configuration_fields_widget.dart';
 
 class SaasField {
   final String name;
@@ -82,6 +84,15 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     'eventType': 'EVENT',
   };
 
+  // Add event types state
+  List<String> eventTypes = [
+    'LOGIN_SUCCESS',
+    'EVENT',
+    'ALERT'
+  ]; // Default event types
+  final TextEditingController eventTypeController =
+      TextEditingController(text: 'EVENT');
+
   @override
   void initState() {
     super.initState();
@@ -94,6 +105,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     sourceSearchController.dispose();
     saasSearchController.dispose();
     jsonInputController.dispose();
+    eventTypeController.dispose();
     super.dispose();
   }
 
@@ -395,6 +407,65 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     );
   }
 
+  // Add this method to generate JSON preview
+  Map<String, dynamic> _generateJsonPreview() {
+    final mappingSchema = <String, dynamic>{};
+    for (var mapping in mappings) {
+      if (mapping['isComplex'] == 'true') {
+        mappingSchema[mapping['target']!] = mapping['jsonataExpr'] ?? '';
+      } else {
+        mappingSchema[mapping['target']!] = mapping['source'];
+      }
+    }
+
+    return {
+      'accountKey': {'field': 'data.id', 'type': 'id'},
+      'dateKeyField': 'data.createdAt',
+      'endpointId': int.tryParse(configFields['endpointId'] ?? '0') ?? 0,
+      'endpointName': 'events',
+      'eventFilter':
+          '{\n  "query": {\n    "bool": {\n      "must": [],\n      "filter": [],\n      "should": [],\n      "must_not": []\n    }\n  }\n}',
+      'eventType': configFields['eventType'] ?? 'EVENT',
+      'eventTypeKey': configFields['eventType'] ?? 'EVENT',
+      'productRef': {
+        '__ref__': configFields['productRef'] ?? 'products/default'
+      },
+      'userKeyField': 'data.userId',
+      'schema': mappingSchema,
+    };
+  }
+
+  // Add this method to show JSON export dialog
+  void _showJsonExportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Current Mappings JSON'),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.6,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: JsonPreviewWidget(
+            jsonData: _generateJsonPreview(),
+            showExportButton: false,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Add this method to handle configuration field changes
+  void _handleConfigFieldChange(String key, String value) {
+    setState(() {
+      configFields[key] = value;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final sortedMappings = List<Map<String, dynamic>>.from(mappings)
@@ -525,9 +596,19 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            'Current Mappings',
-                            style: Theme.of(context).textTheme.titleMedium,
+                          child: Row(
+                            children: [
+                              Text(
+                                'Current Mappings',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.visibility, size: 20),
+                                onPressed: _showJsonExportDialog,
+                                tooltip: 'View JSON',
+                              ),
+                            ],
                           ),
                         ),
                         Expanded(
@@ -872,6 +953,14 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                     ),
                   ),
           ),
+          const Divider(),
+          ConfigurationFieldsWidget(
+            configFields: configFields,
+            eventTypes: eventTypes,
+            eventTypeController: eventTypeController,
+            onConfigFieldChanged: _handleConfigFieldChange,
+          ),
+          const Divider(),
         ],
       ),
     );

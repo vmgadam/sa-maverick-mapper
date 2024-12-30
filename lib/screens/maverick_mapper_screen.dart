@@ -11,6 +11,8 @@ import 'events_display_screen.dart';
 import 'package:provider/provider.dart';
 import '../state/mapping_state.dart';
 import '../widgets/complex_mapping_editor.dart';
+import '../widgets/json_preview_widget.dart';
+import '../widgets/configuration_fields_widget.dart';
 
 /// SaasField: Represents a field in the SaaS Alerts configuration.
 /// Each field has a name, required status, description, type, and optional condition.
@@ -275,6 +277,11 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
   }
 
   void _addMapping(String sourceField, String targetField, bool isComplex) {
+    if (sourceField.isEmpty || targetField.isEmpty) {
+      debugPrint('Invalid mapping: source or target field is empty');
+      return;
+    }
+
     setState(() {
       // Remove any existing mapping for the target field
       mappings.removeWhere((m) => m['target'] == targetField);
@@ -283,6 +290,8 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
         'source': sourceField,
         'target': targetField,
         'isComplex': isComplex.toString(),
+        'jsonataExpr': '', // Initialize with empty string for complex mappings
+        'tokens': '[]', // Initialize with empty array for complex mappings
       };
 
       mappings.add(mapping);
@@ -292,11 +301,13 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
       if (selectedRcAppId != null) {
         final appInfo = rcApps.firstWhere(
           (app) => app['id'].toString() == selectedRcAppId,
-          orElse: () => {'name': 'Unknown App'},
+          orElse: () => {'name': 'Unknown App', 'id': selectedRcAppId},
         );
 
         Provider.of<MappingState>(context, listen: false).setMappings(
-            selectedRcAppId!, appInfo['name'], List.from(mappings));
+            selectedRcAppId!,
+            appInfo['name'] ?? 'Unknown App',
+            List.from(mappings));
       }
 
       if (isComplex) {
@@ -388,6 +399,11 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
   }
 
   Widget _buildDraggableField(String field, bool isSource) {
+    if (field.isEmpty) {
+      debugPrint('Invalid field: empty field name');
+      return const SizedBox.shrink();
+    }
+
     final usageCount = sourceFieldUsage[field] ?? 0;
     final isUsed = usageCount > 0;
     final value = _getNestedValue(currentRcEvent, field)?.toString() ?? '';
@@ -465,6 +481,11 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
   }
 
   Widget _buildDropTarget(SaasField field) {
+    if (field.name.isEmpty) {
+      debugPrint('Invalid SaaS field: empty field name');
+      return const SizedBox.shrink();
+    }
+
     final isMapped = mappings.any((m) => m['target'] == field.name);
     final isComplex = field.defaultMode == 'complex';
 
@@ -501,10 +522,11 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(field.name),
-                        Text(
-                          field.description,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
+                        if (field.description.isNotEmpty)
+                          Text(
+                            field.description,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                       ],
                     ),
                   ),
@@ -554,10 +576,15 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
         );
       },
       onWillAccept: (data) {
-        return data != null && data['isSource'] == true && !isMapped;
+        return data != null &&
+            data['isSource'] == true &&
+            data['field'] != null &&
+            !isMapped;
       },
       onAccept: (data) {
-        _addMapping(data['field'], field.name, isComplex);
+        if (data['field'] != null) {
+          _addMapping(data['field'], field.name, isComplex);
+        }
       },
     );
   }
@@ -864,168 +891,30 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
 
   // Update preview widget to use the generated JSON
   Widget _buildJsonPreview() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.code, size: 16),
-            const SizedBox(width: 8),
-            Text(
-              'JSON Preview',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const Spacer(),
-            if (mappings.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.copy),
-                onPressed: _exportAsJSON,
-                tooltip: 'Export JSON',
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Expanded(
-          child: SingleChildScrollView(
-            child: SelectableText(
-              const JsonEncoder.withIndent('  ')
-                  .convert(_generateJsonPreview()),
-            ),
-          ),
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: JsonPreviewWidget(
+        jsonData: _generateJsonPreview(),
+        onExport: mappings.isNotEmpty ? _exportAsJSON : null,
+      ),
     );
   }
 
   // Configuration section widget
   Widget _buildConfigSection() {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Configuration Fields',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Product Reference',
-                    hintText: 'products/default',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  controller: TextEditingController(
-                    text: configFields['productRef'],
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      configFields['productRef'] = value;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Endpoint ID',
-                    hintText: '0',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  controller: TextEditingController(
-                    text: configFields['endpointId'],
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      configFields['endpointId'] = value;
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Event Type with dropdown and custom input
-          Row(
-            children: [
-              Expanded(
-                child: isCustomEventType
-                    ? TextField(
-                        decoration: const InputDecoration(
-                          labelText: 'Custom Event Type',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                        controller: eventTypeController,
-                        onChanged: (value) {
-                          setState(() {
-                            configFields['eventType'] = value;
-                          });
-                        },
-                      )
-                    : DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
-                          labelText: 'Event Type',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                        value: eventTypes.contains(configFields['eventType'])
-                            ? configFields['eventType']
-                            : eventTypes.first,
-                        items: [
-                          ...eventTypes.map((type) {
-                            return DropdownMenuItem<String>(
-                              value: type,
-                              child: Text(type),
-                            );
-                          }),
-                          const DropdownMenuItem<String>(
-                            value: 'CUSTOM',
-                            child: Text('CUSTOM'),
-                          ),
-                        ],
-                        onChanged: (String? value) {
-                          setState(() {
-                            if (value == 'CUSTOM') {
-                              isCustomEventType = true;
-                              eventTypeController.text = '';
-                              configFields['eventType'] = '';
-                            } else if (value != null) {
-                              isCustomEventType = false;
-                              configFields['eventType'] = value;
-                              eventTypeController.text = value;
-                            }
-                          });
-                        },
-                      ),
-              ),
-              if (isCustomEventType)
-                IconButton(
-                  icon: const Icon(Icons.list),
-                  tooltip: 'Show predefined types',
-                  onPressed: () {
-                    setState(() {
-                      isCustomEventType = false;
-                      configFields['eventType'] = eventTypes.first;
-                      eventTypeController.text = eventTypes.first;
-                    });
-                  },
-                ),
-            ],
-          ),
-        ],
-      ),
+    return ConfigurationFieldsWidget(
+      configFields: configFields,
+      eventTypes: eventTypes,
+      eventTypeController: eventTypeController,
+      onConfigFieldChanged: (key, value) {
+        setState(() {
+          configFields[key] = value;
+        });
+      },
     );
   }
 
@@ -1198,9 +1087,45 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'Mappings',
-                      style: Theme.of(context).textTheme.titleMedium,
+                    child: Row(
+                      children: [
+                        Text(
+                          'Mappings',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.visibility, size: 20),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Current Mappings JSON'),
+                                content: SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.6,
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.6,
+                                  child: JsonPreviewWidget(
+                                    jsonData: _generateJsonPreview(),
+                                    onExport: mappings.isNotEmpty
+                                        ? _exportAsJSON
+                                        : null,
+                                    showExportButton: true,
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Close'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          tooltip: 'View JSON',
+                        ),
+                      ],
                     ),
                   ),
                   Expanded(
