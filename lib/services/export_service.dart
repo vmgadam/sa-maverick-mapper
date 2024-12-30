@@ -34,7 +34,10 @@ class ExportService {
           required: false,
           description: '',
           type: 'string',
+          defaultMode: 'simple',
           category: 'Standard',
+          displayOrder: 999,
+          options: null,
         ),
       );
 

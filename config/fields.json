@@ -19,10 +19,15 @@
     "alertStatus": {
       "required": true,
       "description": "Status of the alert",
-      "type": "string",
+      "type": "picklist",
       "defaultMode": "simple",
-      "category": "Standard",
-      "displayOrder": 2
+      "category": "Configuration",
+      "displayOrder": 2,
+      "options": [
+        "Low",
+        "Medium",
+        "Critical"
+      ]
     },
     "ip": {
       "required": true,
@@ -140,8 +145,22 @@
     "eventType": {
       "required": true,
       "description": "Type of event (e.g., 'LOGIN_SUCCESS')",
-      "type": "string",
-      "category": "Configuration"
+      "type": "picklist",
+      "category": "Configuration",
+      "options": [
+        "LOGIN_SUCCESS",
+        "LOGIN_FAILURE",
+        "USER_CREATED",
+        "USER_DELETED",
+        "USER_MODIFIED",
+        "ROLE_MODIFIED",
+        "PERMISSION_MODIFIED",
+        "POLICY_MODIFIED",
+        "SECURITY_ALERT",
+        "DATA_ACCESS",
+        "CONFIGURATION_CHANGE",
+        "CUSTOM"
+      ]
     },
     "eventTypeKey": {
       "required": true,

@@ -69,6 +69,7 @@ class SaasField {
   final String defaultMode;
   final String category;
   final int displayOrder;
+  final List<String>? options;
 
   SaasField({
     required this.name,
@@ -78,9 +79,13 @@ class SaasField {
     this.defaultMode = 'simple',
     required this.category,
     this.displayOrder = 999,
+    this.options,
   });
 
   factory SaasField.fromJson(String name, Map<String, dynamic> json) {
+    debugPrint('\nParsing field $name:');
+    debugPrint('  Raw JSON: ${json.toString()}');
+
     // Parse displayOrder with explicit type checking
     int displayOrder = 999;
     final rawDisplayOrder = json['displayOrder'];
@@ -99,9 +104,29 @@ class SaasField {
     // Parse other fields with explicit type checking
     final required = json['required'] == true;
     final description = json['description']?.toString() ?? '';
-    final type = json['type']?.toString() ?? 'string';
+    final type = json['type']?.toString().toLowerCase() ?? 'string';
     final defaultMode = json['defaultMode']?.toString() ?? 'simple';
     final category = json['category']?.toString() ?? 'Standard';
+
+    // Parse options for picklist type
+    List<String>? options;
+    if (type == 'picklist') {
+      debugPrint('  Found picklist field with options:');
+      try {
+        if (json['options'] is List) {
+          options = (json['options'] as List).map((e) => e.toString()).toList();
+          debugPrint('    ${options?.join(', ')}');
+        } else {
+          debugPrint('  Warning: options field is not a List');
+        }
+      } catch (e) {
+        debugPrint('  Error parsing options: $e');
+      }
+    }
+
+    debugPrint('  Parsed values:');
+    debugPrint('    type: $type');
+    debugPrint('    options: $options');
 
     return SaasField(
       name: name,
@@ -111,6 +136,7 @@ class SaasField {
       defaultMode: defaultMode,
       category: category,
       displayOrder: displayOrder,
+      options: options,
     );
   }
 }
@@ -158,20 +184,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   String saasSearchQuery = '';
 
   // Configuration fields state
-  final Map<String, String> configFields = {
-    'productRef': 'products/default',
-    'endpointId': '0',
-    'eventType': 'EVENT',
-  };
-
-  // Add event types state
-  List<String> eventTypes = [
-    'LOGIN_SUCCESS',
-    'EVENT',
-    'ALERT'
-  ]; // Default event types
-  final TextEditingController eventTypeController =
-      TextEditingController(text: 'EVENT');
+  final Map<String, String> configFields = {};
 
   // Input mode state
   String selectedInputMode = 'app';
@@ -189,7 +202,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     sourceSearchController.dispose();
     saasSearchController.dispose();
     jsonInputController.dispose();
-    eventTypeController.dispose();
     super.dispose();
   }
 
@@ -248,9 +260,63 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   List<SaasField> get configurationFields {
-    return saasFields
-        .where((field) => field.category == 'Configuration')
-        .toList();
+    debugPrint('\n=== Getting configuration fields ===');
+    final fields = saasFields.where((field) {
+      final isConfig = field.category == 'Configuration';
+      if (isConfig) {
+        debugPrint('\nFound configuration field: ${field.name}');
+        debugPrint('  type: ${field.type}');
+        debugPrint('  options: ${field.options}');
+      }
+      return isConfig;
+    }).toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+
+    debugPrint('\nTotal configuration fields found: ${fields.length}');
+    return fields;
+  }
+
+  // Add this method to convert SaasField to Map for the widget
+  List<Map<String, dynamic>> get configurationFieldsForWidget {
+    debugPrint('\n=== Preparing configuration fields for widget ===');
+
+    debugPrint('\nConfiguration fields before conversion:');
+    final configFields = configurationFields;
+    for (var field in configFields) {
+      debugPrint('\nField: ${field.name}');
+      debugPrint('  type: ${field.type}');
+      debugPrint('  options: ${field.options}');
+    }
+
+    final fields = configFields.map((field) {
+      debugPrint('\nConverting field ${field.name} to widget format:');
+      debugPrint('  Original field data:');
+      debugPrint('    type: ${field.type}');
+      debugPrint('    options: ${field.options}');
+
+      final Map<String, dynamic> fieldData = {
+        'name': field.name,
+        'required': field.required,
+        'description': field.description,
+        'type': field.type,
+        'options': field.options,
+      };
+
+      debugPrint('  Converted to widget data:');
+      debugPrint('    ${json.encode(fieldData)}');
+
+      return fieldData;
+    }).toList();
+
+    debugPrint('\n=== Final configuration fields ===');
+    debugPrint('Total fields: ${fields.length}');
+    for (var field in fields) {
+      debugPrint('\nField: ${field['name']}');
+      debugPrint('  type: ${field['type']}');
+      debugPrint('  options: ${field['options']}');
+    }
+
+    return fields;
   }
 
   // Loading functions
@@ -274,20 +340,65 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
   Future<void> _loadSaasFields() async {
     try {
+      debugPrint('\n=== Loading SaaS fields ===');
       final jsonData = await widget.saasAlertsApi.getFields();
       if (jsonData == null) {
         throw Exception('Failed to load fields from SaasAlertsApiService');
       }
 
+      debugPrint('\nRaw fields data:');
+      debugPrint(json.encode(jsonData));
+
       final fields = jsonData['fields'] as Map<String, dynamic>;
+
+      // Debug logging for raw field data
+      fields.forEach((key, value) {
+        debugPrint('\nRaw field data for $key:');
+        debugPrint('  type: ${value['type']}');
+        debugPrint('  category: ${value['category']}');
+        if (value['type'] == 'picklist') {
+          debugPrint('  Found picklist field!');
+          debugPrint('  options: ${json.encode(value['options'])}');
+        }
+      });
+
+      debugPrint('\n=== Parsing fields ===');
       final loadedFields = fields.entries.map((e) {
-        return SaasField.fromJson(e.key, e.value);
+        debugPrint('\nParsing field: ${e.key}');
+        final field = SaasField.fromJson(e.key, e.value);
+        debugPrint('  Parsed type: ${field.type}');
+        debugPrint('  Parsed options: ${field.options}');
+        return field;
       }).toList();
 
+      debugPrint('\n=== Setting state ===');
       setState(() {
         saasFields = loadedFields;
         isLoadingSaasFields = false;
+
+        // Update configFields with default values from picklists
+        for (var field in loadedFields) {
+          if (field.type == 'picklist' &&
+              field.options != null &&
+              field.options!.isNotEmpty) {
+            debugPrint(
+                '\nSetting default value for picklist field ${field.name}:');
+            debugPrint('  options: ${field.options}');
+            debugPrint('  setting to: ${field.options!.first}');
+            configFields[field.name] = field.options!.first;
+          }
+        }
       });
+
+      debugPrint('\n=== Verifying configuration fields ===');
+      final configurationFields = loadedFields
+          .where((field) => field.category == 'Configuration')
+          .toList();
+      for (var field in configurationFields) {
+        debugPrint('\nConfiguration field: ${field.name}');
+        debugPrint('  type: ${field.type}');
+        debugPrint('  options: ${field.options}');
+      }
     } catch (e, stackTrace) {
       debugPrint('Error loading SaaS fields: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -1307,9 +1418,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           const Divider(),
           ConfigurationFieldsWidget(
             configFields: configFields,
-            eventTypes: eventTypes,
-            eventTypeController: eventTypeController,
             onConfigFieldChanged: _handleConfigFieldChange,
+            configurationFields: configurationFieldsForWidget,
           ),
           const Divider(),
         ],

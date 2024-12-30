@@ -35,3 +35,40 @@
 ## Configuration
 - Updated `fields.json` with proper field definitions and display orders
 - Added auto-mapping functionality for special fields in Elastic Raw format 
+
+## Current Status of the Maverick Mapper Project
+
+### Overview
+The Maverick Mapper is a Flutter application designed to facilitate field mapping between RocketCyber events and SaaS Alerts. It provides a user-friendly interface for creating, managing, and exporting field mappings that conform to the SaaS Alerts mapping configuration format.
+
+### Key Features Implemented
+- **Source Data Input**: Supports API integration and JSON input for RocketCyber events.
+- **Field Mapping**: Drag-and-drop interface for mapping source fields to SaaS Alerts fields.
+- **Configuration Fields**: Handles configuration fields with support for picklist types.
+- **Export Options**: Provides CSV and JSON export functionality.
+- **Complex Mapping**: Includes a visual JSONata expression builder for complex mappings.
+- **State Management**: Utilizes local state for managing mappings and selections.
+
+### Recent Enhancements
+- **UI Refinements**: Improved table message placement and field mapping display.
+- **Complex Mapping System**: Enhanced token management and expression building.
+- **Field Loading and Sorting**: Ensured all fields from fields.json are loaded and sorted by displayOrder.
+- **Scroll Behavior Improvements**: Fixed horizontal scroll interference with browser navigation.
+
+### Pending Features
+- JSONata integration for field transformations.
+- Validation for required fields.
+- Advanced mapping features.
+
+### Next Steps
+1. Fix error handling in complex mapping editor.
+2. Add JSONata expression validation.
+3. Add preview of transformed values.
+4. Implement mapping import/export with complex expressions.
+
+### Developer Notes
+- The application follows a modular structure for easy maintenance.
+- Field definitions are centralized in config/fields.json.
+- Export formats strictly follow SaaS Alerts specifications.
+- UI components are designed for extensibility.
+- Search and filter functions are optimized for performance. 
