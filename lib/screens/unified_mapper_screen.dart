@@ -5,6 +5,7 @@ import '../services/saas_alerts_api_service.dart';
 import 'package:provider/provider.dart';
 import '../state/mapping_state.dart';
 import 'package:flutter/services.dart';
+import '../widgets/complex_mapping_editor.dart';
 
 class SaasField {
   final String name;
@@ -60,14 +61,13 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   bool isLoadingSaasFields = true;
 
   // Mapping state
-  List<Map<String, String>> mappings = [];
+  List<Map<String, dynamic>> mappings = [];
   bool hasUnsavedChanges = false;
   final TextEditingController jsonInputController = TextEditingController();
   bool showJsonInput = false;
 
   // Events display state
   List<Map<String, dynamic>> rcEvents = [];
-  String _searchQuery = '';
 
   // Search functionality
   final TextEditingController sourceSearchController = TextEditingController();
@@ -101,8 +101,10 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   Map<String, int> get sourceFieldUsage {
     final usage = <String, int>{};
     for (final mapping in mappings) {
-      final sourceField = mapping['source']!;
-      usage[sourceField] = (usage[sourceField] ?? 0) + 1;
+      if (mapping['isComplex'] != 'true' && mapping['source'] != null) {
+        final sourceField = mapping['source'] as String;
+        usage[sourceField] = (usage[sourceField] ?? 0) + 1;
+      }
     }
     return usage;
   }
@@ -227,15 +229,22 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   // Mapping functions
   void _addMapping(String sourceField, String targetField, bool isComplex) {
     setState(() {
+      // Remove any existing mapping for this target field
       mappings.removeWhere((m) => m['target'] == targetField);
+
+      // Create the new mapping - always create a simple mapping when using the dropdown
       final mapping = {
         'source': sourceField,
         'target': targetField,
-        'isComplex': isComplex.toString(),
+        'isComplex': 'false',
+        'tokens': '[]',
+        'jsonataExpr': '',
       };
+
       mappings.add(mapping);
       hasUnsavedChanges = true;
 
+      // Update state provider
       if (selectedRcAppId != null) {
         final appInfo = rcApps.firstWhere(
           (app) => app['id'].toString() == selectedRcAppId,
@@ -247,9 +256,9 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     });
   }
 
-  void _removeMapping(int index) {
+  void _removeMapping(String fieldName) {
     setState(() {
-      mappings.removeAt(index);
+      mappings.removeWhere((m) => m['target'] == fieldName);
       if (selectedRcAppId != null) {
         final appInfo = rcApps.firstWhere(
           (app) => app['id'].toString() == selectedRcAppId,
@@ -258,6 +267,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
         Provider.of<MappingState>(context, listen: false).setMappings(
             selectedRcAppId!, appInfo['name'], List.from(mappings));
       }
+      hasUnsavedChanges = true;
     });
   }
 
@@ -292,24 +302,102 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   String _evaluateMapping(
-      Map<String, dynamic> rcEvent, Map<String, String> mapping) {
-    if (mapping.isEmpty) return 'No mapping defined';
+      Map<String, dynamic> rcEvent, Map<String, dynamic> mapping) {
+    if (mapping.isEmpty) return '';
 
-    final isComplex = mapping['isComplex'] == 'true';
-    final jsonataExpr = mapping['jsonataExpr'];
-    final rcField = mapping['source'];
+    try {
+      if (mapping['isComplex'] == 'true' && mapping['tokens'] != null) {
+        final tokens = List<Map<String, String>>.from(json
+            .decode(mapping['tokens']!)
+            .map((t) => Map<String, String>.from(t)));
 
-    if (isComplex && jsonataExpr != null) {
-      return 'JSONata: $jsonataExpr';
-    } else if (rcField != null && rcField.isNotEmpty) {
-      return _getNestedValue(rcEvent, rcField);
+        final parts = tokens.map((token) {
+          if (token['type'] == 'field') {
+            final fieldPath = token['value']!.substring(1); // Remove $ prefix
+            return _getNestedValue(rcEvent, fieldPath)?.toString() ?? '';
+          } else if (token['type'] == 'text') {
+            // Remove the quotes from the text value for preview
+            return token['value']!.substring(1, token['value']!.length - 1);
+          }
+          return '';
+        }).toList();
+
+        return parts.join('');
+      } else if (mapping['source'] != null && mapping['source']!.isNotEmpty) {
+        return _getNestedValue(rcEvent, mapping['source']!) ?? '';
+      }
+      return '';
+    } catch (e) {
+      debugPrint('Error evaluating mapping: $e');
+      return '';
     }
-    return 'No mapping defined';
+  }
+
+  void _showComplexMappingEditor(SaasField field) {
+    // Get existing tokens if this is an edit
+    List<Map<String, String>> initialTokens = [];
+    final existingMapping = mappings.firstWhere(
+      (m) => m['target'] == field.name,
+      orElse: () => {},
+    );
+
+    if (existingMapping.isNotEmpty && existingMapping['tokens'] != null) {
+      try {
+        initialTokens = List<Map<String, String>>.from(json
+            .decode(existingMapping['tokens']!)
+            .map((t) => Map<String, String>.from(t)));
+      } catch (e) {
+        debugPrint('Error parsing tokens: $e');
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Complex Mapping for ${field.name}'),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.6,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: ComplexMappingEditor(
+            sourceFields: rcFields,
+            currentEvent: currentRcEvent,
+            initialTokens: initialTokens,
+            onSave: (expression, tokens) {
+              setState(() {
+                // Remove any existing mapping
+                mappings.removeWhere((m) => m['target'] == field.name);
+
+                // Add new complex mapping
+                final newMapping = {
+                  'target': field.name,
+                  'isComplex': 'true',
+                  'jsonataExpr': expression,
+                  'tokens': json.encode(tokens),
+                };
+                mappings.add(newMapping);
+
+                // Update state provider
+                if (selectedRcAppId != null) {
+                  final appInfo = rcApps.firstWhere(
+                    (app) => app['id'].toString() == selectedRcAppId,
+                    orElse: () => {'name': 'Unknown App'},
+                  );
+                  Provider.of<MappingState>(context, listen: false).setMappings(
+                      selectedRcAppId!, appInfo['name'], List.from(mappings));
+                }
+
+                hasUnsavedChanges = true;
+              });
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final sortedMappings = List<Map<String, String>>.from(mappings)
+    final sortedMappings = List<Map<String, dynamic>>.from(mappings)
       ..sort((a, b) => (a['target'] ?? '').compareTo(b['target'] ?? ''));
 
     return Scaffold(
@@ -464,7 +552,10 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                           color: Colors.red)
                                       : null,
                                   title: Text(
-                                      '${mapping['source']} → ${mapping['target']}'),
+                                    mapping['isComplex'] == 'true'
+                                        ? '[Complex Mapping] → ${mapping['target']}'
+                                        : '${mapping['source'] ?? ''} → ${mapping['target']}',
+                                  ),
                                   subtitle: Text(
                                     targetField.description,
                                     maxLines: 1,
@@ -472,7 +563,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                   ),
                                   trailing: IconButton(
                                     icon: const Icon(Icons.delete),
-                                    onPressed: () => _removeMapping(index),
+                                    onPressed: () =>
+                                        _removeMapping(mapping['target'] ?? ''),
                                   ),
                                 ),
                               );
@@ -508,13 +600,15 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                       child: DragTarget<Map<String, dynamic>>(
                                         onWillAccept: (data) =>
                                             data != null &&
-                                            data['isSource'] == true,
+                                            data['field'] != null,
                                         onAccept: (data) {
-                                          _addMapping(
-                                            data['field'],
-                                            field.name,
-                                            field.defaultMode == 'complex',
-                                          );
+                                          if (data['field'] != null) {
+                                            _addMapping(
+                                              data['field'] as String,
+                                              field.name,
+                                              false,
+                                            );
+                                          }
                                         },
                                         builder: (context, candidateData,
                                                 rejectedData) =>
@@ -575,230 +669,170 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                                 child: Row(
                                                   children: [
                                                     Expanded(
-                                                      child: InkWell(
-                                                        onTap: () {
-                                                          final TextEditingController
-                                                              searchController =
-                                                              TextEditingController();
-                                                          String searchQuery =
-                                                              '';
-
-                                                          showDialog(
-                                                            context: context,
-                                                            builder:
-                                                                (BuildContext
-                                                                    context) {
-                                                              return StatefulBuilder(
-                                                                builder: (context,
-                                                                    setState) {
-                                                                  final filteredFields =
-                                                                      rcFields.where(
-                                                                          (field) {
-                                                                    final value =
-                                                                        _getNestedValue(rcEvents.first, field)?.toString().toLowerCase() ??
-                                                                            '';
-                                                                    return field
-                                                                            .toLowerCase()
-                                                                            .contains(searchQuery
-                                                                                .toLowerCase()) ||
-                                                                        value
-                                                                            .toLowerCase()
-                                                                            .contains(searchQuery.toLowerCase());
-                                                                  }).toList();
-
-                                                                  return AlertDialog(
-                                                                    title:
-                                                                        Column(
-                                                                      mainAxisSize:
-                                                                          MainAxisSize
-                                                                              .min,
-                                                                      children: [
-                                                                        Text(
-                                                                            field
-                                                                                .name,
-                                                                            style:
-                                                                                const TextStyle(fontSize: 16)),
-                                                                        const SizedBox(
-                                                                            height:
-                                                                                8),
-                                                                        TextField(
-                                                                          controller:
-                                                                              searchController,
-                                                                          decoration:
-                                                                              const InputDecoration(
-                                                                            hintText:
-                                                                                'Search fields or values...',
-                                                                            prefixIcon:
-                                                                                Icon(Icons.search),
-                                                                            isDense:
-                                                                                true,
-                                                                            border:
-                                                                                OutlineInputBorder(),
-                                                                          ),
-                                                                          onChanged:
-                                                                              (value) {
-                                                                            setState(() {
-                                                                              searchQuery = value;
-                                                                            });
-                                                                          },
-                                                                          autofocus:
-                                                                              true,
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                    content:
-                                                                        SizedBox(
-                                                                      width:
-                                                                          400,
-                                                                      height:
-                                                                          300,
-                                                                      child: ListView
-                                                                          .builder(
-                                                                        itemCount:
-                                                                            filteredFields.length,
-                                                                        itemBuilder:
-                                                                            (context,
-                                                                                index) {
-                                                                          final sourceField =
-                                                                              filteredFields[index];
-                                                                          final sampleValue = _getNestedValue(
-                                                                              rcEvents.first,
-                                                                              sourceField);
-                                                                          return ListTile(
-                                                                            title:
-                                                                                Text(sourceField),
-                                                                            subtitle:
-                                                                                Text(
-                                                                              sampleValue?.toString() ?? 'null',
-                                                                              style: TextStyle(
-                                                                                color: Colors.grey[600],
-                                                                                fontStyle: FontStyle.italic,
-                                                                              ),
-                                                                            ),
-                                                                            onTap:
-                                                                                () {
-                                                                              _addMapping(
-                                                                                sourceField,
-                                                                                field.name,
-                                                                                field.defaultMode == 'complex',
-                                                                              );
-                                                                              Navigator.of(context).pop();
-                                                                            },
-                                                                          );
-                                                                        },
-                                                                      ),
-                                                                    ),
-                                                                  );
-                                                                },
-                                                              );
-                                                            },
-                                                          );
-                                                        },
-                                                        child: Container(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .symmetric(
-                                                                  horizontal:
-                                                                      8),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            border: Border.all(
-                                                                color: Colors
-                                                                    .grey
-                                                                    .shade300),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        4),
-                                                          ),
-                                                          child: Row(
-                                                            children: [
-                                                              Icon(
-                                                                Icons
-                                                                    .drag_indicator,
-                                                                size: 14,
-                                                                color: candidateData
-                                                                        .isNotEmpty
-                                                                    ? Colors
-                                                                        .blue
-                                                                    : Colors
-                                                                        .grey
-                                                                        .withOpacity(
-                                                                            0.5),
-                                                              ),
-                                                              const SizedBox(
-                                                                  width: 4),
-                                                              Expanded(
-                                                                child: Text(
-                                                                  mappings.any((m) =>
+                                                      child:
+                                                          mappings.any((m) =>
+                                                                  m['target'] ==
+                                                                  field.name)
+                                                              ? Text(
+                                                                  mappings.firstWhere((m) => m['target'] == field.name)[
+                                                                              'isComplex'] ==
+                                                                          'true'
+                                                                      ? '[Complex Mapping]'
+                                                                      : mappings.firstWhere((m) =>
                                                                           m['target'] ==
                                                                           field
-                                                                              .name)
-                                                                      ? mappings
-                                                                          .firstWhere(
-                                                                          (m) =>
-                                                                              m['target'] ==
-                                                                              field.name,
-                                                                        )['source']!
-                                                                      : 'Select field',
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontSize:
-                                                                        12,
-                                                                    color: mappings.any((m) =>
-                                                                            m['target'] ==
-                                                                            field.name)
-                                                                        ? null
-                                                                        : field.required
-                                                                            ? Colors.red
-                                                                            : Colors.grey,
-                                                                    fontStyle: mappings.any((m) =>
-                                                                            m['target'] ==
-                                                                            field
-                                                                                .name)
-                                                                        ? null
-                                                                        : FontStyle
-                                                                            .italic,
-                                                                  ),
+                                                                              .name)['source']!,
+                                                                  style: const TextStyle(
+                                                                      fontSize:
+                                                                          12),
                                                                   overflow:
                                                                       TextOverflow
                                                                           .ellipsis,
+                                                                )
+                                                              : Container(
+                                                                  padding: const EdgeInsets
+                                                                      .symmetric(
+                                                                      horizontal:
+                                                                          8),
+                                                                  decoration:
+                                                                      BoxDecoration(
+                                                                    border: Border.all(
+                                                                        color: Colors
+                                                                            .grey
+                                                                            .shade300),
+                                                                    borderRadius:
+                                                                        BorderRadius
+                                                                            .circular(4),
+                                                                  ),
+                                                                  child: Row(
+                                                                    children: [
+                                                                      Icon(
+                                                                        Icons
+                                                                            .drag_indicator,
+                                                                        size:
+                                                                            14,
+                                                                        color: candidateData.isNotEmpty
+                                                                            ? Colors.blue
+                                                                            : Colors.grey.withOpacity(0.5),
+                                                                      ),
+                                                                      const SizedBox(
+                                                                          width:
+                                                                              4),
+                                                                      Expanded(
+                                                                        child:
+                                                                            InkWell(
+                                                                          onTap:
+                                                                              () {
+                                                                            final TextEditingController
+                                                                                searchController =
+                                                                                TextEditingController();
+                                                                            String
+                                                                                searchQuery =
+                                                                                '';
+
+                                                                            showDialog(
+                                                                              context: context,
+                                                                              builder: (BuildContext context) {
+                                                                                return StatefulBuilder(
+                                                                                  builder: (context, setState) {
+                                                                                    final filteredFields = rcFields.where((field) {
+                                                                                      final value = _getNestedValue(rcEvents.first, field)?.toString().toLowerCase() ?? '';
+                                                                                      return field.toLowerCase().contains(searchQuery.toLowerCase()) || value.toLowerCase().contains(searchQuery.toLowerCase());
+                                                                                    }).toList();
+
+                                                                                    return AlertDialog(
+                                                                                      title: Column(
+                                                                                        mainAxisSize: MainAxisSize.min,
+                                                                                        children: [
+                                                                                          Text(field.name, style: const TextStyle(fontSize: 16)),
+                                                                                          const SizedBox(height: 8),
+                                                                                          TextField(
+                                                                                            controller: searchController,
+                                                                                            decoration: const InputDecoration(
+                                                                                              hintText: 'Search fields or values...',
+                                                                                              prefixIcon: Icon(Icons.search),
+                                                                                              isDense: true,
+                                                                                              border: OutlineInputBorder(),
+                                                                                            ),
+                                                                                            onChanged: (value) {
+                                                                                              setState(() {
+                                                                                                searchQuery = value;
+                                                                                              });
+                                                                                            },
+                                                                                            autofocus: true,
+                                                                                          ),
+                                                                                        ],
+                                                                                      ),
+                                                                                      content: SizedBox(
+                                                                                        width: 400,
+                                                                                        height: 300,
+                                                                                        child: ListView.builder(
+                                                                                          itemCount: filteredFields.length,
+                                                                                          itemBuilder: (context, index) {
+                                                                                            final sourceField = filteredFields[index];
+                                                                                            final sampleValue = _getNestedValue(rcEvents.first, sourceField);
+                                                                                            return ListTile(
+                                                                                              title: Text(sourceField),
+                                                                                              subtitle: Text(
+                                                                                                sampleValue?.toString() ?? 'null',
+                                                                                                style: TextStyle(
+                                                                                                  color: Colors.grey[600],
+                                                                                                  fontStyle: FontStyle.italic,
+                                                                                                ),
+                                                                                              ),
+                                                                                              onTap: () {
+                                                                                                _addMapping(sourceField, field.name, false);
+                                                                                                Navigator.of(context).pop();
+                                                                                              },
+                                                                                            );
+                                                                                          },
+                                                                                        ),
+                                                                                      ),
+                                                                                    );
+                                                                                  },
+                                                                                );
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                          child:
+                                                                              Text(
+                                                                            'Select field',
+                                                                            style:
+                                                                                TextStyle(
+                                                                              fontSize: 12,
+                                                                              color: field.required ? Colors.red : Colors.grey,
+                                                                              fontStyle: FontStyle.italic,
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                              const Icon(
-                                                                Icons
-                                                                    .arrow_drop_down,
-                                                                size: 16,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ),
                                                     ),
+                                                    if (!mappings.any((m) =>
+                                                        m['target'] ==
+                                                        field.name))
+                                                      IconButton(
+                                                        icon: const Icon(
+                                                            Icons.code),
+                                                        tooltip:
+                                                            'Create Complex Mapping',
+                                                        onPressed: () =>
+                                                            _showComplexMappingEditor(
+                                                                field),
+                                                        iconSize: 16,
+                                                      ),
                                                     if (mappings.any((m) =>
                                                         m['target'] ==
                                                         field.name))
-                                                      SizedBox(
-                                                        width: 24,
-                                                        height: 24,
-                                                        child: IconButton(
-                                                          padding:
-                                                              EdgeInsets.zero,
-                                                          icon: const Icon(
-                                                              Icons.clear,
-                                                              size: 16),
-                                                          onPressed: () {
-                                                            setState(() {
-                                                              mappings.removeWhere(
-                                                                  (m) =>
-                                                                      m['target'] ==
-                                                                      field
-                                                                          .name);
-                                                              hasUnsavedChanges =
-                                                                  true;
-                                                            });
-                                                          },
-                                                        ),
+                                                      IconButton(
+                                                        icon: const Icon(
+                                                            Icons.clear),
+                                                        onPressed: () =>
+                                                            _removeMapping(
+                                                                field.name),
+                                                        iconSize: 16,
                                                       ),
                                                   ],
                                                 ),
@@ -823,9 +857,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                         _evaluateMapping(event, mapping);
                                     return DataCell(
                                       Text(
-                                        value == 'No mapping defined'
-                                            ? ''
-                                            : value,
+                                        value.isEmpty ? '' : value,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),

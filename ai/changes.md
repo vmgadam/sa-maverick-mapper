@@ -309,3 +309,43 @@ The Maverick Mapper is a Flutter application designed to facilitate field mappin
   - "No mapping defined" shown in red for required fields
   - "No mapping defined" shown in italic for optional fields
 - Updated the screen header to show total field count and required field count 
+
+## Latest Updates - UI Refinements and Complex Mapping Improvements
+
+### Field Mapping UI Simplification
+- Streamlined the field mapping display:
+  - Unmapped fields: Maintained interactive box with "Select field" text and drag indicator
+  - Simple mappings: Removed box and indicators, showing only the field name
+  - Complex mappings: Removed box and indicators, showing only "[Complex Mapping]" text
+  - Consistent X button for removing any type of mapping
+  - Code icon button for creating complex mappings only shown for unmapped fields
+
+### Complex Mapping System Improvements
+- Extracted complex mapping editor into a reusable widget (`ComplexMappingEditor`)
+- Simplified token management:
+  - Switched to Map-based structure instead of custom classes
+  - Improved token parsing and storage
+  - Enhanced error handling
+- Standardized terminology:
+  - Changed "[Complex Expression]" to "[Complex Mapping]" throughout the UI
+  - Consistent labeling in all views (table headers, mapping list, etc.)
+
+### Code Organization
+- Created new reusable widget:
+  - Separated complex mapping editor into standalone component
+  - Made it reusable across different parts of the application
+  - Improved component isolation and maintainability
+- Enhanced state management:
+  - Better handling of mapping states
+  - Improved error handling
+  - More efficient token management
+
+### Technical Improvements
+- Simplified mapping data structure:
+  - Consistent format for both simple and complex mappings
+  - Improved JSON serialization
+  - Better error handling for null values
+- Enhanced UI responsiveness:
+  - More efficient state updates
+  - Better handling of mapping changes
+  - Improved visual feedback 
