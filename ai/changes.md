@@ -3,6 +3,10 @@
 ## Project Overview
 The Maverick Mapper is a Flutter application designed to facilitate field mapping between RocketCyber events and SaaS Alerts. It provides a user-friendly interface for creating, managing, and exporting field mappings that conform to the SaaS Alerts mapping configuration format.
 
+## To do
+ -Multi-product state management to move between products and keep existing mappings.
+ -AI support to suggest default mappings based on data.
+
 ## Latest Updates - Table Field Configuration
 - Removed hardcoded field definitions:
   - All table fields now come directly from fields.json
