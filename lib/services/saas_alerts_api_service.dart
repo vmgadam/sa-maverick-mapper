@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as developer;
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
 class SaasAlertsApiService {
   final String baseUrl;
@@ -396,6 +398,16 @@ class SaasAlertsApiService {
       developer.log('Error in getReportEventsQuery',
           error: e, stackTrace: stackTrace);
       rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getFields() async {
+    try {
+      final String jsonString = await rootBundle.loadString('config/fields.json');
+      return json.decode(jsonString) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Error loading SaaS Alerts fields: $e');
+      return null;
     }
   }
 }

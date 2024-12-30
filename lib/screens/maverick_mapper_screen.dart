@@ -7,7 +7,9 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
 import '../services/saas_alerts_api_service.dart';
-import 'dart:html' as html;
+import 'events_display_screen.dart';
+import 'package:provider/provider.dart';
+import '../state/mapping_state.dart';
 
 /// SaasField: Represents a field in the SaaS Alerts configuration.
 /// Each field has a name, required status, description, type, and optional condition.
@@ -174,6 +176,24 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
             currentRcEvent = Map<String, dynamic>.from(events.first);
             rcFields = _getAllNestedFields([currentRcEvent]);
           });
+
+          // Update selected app in state
+          final appInfo = rcApps.firstWhere(
+            (app) => app['id'].toString() == appId,
+            orElse: () => {'name': 'Unknown App'},
+          );
+          Provider.of<MappingState>(context, listen: false)
+            .setSelectedApp(appId, appInfo['name']);
+
+          // Load existing mappings from state
+          final existingMappings = Provider.of<MappingState>(context, listen: false)
+            .getMappings(appId);
+          if (existingMappings.isNotEmpty) {
+            setState(() {
+              mappings.clear();
+              mappings.addAll(existingMappings);
+            });
+          }
         }
       }
     } catch (e) {
@@ -264,6 +284,18 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
       };
 
       mappings.add(mapping);
+      hasUnsavedChanges = true;
+
+      // Update state
+      if (selectedRcAppId != null) {
+        final appInfo = rcApps.firstWhere(
+          (app) => app['id'].toString() == selectedRcAppId,
+          orElse: () => {'name': 'Unknown App'},
+        );
+        
+        Provider.of<MappingState>(context, listen: false)
+          .setMappings(selectedRcAppId!, appInfo['name'], List.from(mappings));
+      }
 
       if (isComplex) {
         final field = saasFields.firstWhere(
@@ -275,15 +307,43 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
             type: 'string',
           ),
         );
-        // Keep the source field when showing complex editor
         _showComplexMappingEditor(field);
       }
     });
   }
 
+  Future<void> _saveMappings() async {
+    if (selectedRcAppId == null) return;
+
+    try {
+      final appInfo = rcApps.firstWhere(
+        (app) => app['id'].toString() == selectedRcAppId,
+        orElse: () => {'name': 'Unknown App'},
+      );
+
+      // Update state
+      Provider.of<MappingState>(context, listen: false)
+        .setMappings(selectedRcAppId!, appInfo['name'], List.from(mappings));
+
+      setState(() {
+        hasUnsavedChanges = false;
+      });
+    } catch (e) {
+      debugPrint('Error saving mappings: $e');
+    }
+  }
+
   void _removeMapping(int index) {
     setState(() {
       mappings.removeAt(index);
+      if (selectedRcAppId != null) {
+        final appInfo = rcApps.firstWhere(
+          (app) => app['id'].toString() == selectedRcAppId,
+          orElse: () => {'name': 'Unknown App'},
+        );
+        Provider.of<MappingState>(context, listen: false)
+          .setMappings(selectedRcAppId!, appInfo['name'], List.from(mappings));
+      }
     });
   }
 
@@ -1004,68 +1064,46 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
   }
 
   void _exportAsCSV() {
-    final csvRows = <String>[];
-
-    // Add header row
-    csvRows.add(
-        '"Source App","Source Field","Source Sample Data","Source Record ID",' +
-            '"SaaS Alerts Field","SaaS Alerts Sample Data","SaaS Alerts Record ID"');
-
-    // Add data rows
-    for (final mapping in mappings) {
-      final sourceField = mapping['source']!;
-      final targetField = mapping['target']!;
-      final sourceValue = _getNestedValue(currentRcEvent, sourceField);
-      final appName = rcApps.firstWhere(
-        (app) => app['id'].toString() == selectedRcAppId,
-        orElse: () => {'name': 'Unknown App'},
-      )['name'];
-
-      csvRows.add(
-        '"$appName","$sourceField","$sourceValue","${currentRcEvent['id'] ?? ''}",' +
-            '"$targetField","","${currentRcEvent['id'] ?? ''}"',
-      );
-    }
-
-    final csvContent = csvRows.join('\n');
-    _downloadFile(csvContent, 'maverick_mapper_export.csv', 'text/csv');
+    final csvContent = _generateCSVContent();
+    
+    // Show the CSV in a dialog instead of downloading
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('CSV Export'),
+        content: SingleChildScrollView(
+          child: SelectableText(csvContent),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _exportAsJSON() {
     final jsonData = _generateJsonPreview();
     final jsonString = const JsonEncoder.withIndent('  ').convert(jsonData);
-
-    // Create a Blob containing the JSON data
-    final bytes = utf8.encode(jsonString);
-    final blob = html.Blob([bytes]);
-
-    // Create a download URL and trigger the download
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute('download', 'mappingConfig.json')
-      ..click();
-
-    // Clean up
-    html.Url.revokeObjectUrl(url);
-  }
-
-  void _downloadFile(String content, String filename, String mimeType) {
-    // Create a Blob containing the data
-    final bytes = utf8.encode(content);
-    final blob = html.Blob([bytes], mimeType);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-
-    // Create a link element
-    final anchor = html.AnchorElement(href: url)
-      ..setAttribute('download', filename)
-      ..style.display = 'none';
-
-    html.document.body!.children.add(anchor);
-    anchor.click();
-
-    // Clean up
-    html.document.body!.children.remove(anchor);
-    html.Url.revokeObjectUrl(url);
+    
+    // Show the JSON in a dialog instead of downloading
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('JSON Export'),
+        content: SingleChildScrollView(
+          child: SelectableText(jsonString),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   dynamic _getNestedValue(Map<String, dynamic> data, String path) {
@@ -1389,6 +1427,33 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
     );
   }
 
+  String _generateCSVContent() {
+    final csvRows = <String>[];
+    
+    // Add header row
+    csvRows.add(
+        '"Source App","Source Field","Source Sample Data","Source Record ID",' +
+            '"SaaS Alerts Field","SaaS Alerts Sample Data","SaaS Alerts Record ID"');
+
+    // Add data rows
+    for (final mapping in mappings) {
+      final sourceField = mapping['source']!;
+      final targetField = mapping['target']!;
+      final sourceValue = _getNestedValue(currentRcEvent, sourceField);
+      final appName = rcApps.firstWhere(
+        (app) => app['id'].toString() == selectedRcAppId,
+        orElse: () => {'name': 'Unknown App'},
+      )['name'];
+
+      csvRows.add(
+        '"$appName","$sourceField","$sourceValue","${currentRcEvent['id'] ?? ''}",' +
+            '"$targetField","","${currentRcEvent['id'] ?? ''}"',
+      );
+    }
+
+    return csvRows.join('\n');
+  }
+
   @override
   Widget build(BuildContext context) {
     final sortedMappings = List<Map<String, String>>.from(mappings)
@@ -1399,13 +1464,20 @@ class _MaverickMapperScreenState extends State<MaverickMapperScreen> {
         title: const Text('Maverick Mapper'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.paste),
-            onPressed: () {
-              setState(() {
-                showJsonInput = true;
-              });
+            icon: const Icon(Icons.preview),
+            onPressed: selectedRcAppId == null ? null : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EventsDisplayScreen(
+                    apiService: widget.apiService,
+                    saasAlertsApi: widget.saasAlertsApi,
+                    selectedAppId: selectedRcAppId,
+                  ),
+                ),
+              );
             },
-            tooltip: 'Paste JSON',
+            tooltip: 'View Mapped Events',
           ),
         ],
       ),

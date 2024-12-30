@@ -3,6 +3,28 @@
 ## Project Overview
 The Maverick Mapper is a Flutter application designed to facilitate field mapping between RocketCyber events and SaaS Alerts. It provides a user-friendly interface for creating, managing, and exporting field mappings that conform to the SaaS Alerts mapping configuration format.
 
+## Latest Updates - Navigation Restructuring
+- Removed unused `home_screen.dart` to simplify navigation
+- Added events display button directly to MaverickMapperScreen
+- Made MaverickMapperScreen the primary interface for all functionality
+- Integrated event display navigation with the current app selection state
+
+## Latest Updates - Events Display Implementation
+- Added new `EventsDisplayScreen` for viewing mapped events:
+  - Displays last 20 RocketCyber events using SaaS Alerts field mappings
+  - Shows events in a scrollable data table format
+  - Supports both simple and complex (JSONata) mappings
+  - Provides refresh functionality for live data updates
+  - Loads mappings from saved configurations
+- Added navigation to events display from Maverick Mapper screen
+- Integrated with existing mapping storage system
+
+## Latest Updates - Code Cleanup and Consolidation
+- Removed deprecated `mapper_screen.dart` implementation
+- Updated `home_screen.dart` to use `MaverickMapperScreen` exclusively
+- Removed unused `onViewEvents` callback from navigation
+- Consolidated all mapping functionality into the Maverick Mapper implementation
+
 ## Initial Setup and Basic Structure
 - Created initial `MaverickMapperScreen` with three-panel layout:
   - Left panel: Source Fields (RocketCyber)
@@ -272,3 +294,18 @@ The Maverick Mapper is a Flutter application designed to facilitate field mappin
    - Common patterns library
    - Bulk editing capabilities
    - Import/export of expressions 
+
+## Latest Updates - Events Display Screen Enhancements
+
+- Enhanced the Events Display Screen to show all required SaaS Alerts fields in the table
+- Required fields are now prominently displayed first, with red headers and star icons
+- Unmapped required fields are highlighted in red with italic text
+- Added loading of all SaaS Alerts fields from the API
+- Improved field organization:
+  - Required fields are shown first in the table
+  - Optional fields follow required fields
+  - All fields are sorted alphabetically
+- Added visual indicators for mapping status:
+  - "No mapping defined" shown in red for required fields
+  - "No mapping defined" shown in italic for optional fields
+- Updated the screen header to show total field count and required field count 
