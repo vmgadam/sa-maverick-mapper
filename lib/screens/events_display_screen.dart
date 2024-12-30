@@ -90,26 +90,20 @@ class _EventsDisplayScreenState extends State<EventsDisplayScreen> {
   }
 
   Future<void> _loadMappingsAndEvents() async {
-    if (widget.selectedAppId == null) {
-      debugPrint('No app ID provided');
-      setState(() {
-        isLoading = false;
-      });
-      return;
-    }
-
     try {
-      debugPrint('Loading mappings for app ID: ${widget.selectedAppId}');
-
-      // Get mappings from state
+      // Load mappings from provider
       final mappingState = Provider.of<MappingState>(context, listen: false);
-      final mappings = mappingState.getMappings(widget.selectedAppId!);
+      final List<Map<String, String>> mappings = widget.selectedAppId != null
+          ? List<Map<String, String>>.from(
+              mappingState.getMappings(widget.selectedAppId!))
+          : [];
 
-      // Load SaaS Alerts fields from fields.json
-      final String jsonString =
-          await rootBundle.loadString('config/fields.json');
-      final jsonData = json.decode(jsonString);
-      final fields = jsonData['fields'] as Map<String, dynamic>;
+      // Load SaaS Alerts fields from API service
+      final fieldsData = await widget.saasAlertsApi.getFields();
+      if (fieldsData == null) {
+        throw Exception('Failed to load fields from SaasAlertsApiService');
+      }
+      final fields = fieldsData['fields'] as Map<String, dynamic>;
 
       final List<SaasField> allFields =
           fields.entries.map((e) => SaasField.fromJson(e.key, e.value)).toList()

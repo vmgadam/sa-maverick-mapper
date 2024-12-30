@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:flutter/gestures.dart';
 import '../services/api_service.dart';
 import '../services/saas_alerts_api_service.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,34 @@ import '../widgets/json_preview_widget.dart';
 import '../widgets/configuration_fields_widget.dart';
 import '../services/export_service.dart';
 import '../widgets/export_options_dialog.dart';
+
+class CustomScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+      };
+
+  @override
+  ScrollBehavior copyWith({
+    bool? scrollbars,
+    ScrollPhysics? physics,
+    bool? overscroll,
+    Set<PointerDeviceKind>? dragDevices,
+    TargetPlatform? platform,
+    Set<LogicalKeyboardKey>? pointerAxisModifiers,
+    MultitouchDragStrategy? multitouchDragStrategy,
+  }) {
+    return CustomScrollBehavior();
+  }
+
+  @override
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    return child;
+  }
+}
 
 class SaasField {
   final String name;
@@ -31,14 +60,51 @@ class SaasField {
   });
 
   factory SaasField.fromJson(String name, Map<String, dynamic> json) {
+    debugPrint('Parsing field $name:');
+    debugPrint('  Raw JSON: ${json.toString()}');
+
+    // Parse displayOrder with explicit type checking
+    int displayOrder = 999;
+    final rawDisplayOrder = json['displayOrder'];
+    if (rawDisplayOrder != null) {
+      debugPrint(
+          '  Found displayOrder: $rawDisplayOrder (${rawDisplayOrder.runtimeType})');
+      if (rawDisplayOrder is int) {
+        displayOrder = rawDisplayOrder;
+      } else if (rawDisplayOrder is String) {
+        try {
+          displayOrder = int.parse(rawDisplayOrder);
+        } catch (e) {
+          debugPrint('  Failed to parse displayOrder string: $e');
+        }
+      } else {
+        debugPrint(
+            '  Unexpected displayOrder type: ${rawDisplayOrder.runtimeType}');
+      }
+    } else {
+      debugPrint('  No displayOrder found, using default: 999');
+    }
+
+    // Parse other fields with explicit type checking
+    final required = json['required'] == true;
+    final description = json['description']?.toString() ?? '';
+    final type = json['type']?.toString() ?? 'string';
+    final defaultMode = json['defaultMode']?.toString() ?? 'simple';
+    final category = json['category']?.toString() ?? 'Standard';
+
+    debugPrint('  Final parsed values:');
+    debugPrint('    displayOrder: $displayOrder');
+    debugPrint('    required: $required');
+    debugPrint('    category: $category');
+
     return SaasField(
       name: name,
-      required: json['required'] ?? false,
-      description: json['description'] ?? '',
-      type: json['type'] ?? 'string',
-      defaultMode: json['defaultMode'] ?? 'simple',
-      category: json['category'] ?? 'Standard',
-      displayOrder: json['displayOrder'] ?? 999,
+      required: required,
+      description: description,
+      type: type,
+      defaultMode: defaultMode,
+      category: category,
+      displayOrder: displayOrder,
     );
   }
 }
@@ -161,14 +227,49 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   List<SaasField> get standardFields {
-    final fields =
-        saasFields.where((field) => field.category == 'Standard').toList();
+    debugPrint(
+        '\nGetting standard fields from ${saasFields.length} total fields');
+
+    // Show all fields before filtering
+    debugPrint('All fields before filtering:');
+    for (var field in saasFields) {
+      debugPrint(
+          '  ${field.name}: category=${field.category}, order=${field.displayOrder}');
+    }
+
+    final fields = saasFields.where((field) {
+      final isStandard = field.category == 'Standard';
+      debugPrint(
+          '  Checking ${field.name}: category=${field.category}, isStandard=$isStandard');
+      return isStandard;
+    }).toList();
+
+    debugPrint('\nFound ${fields.length} standard fields before sorting');
+    debugPrint('Standard fields before sorting:');
+    for (var field in fields) {
+      debugPrint('  ${field.name}: order=${field.displayOrder}');
+    }
+
     fields.sort((a, b) {
-      // First compare by displayOrder
-      final orderComparison = a.displayOrder.compareTo(b.displayOrder);
-      // If displayOrder is the same, sort alphabetically by name
-      return orderComparison != 0 ? orderComparison : a.name.compareTo(b.name);
+      // First sort by displayOrder
+      final aOrder = a.displayOrder;
+      final bOrder = b.displayOrder;
+
+      if (aOrder != bOrder) {
+        debugPrint(
+            '  Sorting by order: ${a.name}($aOrder) vs ${b.name}($bOrder)');
+        return aOrder.compareTo(bOrder);
+      }
+      // Then sort alphabetically by name
+      debugPrint(
+          '  Sorting by name: ${a.name} vs ${b.name} (same order: $aOrder)');
+      return a.name.compareTo(b.name);
     });
+
+    debugPrint('\nFinal sorted standard fields:');
+    for (var field in fields) {
+      debugPrint('  ${field.name}: order=${field.displayOrder}');
+    }
     return fields;
   }
 
@@ -199,25 +300,41 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
   Future<void> _loadSaasFields() async {
     try {
-      final String jsonString =
-          await rootBundle.loadString('config/fields.json');
-      final jsonData = json.decode(jsonString);
+      debugPrint('Loading SaaS fields from SaasAlertsApiService');
+
+      final jsonData = await widget.saasAlertsApi.getFields();
+      if (jsonData == null) {
+        throw Exception('Failed to load fields from SaasAlertsApiService');
+      }
+
       final fields = jsonData['fields'] as Map<String, dynamic>;
 
+      debugPrint('\nFound ${fields.length} fields in configuration');
+      debugPrint('All field names in JSON: ${fields.keys.join(', ')}');
+
+      // Verify each field in the JSON
+      fields.forEach((key, value) {
+        debugPrint('\nVerifying field $key:');
+        debugPrint('  Raw value: ${json.encode(value)}');
+        debugPrint('  displayOrder: ${value['displayOrder']}');
+        debugPrint('  category: ${value['category']}');
+      });
+
+      final loadedFields = fields.entries.map((e) {
+        final field = SaasField.fromJson(e.key, e.value);
+        debugPrint('\nLoaded field ${field.name}:');
+        debugPrint('  category: ${field.category}');
+        debugPrint('  displayOrder: ${field.displayOrder}');
+        return field;
+      }).toList();
+
       setState(() {
-        saasFields = fields.entries
-            .map((e) => SaasField.fromJson(e.key, e.value))
-            .toList()
-          ..sort((a, b) {
-            if (a.required != b.required) {
-              return a.required ? -1 : 1;
-            }
-            return a.name.compareTo(b.name);
-          });
+        saasFields = loadedFields;
         isLoadingSaasFields = false;
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('Error loading SaaS fields: $e');
+      debugPrint('Stack trace: $stackTrace');
       setState(() {
         isLoadingSaasFields = false;
       });
@@ -532,32 +649,19 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
       final jsonData = json.decode(jsonInputController.text);
 
       if (selectedJsonMode == 'elastic') {
-        // Handle Elastic Raw format
-        final sourceData = jsonData['_source'] as Map<String, dynamic>?;
-        if (sourceData != null) {
-          // Auto-map special fields
-          if (sourceData['product']?['endpoint']?['id'] != null) {
-            setState(() {
-              configFields['endpointId'] =
-                  sourceData['product']['endpoint']['id'].toString();
-            });
-          }
+        // Handle Elastic Raw format - process entire JSON structure
+        setState(() {
+          currentRcEvent = Map<String, dynamic>.from(jsonData);
+          rcFields = _getAllNestedFields([currentRcEvent]);
+          rcEvents = [currentRcEvent];
+          selectedRcAppId = null; // Clear selected app
 
-          // Use the 'data' field as the source for mapping
-          final eventData = sourceData['data'] as Map<String, dynamic>?;
-          if (eventData != null) {
-            setState(() {
-              currentRcEvent = Map<String, dynamic>.from(eventData);
-              rcFields = _getAllNestedFields([currentRcEvent]);
-              rcEvents = [currentRcEvent];
-              selectedRcAppId = null; // Clear selected app
-            });
-          } else {
-            throw Exception('No data field found in _source');
+          // Auto-map special fields if they exist
+          if (jsonData['_source']?['product']?['endpoint']?['id'] != null) {
+            configFields['endpointId'] =
+                jsonData['_source']['product']['endpoint']['id'].toString();
           }
-        } else {
-          throw Exception('No _source field found in JSON');
-        }
+        });
       } else {
         // Handle misc JSON format
         setState(() {
@@ -609,80 +713,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   List<DataColumn> _buildDataColumns() {
     final List<DataColumn> columns = [];
 
-    // Get the id field if it exists, otherwise create a default one
-    final idField = standardFields.firstWhere(
-      (field) => field.name == 'id',
-      orElse: () => SaasField(
-        name: 'id',
-        required: true,
-        description: 'Unique identifier',
-        type: 'string',
-        category: 'Standard',
-        displayOrder: 0,
-      ),
-    );
-
-    // Add the id field column first
-    columns.add(DataColumn(
-      label: SizedBox(
-        height: 56,
-        child: DragTarget<Map<String, dynamic>>(
-          onWillAccept: (data) => data != null && data['field'] != null,
-          onAccept: (data) {
-            if (data['field'] != null) {
-              _addMapping(data['field'] as String, idField.name, false);
-            }
-          },
-          builder: (context, candidateData, rejectedData) => Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color:
-                    candidateData.isNotEmpty ? Colors.blue : Colors.transparent,
-              ),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      idField.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: idField.required ? Colors.red : null,
-                      ),
-                    ),
-                    if (idField.required)
-                      const Padding(
-                        padding: EdgeInsets.only(left: 4),
-                        child: Icon(Icons.star, size: 12, color: Colors.red),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  width: 180,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: _buildMappingControl(idField, candidateData),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ));
-
-    // Add the rest of the fields
-    final sortedFields =
-        standardFields.where((field) => field.name != 'id').toList();
+    // Add all standard fields in their defined order
+    final sortedFields = standardFields;
 
     columns.addAll(sortedFields.map((field) => DataColumn(
           label: SizedBox(
@@ -1204,30 +1236,22 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                 ? const Center(child: Text('Select an app to view events'))
                 : Stack(
                     children: [
-                      SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
+                      ScrollConfiguration(
+                        behavior: CustomScrollBehavior(),
                         child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              DataTable(
-                                columns: _buildDataColumns(),
-                                rows: rcEvents.map((event) {
-                                  final idMapping = mappings.firstWhere(
-                                    (m) => m['target'] == 'id',
-                                    orElse: () => {},
-                                  );
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(
-                                        Text(
-                                          _evaluateMapping(event, idMapping),
-                                        ),
-                                      ),
-                                      ...standardFields
-                                          .where((field) => field.name != 'id')
-                                          .map((field) {
+                          scrollDirection: Axis.vertical,
+                          physics: const ClampingScrollPhysics(),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const ClampingScrollPhysics(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                DataTable(
+                                  columns: _buildDataColumns(),
+                                  rows: rcEvents.map((event) {
+                                    return DataRow(
+                                      cells: standardFields.map((field) {
                                         final mapping = mappings.firstWhere(
                                           (m) => m['target'] == field.name,
                                           orElse: () => {},
@@ -1242,11 +1266,11 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                           ),
                                         );
                                       }).toList(),
-                                    ],
-                                  );
-                                }).toList(),
-                              ),
-                            ],
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

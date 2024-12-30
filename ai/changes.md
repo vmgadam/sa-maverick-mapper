@@ -3,6 +3,67 @@
 ## Project Overview
 The Maverick Mapper is a Flutter application designed to facilitate field mapping between RocketCyber events and SaaS Alerts. It provides a user-friendly interface for creating, managing, and exporting field mappings that conform to the SaaS Alerts mapping configuration format.
 
+## Latest Updates - Table Field Configuration
+- Removed hardcoded field definitions:
+  - All table fields now come directly from fields.json
+  - No more hardcoded 'id' field or special handling
+  - Consistent field names across the application
+- Improved field configuration:
+  - Fields are displayed in their defined order from config
+  - Maintained all field properties (required, description, etc.)
+  - Consistent handling of all standard fields
+
+## Latest Updates - UI Refinements and Message Placement
+- Improved table message placement:
+  - Moved "Map the first field" message to overlay the table instead of being part of it
+  - Used Stack widget to float the message over the empty table
+  - Maintained table row sizes by removing message from table structure
+  - Message remains centered and visible while table is scrollable underneath
+- Enhanced user experience:
+  - Cleaner table appearance with consistent row heights
+  - Better visual hierarchy with floating message
+  - Improved scrolling behavior without message interference
+
+## Latest Updates - UI Refinements and Complex Mapping Improvements
+
+### Field Mapping UI Simplification
+- Streamlined the field mapping display:
+  - Unmapped fields: Maintained interactive box with "Select field" text and drag indicator
+  - Simple mappings: Removed box and indicators, showing only the field name
+  - Complex mappings: Removed box and indicators, showing only "[Complex Mapping]" text
+  - Consistent X button for removing any type of mapping
+  - Code icon button for creating complex mappings only shown for unmapped fields
+
+### Complex Mapping System Improvements
+- Extracted complex mapping editor into a reusable widget (`ComplexMappingEditor`)
+- Simplified token management:
+  - Switched to Map-based structure instead of custom classes
+  - Improved token parsing and storage
+  - Enhanced error handling
+- Standardized terminology:
+  - Changed "[Complex Expression]" to "[Complex Mapping]" throughout the UI
+  - Consistent labeling in all views (table headers, mapping list, etc.)
+
+### Code Organization
+- Created new reusable widget:
+  - Separated complex mapping editor into standalone component
+  - Made it reusable across different parts of the application
+  - Improved component isolation and maintainability
+- Enhanced state management:
+  - Better handling of mapping states
+  - Improved error handling
+  - More efficient token management
+
+### Technical Improvements
+- Simplified mapping data structure:
+  - Consistent format for both simple and complex mappings
+  - Improved JSON serialization
+  - Better error handling for null values
+- Enhanced UI responsiveness:
+  - More efficient state updates
+  - Better handling of mapping changes
+  - Improved visual feedback
+
 ## Latest Updates - Navigation Restructuring
 - Removed unused `home_screen.dart` to simplify navigation
 - Added events display button directly to MaverickMapperScreen
@@ -310,42 +371,52 @@ The Maverick Mapper is a Flutter application designed to facilitate field mappin
   - "No mapping defined" shown in italic for optional fields
 - Updated the screen header to show total field count and required field count 
 
-## Latest Updates - UI Refinements and Complex Mapping Improvements
+## Latest Updates - UI Refinements and Message Placement
+- Improved table message placement:
+  - Moved "Map the first field" message to overlay the table instead of being part of it
+  - Used Stack widget to float the message over the empty table
+  - Maintained table row sizes by removing message from table structure
+  - Message remains centered and visible while table is scrollable underneath
+- Enhanced user experience:
+  - Cleaner table appearance with consistent row heights
+  - Better visual hierarchy with floating message
+  - Improved scrolling behavior without message interference 
 
-### Field Mapping UI Simplification
-- Streamlined the field mapping display:
-  - Unmapped fields: Maintained interactive box with "Select field" text and drag indicator
-  - Simple mappings: Removed box and indicators, showing only the field name
-  - Complex mappings: Removed box and indicators, showing only "[Complex Mapping]" text
-  - Consistent X button for removing any type of mapping
-  - Code icon button for creating complex mappings only shown for unmapped fields
+## Latest Updates - JSON Processing Improvements
+- Enhanced JSON parsing functionality:
+  - Process entire JSON structure for Elastic Raw format instead of just 'data' field
+  - Flatten all nested fields into dot-notation paths
+  - Skip map-like structures while keeping their child fields
+  - Maintain consistent field path format with API data
+- Improved field discovery:
+  - All nested fields are now available for mapping
+  - Better field visibility in complex JSON structures
+  - Consistent field path representation across data sources 
 
-### Complex Mapping System Improvements
-- Extracted complex mapping editor into a reusable widget (`ComplexMappingEditor`)
-- Simplified token management:
-  - Switched to Map-based structure instead of custom classes
-  - Improved token parsing and storage
-  - Enhanced error handling
-- Standardized terminology:
-  - Changed "[Complex Expression]" to "[Complex Mapping]" throughout the UI
-  - Consistent labeling in all views (table headers, mapping list, etc.)
+## Latest Updates - Browser Navigation Fix
+- Fixed browser back navigation interference:
+  - Added ScrollConfiguration to control scroll behavior
+  - Implemented ClampingScrollPhysics for both vertical and horizontal scrolling
+  - Disabled browser scrollbars to prevent interference
+  - Prevented browser history manipulation during table scrolling 
 
-### Code Organization
-- Created new reusable widget:
-  - Separated complex mapping editor into standalone component
-  - Made it reusable across different parts of the application
-  - Improved component isolation and maintainability
-- Enhanced state management:
-  - Better handling of mapping states
-  - Improved error handling
-  - More efficient token management
+## Latest Updates - Scroll Behavior Improvements
+- Fixed horizontal scroll interference with browser navigation:
+  - Implemented custom scroll behavior to handle horizontal scrolling
+  - Prevented browser back/forward triggers during table navigation
+  - Added support for touch, mouse, and trackpad interactions
+  - Disabled browser's default scroll behavior overrides
+- Enhanced scroll experience:
+  - Smoother horizontal scrolling through wide tables
+  - Consistent behavior across different input devices
+  - Eliminated browser navigation interference 
 
-### Technical Improvements
-- Simplified mapping data structure:
-  - Consistent format for both simple and complex mappings
-  - Improved JSON serialization
-  - Better error handling for null values
-- Enhanced UI responsiveness:
-  - More efficient state updates
-  - Better handling of mapping changes
-  - Improved visual feedback 
+## Latest Updates - Field Loading and Sorting Improvements
+- Enhanced field loading from configuration:
+  - Ensured all fields from fields.json are loaded including '_id'
+  - Removed premature sorting during initial load
+  - Fixed field ordering to respect displayOrder property
+- Improved field sorting logic:
+  - Primary sort by displayOrder as defined in fields.json
+  - Secondary alphabetical sort for fields with same displayOrder
+  - Consistent field order across all views 
