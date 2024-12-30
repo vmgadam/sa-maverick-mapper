@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'services/api_service.dart';
 import 'services/saas_alerts_api_service.dart';
 import 'state/mapping_state.dart';
-import 'screens/mapper_selection_screen.dart';
+import 'screens/unified_mapper_screen.dart';
 import 'config/api_config.dart';
 
 void main() {
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
-        home: MapperSelectionScreen(
+        home: UnifiedMapperScreen(
           apiService: apiService,
           saasAlertsApi: saasAlertsApi,
         ),

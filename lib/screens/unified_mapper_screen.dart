@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import '../widgets/complex_mapping_editor.dart';
 import '../widgets/json_preview_widget.dart';
 import '../widgets/configuration_fields_widget.dart';
+import '../services/export_service.dart';
+import '../widgets/export_options_dialog.dart';
 
 class SaasField {
   final String name;
@@ -15,6 +17,7 @@ class SaasField {
   final String description;
   final String type;
   final String defaultMode;
+  final String category;
 
   SaasField({
     required this.name,
@@ -22,6 +25,7 @@ class SaasField {
     required this.description,
     required this.type,
     this.defaultMode = 'simple',
+    required this.category,
   });
 
   factory SaasField.fromJson(String name, Map<String, dynamic> json) {
@@ -31,6 +35,7 @@ class SaasField {
       description: json['description'] ?? '',
       type: json['type'] ?? 'string',
       defaultMode: json['defaultMode'] ?? 'simple',
+      category: json['category'] ?? 'Standard',
     );
   }
 }
@@ -93,6 +98,10 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   final TextEditingController eventTypeController =
       TextEditingController(text: 'EVENT');
 
+  // Input mode state
+  String selectedInputMode = 'app';
+  String selectedJsonMode = 'elastic';
+
   @override
   void initState() {
     super.initState();
@@ -146,6 +155,16 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
               .toLowerCase()
               .contains(saasSearchQuery.toLowerCase());
     }).toList();
+  }
+
+  List<SaasField> get standardFields {
+    return saasFields.where((field) => field.category == 'Standard').toList();
+  }
+
+  List<SaasField> get configurationFields {
+    return saasFields
+        .where((field) => field.category == 'Configuration')
+        .toList();
   }
 
   // Loading functions
@@ -466,6 +485,84 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     });
   }
 
+  // Add export methods
+  void _exportAsCSV() {
+    final csvContent = ExportService.generateCSVContent(
+      mappings: mappings,
+      currentEvent: currentRcEvent,
+      selectedAppId: selectedRcAppId,
+      apps: rcApps,
+      getNestedValue: _getNestedValue,
+      saasFields: saasFields,
+    );
+    ExportService.showCSVExportDialog(context, csvContent);
+  }
+
+  void _exportAsJSON() {
+    ExportService.showJSONExportDialog(
+      context,
+      jsonPreviewWidget: JsonPreviewWidget(
+        jsonData: _generateJsonPreview(),
+        showExportButton: false,
+      ),
+    );
+  }
+
+  void _showExportOptions() {
+    ExportOptionsDialog.show(
+      context,
+      onCSVExport: _exportAsCSV,
+      onJSONExport: _exportAsJSON,
+    );
+  }
+
+  void _parseJson() {
+    try {
+      final jsonData = json.decode(jsonInputController.text);
+
+      if (selectedJsonMode == 'elastic') {
+        // Handle Elastic Raw format
+        final sourceData = jsonData['_source'] as Map<String, dynamic>?;
+        if (sourceData != null) {
+          // Auto-map special fields
+          if (sourceData['product']?['endpoint']?['id'] != null) {
+            setState(() {
+              configFields['endpointId'] =
+                  sourceData['product']['endpoint']['id'].toString();
+            });
+          }
+
+          // Use the 'data' field as the source for mapping
+          final eventData = sourceData['data'] as Map<String, dynamic>?;
+          if (eventData != null) {
+            setState(() {
+              currentRcEvent = Map<String, dynamic>.from(eventData);
+              rcFields = _getAllNestedFields([currentRcEvent]);
+              rcEvents = [currentRcEvent];
+              selectedRcAppId = null; // Clear selected app
+            });
+          } else {
+            throw Exception('No data field found in _source');
+          }
+        } else {
+          throw Exception('No _source field found in JSON');
+        }
+      } else {
+        // Handle misc JSON format
+        setState(() {
+          currentRcEvent = Map<String, dynamic>.from(jsonData);
+          rcFields = _getAllNestedFields([currentRcEvent]);
+          rcEvents = [currentRcEvent];
+          selectedRcAppId = null; // Clear selected app
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invalid JSON: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final sortedMappings = List<Map<String, dynamic>>.from(mappings)
@@ -473,7 +570,13 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Unified Mapper'),
+        title: Row(
+          children: const [
+            Icon(Icons.flight_takeoff, size: 24), // Fighter plane icon
+            SizedBox(width: 8), // Space between icon and text
+            Text('Maverick Mapper'),
+          ],
+        ),
         actions: [
           if (hasUnsavedChanges)
             TextButton.icon(
@@ -499,91 +602,160 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
       ),
       body: Column(
         children: [
-          // Top section - Source Fields and Mappings
+          // Top section - Configuration Fields and Current Mappings
           Container(
             height: MediaQuery.of(context).size.height * 0.3,
             padding: const EdgeInsets.all(8),
             child: Row(
               children: [
-                // Source Fields
+                // Configuration Fields
                 Expanded(
                   flex: 2,
                   child: Card(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: DropdownButton<String>(
-                            value: selectedRcAppId,
-                            hint: const Text('Select App'),
-                            isExpanded: true,
-                            items: rcApps.map((app) {
-                              return DropdownMenuItem(
-                                value: app['id'].toString(),
-                                child: Text(app['name']),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              if (value != null) _loadRcEvents(value);
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: TextField(
-                            controller: sourceSearchController,
-                            decoration: const InputDecoration(
-                              hintText: 'Search source fields...',
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                sourceSearchQuery = value;
-                              });
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(8),
-                            itemCount: filteredSourceFields.length,
-                            itemBuilder: (context, index) {
-                              final field = filteredSourceFields[index];
-                              return Draggable<Map<String, dynamic>>(
-                                data: {
-                                  'field': field,
-                                  'isSource': true,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Input Source',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              SegmentedButton<String>(
+                                segments: const [
+                                  ButtonSegment(
+                                    value: 'app',
+                                    label: Text('Select App'),
+                                    icon: Icon(Icons.apps),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'json',
+                                    label: Text('Paste JSON'),
+                                    icon: Icon(Icons.code),
+                                  ),
+                                ],
+                                selected: {selectedInputMode},
+                                onSelectionChanged: (Set<String> newSelection) {
+                                  if (mappings.isNotEmpty) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Warning'),
+                                        content: const Text(
+                                            'Changing input source will discard all current mappings. Do you want to continue?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                mappings.clear();
+                                                selectedInputMode =
+                                                    newSelection.first;
+                                                selectedRcAppId = null;
+                                                jsonInputController.clear();
+                                                currentRcEvent = {};
+                                                rcFields = [];
+                                                rcEvents = [];
+                                              });
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('Continue'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  } else {
+                                    setState(() {
+                                      selectedInputMode = newSelection.first;
+                                    });
+                                  }
                                 },
-                                feedback: Material(
-                                  elevation: 4,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    color: Colors.blue.withOpacity(0.8),
-                                    child: Text(
-                                      field,
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                                child: Card(
-                                  child: ListTile(
-                                    title: Text(field),
-                                    subtitle: Text(
-                                      _getNestedValue(currentRcEvent, field) ??
-                                          '',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          if (selectedInputMode == 'app')
+                            DropdownButton<String>(
+                              value: selectedRcAppId,
+                              hint: const Text('Select an application'),
+                              isExpanded: true,
+                              items: rcApps.map((app) {
+                                return DropdownMenuItem(
+                                  value: app['id'].toString(),
+                                  child: Text(app['name']),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) _loadRcEvents(value);
+                              },
+                            )
+                          else
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SegmentedButton<String>(
+                                    segments: const [
+                                      ButtonSegment(
+                                        value: 'elastic',
+                                        label: Text('Elastic Raw'),
+                                      ),
+                                      ButtonSegment(
+                                        value: 'misc',
+                                        label: Text('Misc'),
+                                      ),
+                                    ],
+                                    selected: {selectedJsonMode},
+                                    onSelectionChanged:
+                                        (Set<String> newSelection) {
+                                      setState(() {
+                                        selectedJsonMode = newSelection.first;
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: jsonInputController,
+                                      expands: true,
+                                      maxLines: null,
+                                      minLines: null,
+                                      decoration: InputDecoration(
+                                        hintText: selectedJsonMode == 'elastic'
+                                            ? 'Paste Elastic Raw JSON event here...'
+                                            : 'Paste JSON here...',
+                                        border: const OutlineInputBorder(),
+                                        suffix: Align(
+                                          alignment: Alignment.bottomRight,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                                right: 8.0, bottom: 8.0),
+                                            child: ElevatedButton.icon(
+                                              onPressed: _parseJson,
+                                              icon: const Icon(Icons.check,
+                                                  size: 18),
+                                              label: const Text('Parse'),
+                                            ),
+                                          ),
+                                        ),
+                                        alignLabelWithHint: true,
+                                        contentPadding:
+                                            const EdgeInsets.all(16),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -608,6 +780,11 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                 onPressed: _showJsonExportDialog,
                                 tooltip: 'View JSON',
                               ),
+                              IconButton(
+                                icon: const Icon(Icons.download, size: 20),
+                                onPressed: _showExportOptions,
+                                tooltip: 'Export Mappings',
+                              ),
                             ],
                           ),
                         ),
@@ -624,6 +801,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                   required: false,
                                   description: '',
                                   type: 'string',
+                                  category: 'Standard',
                                 ),
                               );
                               return Card(
@@ -659,7 +837,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
               ],
             ),
           ),
-          const Divider(height: 1),
+          const Divider(),
           // Bottom section - Events Table with Droppable Columns
           Expanded(
             child: rcEvents.isEmpty
@@ -671,13 +849,12 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Data Table
                           DataTable(
                             columns: [
                               const DataColumn(label: Text('RC Event ID')),
-                              ...saasFields.map((field) => DataColumn(
+                              ...standardFields.map((field) => DataColumn(
                                     label: SizedBox(
-                                      height: 56, // Fixed height for the header
+                                      height: 56,
                                       child: DragTarget<Map<String, dynamic>>(
                                         onWillAccept: (data) =>
                                             data != null &&
@@ -929,7 +1106,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                               return DataRow(
                                 cells: [
                                   DataCell(Text(event['id'].toString())),
-                                  ...saasFields.map((field) {
+                                  ...standardFields.map((field) {
                                     final mapping = mappings.firstWhere(
                                       (m) => m['target'] == field.name,
                                       orElse: () => {},

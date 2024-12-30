@@ -35,3 +35,19 @@
    - Adding mappings through the dropdown
    - Removing mappings with the clear button
    - Ensuring unsaved changes are tracked correctly 
+
+### Export Functionality Enhancements
+1. Created reusable export components:
+   - Added `ExportService` class for handling CSV and JSON exports
+   - Created `ExportOptionsDialog` widget for consistent export UI
+2. Enhanced CSV export format:
+   - Streamlined columns to show essential mapping information
+   - Added clear headers: Product Name, Source App, Source Field Name, SaaS Alerts Field Name, and Description
+   - Improved complex mapping display by showing full JSONata expressions in Source Field Name
+3. Added export buttons to the Current Mappings panel:
+   - View JSON button (👁️) for quick JSON preview
+   - Export button (⬇️) with options for CSV or JSON format
+4. Improved export dialogs:
+   - Added copy functionality with selectable text
+   - Consistent dialog sizes and layouts
+   - Clear preview formatting for both CSV and JSON 
