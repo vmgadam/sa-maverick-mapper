@@ -1,53 +1,37 @@
-## Session Changes - Unified Mapper Screen Enhancements
+# Changes Log
 
-### Mapping Row and Picklist Improvements
-1. Removed the "Map Fields" row since the functionality was moved to the column headers
-2. Added a fixed height (56px) for the column headers to prevent overflow issues
-3. Improved the column header layout:
-   - Field name with required indicator (red star) and info tooltip
-   - Small gap (2px) between title and dropdown
-   - Fixed height dropdown (24px) with consistent styling
+## UI and Navigation Changes
+- Removed initial start screen and `mapper_selection_screen.dart`
+- Removed `maverick_mapper_screen.dart`
+- Modified app to launch directly into `UnifiedMapperScreen`
+- Updated app title to "Maverick Mapper" with fighter plane icon
+- Added segmented button for toggling between "Select App" and "Paste JSON" input modes
+- Added confirmation dialog when switching input modes with existing mappings
 
-### Enhanced Dropdown Functionality
-1. Implemented a searchable dropdown with sample data:
-   - Shows field names and their values from the first record
-   - Added search functionality that filters by both field names and values
-   - Improved visibility with a wider dialog (400px)
-   - Added autofocus to the search field for immediate typing
+## JSON Input Features
+- Added JSON paste functionality with two modes:
+  - Elastic Raw: Handles Elastic Search formatted JSON
+  - Misc: Handles general JSON formats
+- Added Clear and Parse buttons for JSON input
+- Added confirmation dialog when parsing new JSON with existing mappings
+- Auto-mapping of special fields (e.g., endpoint ID) when parsing Elastic Raw format
 
-### Visual and UX Improvements
-1. Added a clear button (x) next to mapped fields:
-   - Small icon (16px) that appears only when a mapping exists
-   - Aligned with the dropdown height
-   - Removes the mapping and updates the unsaved changes state
-2. Improved spacing and alignment:
-   - Reduced vertical padding to prevent overflow
-   - Consistent horizontal spacing
-   - Better alignment of all elements
+## Field Mapping Improvements
+- Changed first column title from "SaaS Alerts ID" to "id"
+- Made the id field mappable like other fields
+- Implemented display order for fields with alphabetical sorting fallback
+- Added field sorting:
+  1. "id" field always first (displayOrder: 0)
+  2. "time" field second (displayOrder: 1)
+  3. "partner.id" field third (displayOrder: 2)
+  4. Other fields sorted by displayOrder, then alphabetically
 
-### Bug Fixes
-1. Fixed overflow issues in the column headers
-2. Resolved layout issues with the mapping interface
-3. Improved the drag-and-drop target area for better usability
+## Visual Enhancements
+- Added red star indicators for required fields
+- Improved table layout and column headers
+- Added "Map the first field to display data in table view" message when no mappings exist
+- Enhanced drag-and-drop visual feedback
 
-### State Management
-1. Maintained proper state updates when:
-   - Adding mappings through the dropdown
-   - Removing mappings with the clear button
-   - Ensuring unsaved changes are tracked correctly 
-
-### Export Functionality Enhancements
-1. Created reusable export components:
-   - Added `ExportService` class for handling CSV and JSON exports
-   - Created `ExportOptionsDialog` widget for consistent export UI
-2. Enhanced CSV export format:
-   - Streamlined columns to show essential mapping information
-   - Added clear headers: Product Name, Source App, Source Field Name, SaaS Alerts Field Name, and Description
-   - Improved complex mapping display by showing full JSONata expressions in Source Field Name
-3. Added export buttons to the Current Mappings panel:
-   - View JSON button (👁️) for quick JSON preview
-   - Export button (⬇️) with options for CSV or JSON format
-4. Improved export dialogs:
-   - Added copy functionality with selectable text
-   - Consistent dialog sizes and layouts
-   - Clear preview formatting for both CSV and JSON 
+## Configuration
+- Updated `fields.json` with proper field definitions and display orders
+- Added auto-mapping functionality for special fields in Elastic Raw format 
