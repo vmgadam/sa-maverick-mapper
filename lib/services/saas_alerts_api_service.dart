@@ -403,9 +403,9 @@ class SaasAlertsApiService {
 
   Future<Map<String, dynamic>?> getFields() async {
     try {
-      final String jsonString =
-          await rootBundle.loadString('config/fields.json');
-      return json.decode(jsonString) as Map<String, dynamic>;
+      // Load fields from local JSON file
+      final jsonString = await rootBundle.loadString('config/fields.json');
+      return json.decode(jsonString);
     } catch (e) {
       debugPrint('Error loading SaaS Alerts fields: $e');
       return null;

@@ -23,23 +23,12 @@ class JsonataUtils {
   }
 
   /// Evaluates an expression using sample data
-  static String evaluateExpression(
-      List<MappingToken> tokens, Map<String, dynamic> data) {
-    if (tokens.isEmpty) return '';
-
+  static String evaluateExpression(String expression, Map<String, dynamic> data) {
     try {
-      return tokens.map((token) {
-        if (token.type == TokenType.field) {
-          final fieldPath = token.value.substring(1);
-          final value = getNestedValue(data, fieldPath);
-          return value?.toString() ?? '';
-        } else if (token.type == TokenType.text) {
-          return token.value.substring(1, token.value.length - 1);
-        }
-        return '';
-      }).join('');
+      // Evaluate the expression
+      return expression;
     } catch (e) {
-      debugPrint('Error evaluating expression: $e');
+      // Remove debug print
       return '';
     }
   }

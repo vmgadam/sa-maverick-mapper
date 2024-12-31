@@ -52,10 +52,6 @@ class ConfigurationFieldsWidget extends StatelessWidget {
               final type = (field['type'] as String).toLowerCase();
               final options = field['options'] as List<String>?;
 
-              debugPrint('\nBuilding configuration field: $fieldName');
-              debugPrint('  type: $type');
-              debugPrint('  options: $options');
-
               String? currentValue = configFields[fieldName];
               if (currentValue == null &&
                   type == 'picklist' &&
@@ -107,15 +103,13 @@ class ConfigurationFieldsWidget extends StatelessWidget {
                           border: OutlineInputBorder(),
                         ),
                         items: options.map((option) {
-                          debugPrint('  Creating dropdown item: $option');
-                          return DropdownMenuItem(
+                          return DropdownMenuItem<String>(
                             value: option,
                             child: Text(option),
                           );
                         }).toList(),
                         onChanged: (value) {
                           if (value != null) {
-                            debugPrint('  Selected value: $value');
                             onConfigFieldChanged(fieldName, value);
                           }
                         },
