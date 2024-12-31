@@ -1409,47 +1409,87 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                         PointerDeviceKind.trackpad,
                       },
                     ),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      physics: const ClampingScrollPhysics(),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const ClampingScrollPhysics(),
-                        child: DataTable(
-                          horizontalMargin: 16,
-                          columnSpacing: 16,
-                          headingRowHeight: 100,
-                          columns: _buildDataColumns(),
-                          rows: rcEvents.map((event) {
-                            return DataRow(
-                              cells: standardFields.map((field) {
-                                final mapping = mappings.firstWhere(
-                                  (m) => m['target'] == field.name,
-                                  orElse: () => {},
-                                );
-                                final value = _evaluateMapping(event, mapping);
-                                return DataCell(
-                                  Text(
-                                    value.isEmpty ? '' : value,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                );
-                              }).toList(),
-                            );
-                          }).toList(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Event Fields',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.info_outline, size: 16),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'These fields are used to map the RAW event data to the PROCESSED event data',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.star,
+                                  size: 12, color: Colors.red),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'are required',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            physics: const ClampingScrollPhysics(),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const ClampingScrollPhysics(),
+                              child: DataTable(
+                                horizontalMargin: 16,
+                                columnSpacing: 16,
+                                headingRowHeight: 100,
+                                columns: _buildDataColumns(),
+                                rows: rcEvents.map((event) {
+                                  return DataRow(
+                                    cells: standardFields.map((field) {
+                                      final mapping = mappings.firstWhere(
+                                        (m) => m['target'] == field.name,
+                                        orElse: () => {},
+                                      );
+                                      final value =
+                                          _evaluateMapping(event, mapping);
+                                      return DataCell(
+                                        Text(
+                                          value.isEmpty ? '' : value,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
           ),
           const Divider(),
-          ConfigurationFieldsWidget(
-            configFields: configFields,
-            onConfigFieldChanged: _handleConfigFieldChange,
-            configurationFields: configurationFieldsForWidget,
-          ),
-          const Divider(),
+          rcEvents.isEmpty
+              ? const SizedBox.shrink()
+              : Column(
+                  children: [
+                    ConfigurationFieldsWidget(
+                      configFields: configFields,
+                      onConfigFieldChanged: _handleConfigFieldChange,
+                      configurationFields: configurationFieldsForWidget,
+                    ),
+                    const Divider(),
+                  ],
+                ),
         ],
       ),
     );
