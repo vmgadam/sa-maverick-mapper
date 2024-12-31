@@ -2,24 +2,32 @@
 
 ## Tier 1: Basic required, functionality for MVP
 - [x] Ability to paste the output of Elastic Kabana Inspector Request and Response data into the app and have it parse the data into a useable format for mapping fields.
-  - Added Request/Response tabs for Elastic Raw data
-  - Implemented correct parsing of Elastic fields structure
-  - Added unit tests to verify field mapping functionality
-  - Properly handling array values from Elastic fields
-  - Filtering out .keyword variants
+  - [x] Added Request/Response tabs for Elastic Raw data
+  - [x] Implemented correct parsing of Elastic fields structure
+  - [x] Added unit tests to verify field mapping functionality
+  - [x] Properly handling array values from Elastic fields
+  - [x] Filtering out .keyword variants
+  - [x] Side-by-side Request/Response input areas
+  - [x] Improved field removal handling in complex mappings
+  - [x] Added visual indicators for removed fields
+  - [x] Added edit buttons for complex mappings in both table and list views
 - [x] Ability to extract the query from the Elastic Kabana Inspector Request and use it to build the query section of the JSONata export.
-  - Implemented query extraction from request data
-  - Auto-populating eventFilter field with extracted query
+  - [x] Implemented query extraction from request data
+  - [x] Auto-populating eventFilter field with extracted query
 - [x] Performance optimization for large datasets
   - [x] Added record limit selector (1, 5, 10, 20, 50, 100, 200)
   - [x] Implemented initial load limit of 5 records by default
   - [x] Optimized memory usage by limiting loaded records
   - [x] Improved UI responsiveness with large datasets
+  - [x] Delayed RC app loading until needed
 - [x] UI Improvements
   - [x] Fixed SearchableDropdown lifecycle issues
   - [x] Optimized dropdown performance
   - [x] Added sample value truncation to prevent rendering issues
   - [x] Maintained search functionality while improving stability
+  - [x] Improved complex mapping display with inline removed field indicators
+  - [x] Added edit capabilities for complex mappings in both views
+  - [x] Optimized RC app loading to reduce unnecessary API calls
 - [ ] Ability to validate Jsonata expressions and final JSON output for formatting and errors.
 - [ ] Ability to make multiple mappings for a single product (event mappings where the eventType changes) based on specific queries and filters and load/switch between them
 - [ ] Ability to make mappings across products and switch between them
@@ -27,6 +35,9 @@
   - [x] Added unit tests for Elastic field mapping functionality
   - [ ] Need tests for other core functionality
 - [ ] Ability to export all mappings to a file and then upload them via firefoo as seperate documents in the configMapping collection.
+
+## Known Issues/Bugs
+- [ ] Complex mapping preview text manipulation issue (first/last character being stripped from removed field markers)
 
 ## Tier 2: Worth Considering
 These improvements offer good value but require more careful consideration:
