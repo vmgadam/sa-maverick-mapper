@@ -10,6 +10,9 @@ class ComplexMappingEditor extends StatefulWidget {
   /// The current event data used for previewing the expression
   final Map<String, dynamic> currentEvent;
 
+  /// Sample values for each field (optional)
+  final Map<String, String>? sampleValues;
+
   /// The initial tokens in the expression (optional)
   final List<Map<String, String>> initialTokens;
 
@@ -22,6 +25,7 @@ class ComplexMappingEditor extends StatefulWidget {
     required this.sourceFields,
     required this.currentEvent,
     required this.onSave,
+    this.sampleValues,
     this.initialTokens = const [],
   });
 
@@ -151,7 +155,8 @@ class _ComplexMappingEditorState extends State<ComplexMappingEditor> {
                                     dense: true,
                                     title: Text('\$${field}'),
                                     subtitle: Text(
-                                      _getNestedValue(
+                                      widget.sampleValues?[field] ??
+                                          _getNestedValue(
                                                   widget.currentEvent, field)
                                               ?.toString() ??
                                           '',

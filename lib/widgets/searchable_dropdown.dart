@@ -30,13 +30,15 @@ class SearchableDropdown extends StatefulWidget {
 
 class _SearchableDropdownState extends State<SearchableDropdown> {
   final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
   final TextEditingController _searchController = TextEditingController();
   bool _isOpen = false;
   String _searchQuery = '';
-  OverlayEntry? _overlayEntry;
+  bool _disposed = false;
 
   @override
   void dispose() {
+    _disposed = true;
     _searchController.dispose();
     _hideOverlay();
     super.dispose();
@@ -44,14 +46,18 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
 
   void _showOverlay() {
     _overlayEntry = _createOverlayEntry();
-    Overlay.of(context).insert(_overlayEntry!);
-    setState(() => _isOpen = true);
+    if (!_disposed) {
+      Overlay.of(context).insert(_overlayEntry!);
+      setState(() => _isOpen = true);
+    }
   }
 
   void _hideOverlay() {
     _overlayEntry?.remove();
     _overlayEntry = null;
-    setState(() => _isOpen = false);
+    if (!_disposed) {
+      setState(() => _isOpen = false);
+    }
   }
 
   List<SearchableDropdownItem> get filteredItems {
@@ -95,14 +101,17 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                       controller: _searchController,
                       decoration: const InputDecoration(
                         isDense: true,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         hintText: 'Search fields or values...',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.search, size: 20),
                       ),
                       onChanged: (value) {
-                        setState(() => _searchQuery = value);
-                        _overlayEntry?.markNeedsBuild();
+                        if (!_disposed) {
+                          setState(() => _searchQuery = value);
+                          _overlayEntry?.markNeedsBuild();
+                        }
                       },
                     ),
                   ),
@@ -115,7 +124,8 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                         final item = filteredItems[index];
                         return ListTile(
                           dense: true,
-                          title: Text(item.label, style: const TextStyle(fontSize: 13)),
+                          title: Text(item.label,
+                              style: const TextStyle(fontSize: 13)),
                           subtitle: Text(
                             item.subtitle,
                             style: TextStyle(
@@ -125,10 +135,12 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                             ),
                           ),
                           onTap: () {
-                            widget.onChanged(item.value);
-                            _hideOverlay();
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
+                            if (!_disposed) {
+                              widget.onChanged(item.value);
+                              _hideOverlay();
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            }
                           },
                         );
                       },
@@ -176,4 +188,4 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
       ),
     );
   }
-} 
+}

@@ -13,6 +13,7 @@ import '../widgets/configuration_fields_widget.dart';
 import '../services/export_service.dart';
 import '../widgets/export_options_dialog.dart';
 import '../widgets/searchable_dropdown.dart';
+import '../services/field_mapping_service.dart';
 
 class CustomScrollBehavior extends MaterialScrollBehavior {
   @override
@@ -183,6 +184,15 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   // Input mode state
   String selectedInputMode = 'app';
   String selectedJsonMode = 'elastic';
+  int selectedRecordLimit = 5;
+  final List<int> recordLimits = [1, 5, 10, 20, 50, 100, 200];
+
+  // Elastic Raw input state
+  final TextEditingController elasticRequestController =
+      TextEditingController();
+  final TextEditingController elasticResponseController =
+      TextEditingController();
+  int selectedElasticTab = 0; // 0 for Request, 1 for Response
 
   // Single scroll controller
   final ScrollController _horizontalController = ScrollController();
@@ -192,10 +202,11 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     super.initState();
     _loadRcApps();
     _loadSaasFields();
-    
+
     // Synchronize horizontal scrolling
     _horizontalController.addListener(() {
-      if (_horizontalController.position.pixels != _horizontalController.position.pixels) {
+      if (_horizontalController.position.pixels !=
+          _horizontalController.position.pixels) {
         _horizontalController.jumpTo(_horizontalController.position.pixels);
       }
     });
@@ -207,6 +218,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     sourceSearchController.dispose();
     saasSearchController.dispose();
     jsonInputController.dispose();
+    elasticRequestController.dispose();
+    elasticResponseController.dispose();
     super.dispose();
   }
 
@@ -231,9 +244,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   List<String> get filteredSourceFields {
     if (sourceSearchQuery.isEmpty) return rcFields;
     return rcFields.where((field) {
-      final value =
-          _getNestedValue(currentRcEvent, field)?.toString().toLowerCase() ??
-              '';
+      final value = FieldMappingService.getNestedValue(currentRcEvent, field)
+          .toLowerCase();
       return field.toLowerCase().contains(sourceSearchQuery.toLowerCase()) ||
           value.contains(sourceSearchQuery.toLowerCase());
     }).toList();
@@ -265,7 +277,9 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   List<SaasField> get configurationFields {
-    final fields = saasFields.where((field) => field.category == 'Configuration').toList()
+    final fields = saasFields
+        .where((field) => field.category == 'Configuration')
+        .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
     return fields;
   }
@@ -311,14 +325,18 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
       }
 
       final fields = jsonData['fields'] as Map<String, dynamic>;
-      final loadedFields = fields.entries.map((e) => SaasField.fromJson(e.key, e.value)).toList();
+      final loadedFields = fields.entries
+          .map((e) => SaasField.fromJson(e.key, e.value))
+          .toList();
 
       setState(() {
         saasFields = loadedFields;
         isLoadingSaasFields = false;
 
         for (var field in loadedFields) {
-          if (field.type == 'picklist' && field.options != null && field.options!.isNotEmpty) {
+          if (field.type == 'picklist' &&
+              field.options != null &&
+              field.options!.isNotEmpty) {
             configFields[field.name] = field.options!.first;
           }
         }
@@ -441,32 +459,13 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
   // Helper functions
   List<String> _getAllNestedFields(List<dynamic> data, [String prefix = '']) {
-    final fields = <String>{};
-    for (var item in data) {
-      if (item is Map<String, dynamic>) {
-        item.forEach((key, value) {
-          final fieldName = prefix.isEmpty ? key : '$prefix.$key';
-          if (value is Map<String, dynamic>) {
-            fields.addAll(_getAllNestedFields([value], fieldName));
-          } else if (value is List) {
-            fields.addAll(_getAllNestedFields(value, fieldName));
-          } else {
-            fields.add(fieldName);
-          }
-        });
-      }
-    }
-    return fields.toList()..sort();
+    if (data.isEmpty) return [];
+    return FieldMappingService.getAllFields(
+        data.first as Map<String, dynamic>, prefix);
   }
 
   dynamic _getNestedValue(Map<String, dynamic> data, String path) {
-    final parts = path.split('.');
-    dynamic value = data;
-    for (final part in parts) {
-      if (value is! Map<String, dynamic>) return null;
-      value = value[part];
-    }
-    return value?.toString() ?? 'null';
+    return FieldMappingService.getNestedValue(data, path);
   }
 
   String _evaluateMapping(
@@ -517,6 +516,18 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
       }
     }
 
+    // Create sample values map
+    final sampleValues = Map.fromEntries(
+      rcFields.map((field) {
+        String value = _getNestedValue(rcEvents.first, field).toString();
+        // Limit sample value length to prevent rendering issues
+        if (value.length > 50) {
+          value = '${value.substring(0, 47)}...';
+        }
+        return MapEntry(field, value);
+      }),
+    );
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -527,6 +538,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           child: ComplexMappingEditor(
             sourceFields: rcFields,
             currentEvent: currentRcEvent,
+            sampleValues: sampleValues,
             initialTokens: initialTokens,
             onSave: (expression, tokens) {
               setState(() {
@@ -653,14 +665,57 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
   void _parseJson() {
     try {
-      final jsonData = json.decode(jsonInputController.text);
-
       if (selectedJsonMode == 'elastic') {
-        // Handle Elastic Raw format - process entire JSON structure
+        // Parse both request and response data
+        final requestData = elasticRequestController.text.isNotEmpty
+            ? json.decode(elasticRequestController.text)
+            : null;
+        final responseData = elasticResponseController.text.isNotEmpty
+            ? json.decode(elasticResponseController.text)
+            : null;
+
+        if (responseData == null) {
+          throw Exception('Response data is required for Elastic Raw format');
+        }
+
+        // Parse the rawResponse which contains the actual Elastic data
+        final rawResponse = responseData['rawResponse'];
+        if (rawResponse == null) {
+          throw Exception('No rawResponse found in Elastic data');
+        }
+
+        // Parse or use the raw response
+        final elasticData =
+            rawResponse is String ? json.decode(rawResponse) : rawResponse;
+
+        // Extract hits from response data
+        List? hits;
+        if (elasticData['hits']?['hits'] != null) {
+          hits = elasticData['hits']['hits'] as List?;
+        }
+
+        if (hits == null || hits.isEmpty) {
+          throw Exception(
+              'No records found in Elastic Response data. Please check the data format.');
+        }
+
+        // Extract query from request if available
+        String? querySection;
+        if (requestData != null && requestData['query'] != null) {
+          querySection = json.encode(requestData['query']);
+        }
+
         setState(() {
-          currentRcEvent = Map<String, dynamic>.from(jsonData);
+          // Use only the fields object for mapping, not the Elasticsearch metadata
+          final firstHit = hits![0];
+          currentRcEvent = Map<String, dynamic>.from(firstHit['fields']);
           rcFields = _getAllNestedFields([currentRcEvent]);
-          rcEvents = [currentRcEvent];
+
+          // Store only the fields data as events, limited by selectedRecordLimit
+          rcEvents = hits
+              .take(selectedRecordLimit)
+              .map((hit) => Map<String, dynamic>.from(hit['fields']))
+              .toList();
           selectedRcAppId = null; // Clear selected app
 
           // Auto-map matching fields that aren't already mapped
@@ -682,18 +737,27 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           }
 
           // Auto-map special fields if they exist
-          if (jsonData['_source']?['product']?['endpoint']?['id'] != null) {
-            configFields['endpointId'] =
-                jsonData['_source']['product']['endpoint']['id'].toString();
+          if (currentRcEvent['product.endpoint.id'] != null) {
+            final endpointId =
+                _getNestedValue(currentRcEvent, 'product.endpoint.id');
+            if (endpointId != null) {
+              configFields['endpointId'] = endpointId.toString();
+            }
+          }
+
+          // Set the query section if available
+          if (querySection != null) {
+            configFields['eventFilter'] = querySection;
           }
         });
       } else {
-        // Handle misc JSON format
+        // Handle misc JSON format (existing code)
+        final jsonData = json.decode(jsonInputController.text);
         setState(() {
           currentRcEvent = Map<String, dynamic>.from(jsonData);
           rcFields = _getAllNestedFields([currentRcEvent]);
           rcEvents = [currentRcEvent];
-          selectedRcAppId = null; // Clear selected app
+          selectedRcAppId = null;
 
           // Auto-map matching fields that aren't already mapped
           for (var sourceField in rcFields) {
@@ -722,7 +786,12 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   void _clearJson() {
-    jsonInputController.clear();
+    if (selectedJsonMode == 'elastic') {
+      elasticRequestController.clear();
+      elasticResponseController.clear();
+    } else {
+      jsonInputController.clear();
+    }
   }
 
   void _confirmAndParseJson() {
@@ -807,20 +876,28 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
               ? Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
-                    mappings.firstWhere((m) => m['target'] == field.name)['isComplex'] == 'true'
+                    mappings.firstWhere((m) => m['target'] == field.name)[
+                                'isComplex'] ==
+                            'true'
                         ? '[Complex Mapping]'
-                        : mappings.firstWhere((m) => m['target'] == field.name)['source']!,
+                        : mappings.firstWhere(
+                            (m) => m['target'] == field.name)['source']!,
                     style: const TextStyle(fontSize: 12),
                     overflow: TextOverflow.ellipsis,
                   ),
                 )
               : SearchableDropdown(
                   items: rcFields.map((sourceField) {
-                    final sampleValue = _getNestedValue(rcEvents.first, sourceField);
+                    String sampleValue =
+                        _getNestedValue(rcEvents.first, sourceField).toString();
+                    // Limit sample value length to prevent rendering issues
+                    if (sampleValue.length > 50) {
+                      sampleValue = '${sampleValue.substring(0, 47)}...';
+                    }
                     return SearchableDropdownItem(
                       value: sourceField,
                       label: sourceField,
-                      subtitle: sampleValue?.toString() ?? 'null',
+                      subtitle: sampleValue,
                     );
                   }).toList(),
                   hint: Text(
@@ -1021,68 +1098,215 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                             color: Colors.grey.shade300),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
-                                      child: Column(
-                                        children: [
-                                          Expanded(
-                                            child: SingleChildScrollView(
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(16.0),
-                                                child: TextFormField(
-                                                  controller:
-                                                      jsonInputController,
-                                                  maxLines: null,
-                                                  decoration:
-                                                      const InputDecoration
-                                                          .collapsed(
-                                                    hintText:
-                                                        'Paste JSON here...',
-                                                  ),
-                                                  style: const TextStyle(
-                                                    fontFamily: 'monospace',
-                                                    height: 1.5,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              border: Border(
-                                                top: BorderSide(
-                                                    color:
-                                                        Colors.grey.shade300),
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.end,
+                                      child: selectedJsonMode == 'elastic'
+                                          ? DefaultTabController(
+                                              length: 2,
+                                              child: Column(
                                                 children: [
-                                                  TextButton.icon(
-                                                    onPressed: _clearJson,
-                                                    icon: const Icon(
-                                                        Icons.clear,
-                                                        size: 18),
-                                                    label: const Text('Clear'),
+                                                  const TabBar(
+                                                    tabs: [
+                                                      Tab(text: 'Request'),
+                                                      Tab(text: 'Response'),
+                                                    ],
                                                   ),
-                                                  const SizedBox(width: 8),
-                                                  ElevatedButton.icon(
-                                                    onPressed:
-                                                        _confirmAndParseJson,
-                                                    icon: const Icon(
-                                                        Icons.check,
-                                                        size: 18),
-                                                    label: const Text('Parse'),
+                                                  Expanded(
+                                                    child: TabBarView(
+                                                      children: [
+                                                        SingleChildScrollView(
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(16.0),
+                                                            child:
+                                                                TextFormField(
+                                                              controller:
+                                                                  elasticRequestController,
+                                                              maxLines: null,
+                                                              decoration:
+                                                                  const InputDecoration
+                                                                      .collapsed(
+                                                                hintText:
+                                                                    'Paste Elastic Request JSON here...',
+                                                              ),
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontFamily:
+                                                                    'monospace',
+                                                                height: 1.5,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        SingleChildScrollView(
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(16.0),
+                                                            child:
+                                                                TextFormField(
+                                                              controller:
+                                                                  elasticResponseController,
+                                                              maxLines: null,
+                                                              decoration:
+                                                                  const InputDecoration
+                                                                      .collapsed(
+                                                                hintText:
+                                                                    'Paste Elastic Response JSON here...',
+                                                              ),
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontFamily:
+                                                                    'monospace',
+                                                                height: 1.5,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      border: Border(
+                                                        top: BorderSide(
+                                                            color: Colors
+                                                                .grey.shade300),
+                                                      ),
+                                                    ),
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8.0),
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .end,
+                                                        children: [
+                                                          const Text(
+                                                              'Records to load:'),
+                                                          const SizedBox(
+                                                              width: 8),
+                                                          DropdownButton<int>(
+                                                            value:
+                                                                selectedRecordLimit,
+                                                            items: recordLimits
+                                                                .map((int
+                                                                    value) {
+                                                              return DropdownMenuItem<
+                                                                  int>(
+                                                                value: value,
+                                                                child: Text(value
+                                                                    .toString()),
+                                                              );
+                                                            }).toList(),
+                                                            onChanged: (int?
+                                                                newValue) {
+                                                              if (newValue !=
+                                                                  null) {
+                                                                setState(() {
+                                                                  selectedRecordLimit =
+                                                                      newValue;
+                                                                });
+                                                              }
+                                                            },
+                                                          ),
+                                                          const SizedBox(
+                                                              width: 16),
+                                                          TextButton.icon(
+                                                            onPressed:
+                                                                _clearJson,
+                                                            icon: const Icon(
+                                                                Icons.clear,
+                                                                size: 18),
+                                                            label: const Text(
+                                                                'Clear'),
+                                                          ),
+                                                          const SizedBox(
+                                                              width: 8),
+                                                          ElevatedButton.icon(
+                                                            onPressed:
+                                                                _confirmAndParseJson,
+                                                            icon: const Icon(
+                                                                Icons.check,
+                                                                size: 18),
+                                                            label: const Text(
+                                                                'Parse'),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
                                                   ),
                                                 ],
                                               ),
+                                            )
+                                          : Column(
+                                              children: [
+                                                Expanded(
+                                                  child: SingleChildScrollView(
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              16.0),
+                                                      child: TextFormField(
+                                                        controller:
+                                                            jsonInputController,
+                                                        maxLines: null,
+                                                        decoration:
+                                                            const InputDecoration
+                                                                .collapsed(
+                                                          hintText:
+                                                              'Paste JSON here...',
+                                                        ),
+                                                        style: const TextStyle(
+                                                          fontFamily:
+                                                              'monospace',
+                                                          height: 1.5,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    border: Border(
+                                                      top: BorderSide(
+                                                          color: Colors
+                                                              .grey.shade300),
+                                                    ),
+                                                  ),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment.end,
+                                                      children: [
+                                                        TextButton.icon(
+                                                          onPressed: _clearJson,
+                                                          icon: const Icon(
+                                                              Icons.clear,
+                                                              size: 18),
+                                                          label: const Text(
+                                                              'Clear'),
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 8),
+                                                        ElevatedButton.icon(
+                                                          onPressed:
+                                                              _confirmAndParseJson,
+                                                          icon: const Icon(
+                                                              Icons.check,
+                                                              size: 18),
+                                                          label: const Text(
+                                                              'Parse'),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ),
-                                        ],
-                                      ),
                                     ),
                                   ),
                                 ],
@@ -1238,7 +1462,8 @@ class _EventDataSource extends DataTableSource {
   final List<Map<String, dynamic>> mappings;
   final Function(Map<String, dynamic>, Map<String, dynamic>) evaluateMapping;
 
-  _EventDataSource(this.events, this.fields, this.mappings, this.evaluateMapping);
+  _EventDataSource(
+      this.events, this.fields, this.mappings, this.evaluateMapping);
 
   @override
   DataRow? getRow(int index) {

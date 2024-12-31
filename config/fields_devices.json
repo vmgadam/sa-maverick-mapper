@@ -1,0 +1,118 @@
+{
+  "fields": {
+    "_id": {
+      "required": true,
+      "description": "Unique identifier for the device event",
+      "type": "string",
+      "defaultMode": "simple",
+      "category": "Standard",
+      "displayOrder": 0
+    },
+    "time": {
+      "required": true,
+      "description": "Timestamp of when the device event occurred",
+      "type": "string",
+      "defaultMode": "simple",
+      "category": "Standard",
+      "displayOrder": 1
+    },
+    "os": {
+      "required": true,
+      "description": "Operating system of the device",
+      "type": "string",
+      "defaultMode": "simple",
+      "category": "Standard",
+      "displayOrder": 2
+    },
+    "ip": {
+      "required": true,
+      "description": "IP address of the device",
+      "type": "string",
+      "defaultMode": "simple",
+      "category": "Standard",
+      "displayOrder": 3
+    },
+    "deviceName": {
+      "required": true,
+      "description": "Name of the device",
+      "type": "string",
+      "defaultMode": "simple",
+      "category": "Standard",
+      "displayOrder": 4
+    },
+    "accountKey.field": {
+      "required": false,
+      "description": "Field path for account identification",
+      "type": "string",
+      "defaultMode": "complex",
+      "category": "Configuration"
+    },
+    "accountKey.type": {
+      "required": false,
+      "description": "Type of account key (e.g., 'id')",
+      "type": "string",
+      "defaultMode": "simple",
+      "category": "Configuration"
+    },
+    "dateKeyField": {
+      "required": false,
+      "description": "Field path for event timestamp",
+      "type": "string",
+      "defaultMode": "simple",
+      "category": "Configuration"
+    },
+    "endpointId": {
+      "required": true,
+      "description": "Identifier for the endpoint",
+      "type": "number",
+      "category": "Configuration"
+    },
+    "endpointName": {
+      "required": true,
+      "description": "Name of the endpoint (e.g., 'logs', 'events')",
+      "type": "string",
+      "category": "Configuration"
+    },
+    "eventType": {
+      "required": true,
+      "description": "Type of event (e.g., 'DEVICE_STATUS')",
+      "type": "picklist",
+      "category": "Configuration",
+      "options": [
+        "DEVICE_STATUS",
+        "DEVICE_CONNECTED",
+        "DEVICE_DISCONNECTED",
+        "DEVICE_MODIFIED",
+        "SECURITY_ALERT",
+        "CONFIGURATION_CHANGE",
+        "CUSTOM"
+      ]
+    },
+    "eventTypeKey": {
+      "required": true,
+      "description": "Key identifier for event type",
+      "type": "string",
+      "category": "Configuration"
+    },
+    "productRef": {
+      "required": true,
+      "description": "Reference to product configuration",
+      "type": "string",
+      "category": "Configuration"
+    },
+    "userKeyField": {
+      "required": true,
+      "description": "Field path for user identification",
+      "type": "string",
+      "category": "Standard",
+      "displayOrder": 5
+    },
+    "eventFilter": {
+      "required": true,
+      "description": "Query filter for events",
+      "type": "string",
+      "category": "Standard",
+      "displayOrder": 6
+    }
+  }
+} 

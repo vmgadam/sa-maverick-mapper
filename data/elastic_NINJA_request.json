@@ -1,0 +1,757 @@
+{
+  "track_total_hits": false,
+  "sort": [
+    {
+      "@timestamp": {
+        "order": "desc",
+        "unmapped_type": "boolean"
+      }
+    }
+  ],
+  "fields": [
+    {
+      "field": "*",
+      "include_unmapped": "true"
+    },
+    {
+      "field": "@timestamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ActivityStartTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.AlertCreationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.AppAccessContext.IssuedAtTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.AppAccessContext.TokenIssuedAtTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ArtifactsShared.ArtifactShareSessions.EndTimestamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ArtifactsShared.ArtifactShareSessions.StartTimestamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.AttackSimulationInfo.AttackSimDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.Attendees.ExplicitConsentInfo.ExplicitConsentLog.ConsentTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.Attendees.InviterInfo.InviteTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.CloudTrailEvent.eventTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ContentModifiedDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.CreatedDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.CreationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.DateCreated",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.DeliveryMessageInfo.Timestamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.DetectionDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.EndTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.EndTimeUtc",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.EntityData.Expiry",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.EventTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ExchangeMetaData.Sent",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ExportEventEndDateTimeParameter",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ExportEventStartDateTimeParameter",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.FilteringDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.FirstViewDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.GradingResult.Timestamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ItemCreationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ItemLastModifiedTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.JoinTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LabelAppliedDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LastModifiedDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LastReferencedDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LastRefreshTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LastUpdate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LastUpdateTimeUtc",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LastUpdatedTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LastViewDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LastViewedDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LeaveTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.LoginTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.MessageDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.MessageTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.MessageVisibilityTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.OpenShift.EndTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.OpenShift.StartTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.OperationDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.PackageExpiration",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.PropertyBag.AssessmentStatusPerInitiative.StatusChangeDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.PropertyBag.AssessmentStatusPerInitiative.StatusFirstEvaluationDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.PropertyBag.Policy.EventTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.RescanResult.Timestamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.SharePointMetaData.ItemCreationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.SharePointMetaData.ItemLastModifiedTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.SharePointMetaData.ItemLastSharedTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.Shift.EndTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.Shift.StartTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ShiftRequest.CreatedTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ShiftRequest.EndTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ShiftRequest.StartTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.StartTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.StartTimeUtc",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.SystemModstamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.TimeOfClick",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.Timestamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.activityDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.additionalData.ProcessingEndTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.additionalData.TimeGenerated",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.attributes.created-at",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.authenticationDetails.authenticationStepDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.from",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.createdOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.created_date",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.created_on",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.detectionTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.eventTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.executedOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.fileCreated",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.fileModified",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.heartbeat",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.markedForUpdateOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.modifiedOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.monitoredJobFetched",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.remediationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.data.threatStatusTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.eventTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.lastSeenOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.responseData.createdon",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.item.updatedOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.query.endDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.query.startDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.target.createdOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.target.lastScannedOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.body.to",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.comments.createdDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.createdAt",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.createdDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.createdDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.createdOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.created_at",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.creationTimestamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.createdAt",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.created_date",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.created_on",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.detectedat",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.detectionTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.eventTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.executedOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.expiration",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.fileCreated",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.fileModified",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.heartbeat",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.markedForUpdateOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.message.params.connectionEnded",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.message.params.connectionStarted",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.message.params.logged_in_time",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.message.params.logged_out_time",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.message.params.schedule",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.modifiedOn",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.monitoredJobFetched",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.remediationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.threatStatusTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.data.utcTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.authMethodFirstVerificationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.authMethodFourthVerificationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.authMethodSecondVerificationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.authMethodThirdVerificationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.authTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.authenticatorMethodChallengeTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.enrollmentMethodChallengeTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.expirationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.expiryTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.issuedAt",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.suspiciousActivityTimestamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.transactionCompleted",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.debugContext.debugData.transactionStarted",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.details.asset_fields.date_value",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.details.device_session_info.created",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.details.device_session_info.updated",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.detectedDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.eventDate",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.eventTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.account.createdDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.blobContainer.createdDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.blobContainer.storageResource.createdDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.createdDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.files.createdDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.firstSeenDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.parentProcessCreationDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.processCreationDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.receivedDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.sourceAddress.createdDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.startUtcDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.evidence.storageResource.createdDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.firstActivityDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.isotimestamp",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.lastActivityDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.lastUpdateDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.lastUpdatedDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.profile.start_date",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.published",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.resolvedDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.responseData.createdon",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.signInActivity.lastNonInteractiveSignInDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.signInActivity.lastSignInDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.signInActivity.lastSuccessfulSignInDateTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.target.detailEntry.authenticatorMethodVerificationTime",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.target.detailEntry.completedAt",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.target.detailEntry.datecreated",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.target.detailEntry.expires",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.target.detailEntry.initiatedAt",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.ts",
+      "format": "strict_date_optional_time"
+    },
+    {
+      "field": "data.updatedAt",
+      "format": "strict_date_optional_time"
+    }
+  ],
+  "size": 500,
+  "version": true,
+  "script_fields": {},
+  "stored_fields": [
+    "*"
+  ],
+  "runtime_mappings": {},
+  "_source": false,
+  "query": {
+    "bool": {
+      "must": [],
+      "filter": [
+        {
+          "range": {
+            "@timestamp": {
+              "format": "strict_date_optional_time",
+              "gte": "2024-12-31T19:51:28.353Z",
+              "lte": "2024-12-31T19:56:28.353Z"
+            }
+          }
+        },
+        {
+          "match_phrase": {
+            "product.type": "NINJA_ONE"
+          }
+        },
+        {
+          "match_phrase": {
+            "data.data.message.code": "audit_app_user_logged_out"
+          }
+        }
+      ],
+      "should": [],
+      "must_not": []
+    }
+  },
+  "highlight": {
+    "pre_tags": [
+      "@kibana-highlighted-field@"
+    ],
+    "post_tags": [
+      "@/kibana-highlighted-field@"
+    ],
+    "fields": {
+      "*": {}
+    },
+    "fragment_size": 2147483647
+  }
+}
