@@ -14,6 +14,9 @@ import '../services/export_service.dart';
 import '../widgets/export_options_dialog.dart';
 import '../widgets/searchable_dropdown.dart';
 import '../services/field_mapping_service.dart';
+import './saved_mappings_screen.dart';
+import '../models/saved_mapping.dart';
+import '../services/mapping_export_service.dart';
 
 class CustomScrollBehavior extends MaterialScrollBehavior {
   @override
@@ -644,13 +647,19 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   void _exportAsJSON() {
-    ExportService.showJSONExportDialog(
-      context,
-      jsonPreviewWidget: JsonPreviewWidget(
-        jsonData: _generateJsonPreview(),
-        showExportButton: false,
-      ),
+    // Create a temporary SavedMapping from current state
+    final currentMapping = SavedMapping(
+      name: 'Current Mapping',
+      product: selectedRcAppId ?? 'Unknown',
+      query: elasticRequestController.text,
+      mappings: mappings,
+      configFields: configFields,
+      totalFieldsMapped: mappings.length,
+      requiredFieldsMapped: _calculateRequiredFieldsMapped(),
+      totalRequiredFields: _calculateTotalRequiredFields(),
     );
+
+    MappingExportService.showSingleMappingExportDialog(context, currentMapping);
   }
 
   void _showExportOptions() {
@@ -1036,497 +1045,288 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final sortedMappings = List<Map<String, dynamic>>.from(mappings)
-      ..sort((a, b) => (a['target'] ?? '').compareTo(b['target'] ?? ''));
+  void _showSaveAsDialog() {
+    final nameController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final mappingState = Provider.of<MappingState>(context, listen: false);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: const [
-            Icon(Icons.flight_takeoff, size: 24), // Fighter plane icon
-            SizedBox(width: 8), // Space between icon and text
-            Text('Maverick Mapper'),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save Mapping As'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Mapping Name',
+                  hintText: 'Enter a name for this mapping',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a name';
+                  }
+                  if (value.length > 200) {
+                    return 'Name must be 200 characters or less';
+                  }
+                  return null;
+                },
+                autofocus: true,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                final name = nameController.text;
+                final appInfo = selectedRcAppId != null
+                    ? rcApps.firstWhere(
+                        (app) => app['id'].toString() == selectedRcAppId,
+                        orElse: () => {'name': 'Unknown App'},
+                      )
+                    : {'name': 'Unknown App'};
+
+                // Create the saved mapping
+                final savedMapping = SavedMapping(
+                  name: name,
+                  product: appInfo['name'],
+                  query: _getCurrentQuery() ?? '',
+                  mappings: List.from(mappings),
+                  configFields: Map.from(configFields),
+                  totalFieldsMapped: mappings.length,
+                  requiredFieldsMapped: mappings
+                      .where((m) => saasFields
+                          .firstWhere((f) => f.name == m['target'])
+                          .required)
+                      .length,
+                  totalRequiredFields:
+                      saasFields.where((f) => f.required).length,
+                );
+
+                // Check for duplicate queries
+                final duplicates =
+                    mappingState.findMappingsWithQuery(savedMapping.query);
+                if (duplicates.isNotEmpty) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Duplicate Query Found'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'The following mappings use the same query:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          ...duplicates.map((m) => Text('• ${m.name}')),
+                          const SizedBox(height: 16),
+                          const Text('Do you want to continue saving?'),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            mappingState.addSavedMapping(savedMapping);
+                            Navigator.pop(context); // Close duplicate warning
+                            Navigator.pop(context); // Close save dialog
+                            setState(() => hasUnsavedChanges = false);
+                          },
+                          child: const Text('Save Anyway'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  mappingState.addSavedMapping(savedMapping);
+                  Navigator.pop(context);
+                  setState(() => hasUnsavedChanges = false);
+                }
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String? _getCurrentQuery() {
+    if (selectedInputMode == 'elastic') {
+      try {
+        final requestData = json.decode(elasticRequestController.text);
+        if (requestData['query'] != null) {
+          return json.encode(requestData['query']);
+        }
+      } catch (e) {
+        debugPrint('Error getting query from elastic request: $e');
+      }
+    }
+    return null;
+  }
+
+  int _calculateRequiredFieldsMapped() {
+    return mappings.where((m) {
+      final targetField = saasFields.firstWhere(
+        (f) => f.name == m['target'],
+        orElse: () => SaasField(
+          name: '',
+          description: '',
+          type: 'string',
+          category: 'default',
+          required: false,
+        ),
+      );
+      return targetField.required;
+    }).length;
+  }
+
+  int _calculateTotalRequiredFields() {
+    return saasFields.where((f) => f.required).length;
+  }
+
+  Widget _buildSaveButton() {
+    return IconButton(
+      key: const Key('save_button'),
+      icon: const Icon(Icons.save),
+      onPressed: hasUnsavedChanges ? _showSaveDialog : null,
+      tooltip: 'Save Mapping',
+    );
+  }
+
+  Future<void> _showSaveDialog() async {
+    final mappingState = Provider.of<MappingState>(context, listen: false);
+    final TextEditingController nameController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save Mapping'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Mapping Name',
+                hintText: 'Enter a name for this mapping',
+              ),
+            ),
           ],
         ),
         actions: [
-          if (hasUnsavedChanges)
-            TextButton.icon(
-              icon: const Icon(Icons.save),
-              label: const Text('Save'),
-              onPressed: () {
-                // Save mappings
-                if (selectedRcAppId != null) {
-                  final appInfo = rcApps.firstWhere(
-                    (app) => app['id'].toString() == selectedRcAppId,
-                    orElse: () => {'name': 'Unknown App'},
-                  );
-                  Provider.of<MappingState>(context, listen: false).setMappings(
-                      selectedRcAppId!, appInfo['name'], List.from(mappings));
-                  setState(() {
-                    hasUnsavedChanges = false;
-                  });
-                }
-              },
-              style: TextButton.styleFrom(foregroundColor: Colors.white),
-            ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (nameController.text.isNotEmpty) {
+                mappingState.setMappings(
+                  selectedRcAppId!,
+                  nameController.text,
+                  mappings.map((m) => Map<String, String>.from(m)).toList(),
+                );
+                Navigator.of(context).pop(true);
+              }
+            },
+            child: const Text('Save'),
+          ),
         ],
       ),
-      body: Column(
-        children: [
-          // Top section - Configuration Fields and Current Mappings
-          Container(
-            height: MediaQuery.of(context).size.height * 0.3,
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                // Configuration Fields
-                Expanded(
-                  flex: 2,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SegmentedButton<String>(
-                            segments: const [
-                              ButtonSegment(
-                                value: 'elastic',
-                                label: Text('Elastic Raw'),
-                                icon: Icon(Icons.data_array),
-                              ),
-                              ButtonSegment(
-                                value: 'json',
-                                label: Text('JSON'),
-                                icon: Icon(Icons.code),
-                              ),
-                              ButtonSegment(
-                                value: 'rc',
-                                label: Text('RC'),
-                                icon: Icon(Icons.rocket_launch),
-                              ),
-                            ],
-                            selected: {selectedInputMode},
-                            onSelectionChanged: (Set<String> newSelection) {
-                              if (mappings.isNotEmpty) {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Warning'),
-                                    content: const Text(
-                                        'Changing input source will discard all current mappings. Do you want to continue?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            mappings.clear();
-                                            selectedInputMode =
-                                                newSelection.first;
-                                            selectedRcAppId = null;
-                                            jsonInputController.clear();
-                                            currentRcEvent = {};
-                                            rcFields = [];
-                                            rcEvents = [];
-                                          });
-                                          if (newSelection.first == 'rc') {
-                                            _loadRcApps();
-                                          }
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('Continue'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                setState(() {
-                                  selectedInputMode = newSelection.first;
-                                });
-                                if (newSelection.first == 'rc') {
-                                  _loadRcApps();
-                                }
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          if (selectedInputMode == 'rc')
-                            DropdownButton<String>(
-                              value: selectedRcAppId,
-                              hint: const Text('Select an application'),
-                              isExpanded: true,
-                              items: rcApps.map((app) {
-                                return DropdownMenuItem(
-                                  value: app['id'].toString(),
-                                  child: Text(app['name']),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) _loadRcEvents(value);
-                              },
-                            )
-                          else if (selectedInputMode == 'elastic')
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border:
-                                      Border.all(color: Colors.grey.shade300),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Expanded(
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                const Padding(
-                                                  padding: EdgeInsets.all(8.0),
-                                                  child: Text(
-                                                    'Request',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: TextFormField(
-                                                      controller:
-                                                          elasticRequestController,
-                                                      maxLines: null,
-                                                      decoration:
-                                                          const InputDecoration(
-                                                        hintText:
-                                                            'Paste Elastic Request JSON here...',
-                                                        border:
-                                                            OutlineInputBorder(),
-                                                        contentPadding:
-                                                            EdgeInsets.all(8),
-                                                      ),
-                                                      style: const TextStyle(
-                                                        fontFamily: 'monospace',
-                                                        height: 1.5,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const VerticalDivider(),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                const Padding(
-                                                  padding: EdgeInsets.all(8.0),
-                                                  child: Text(
-                                                    'Response',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: TextFormField(
-                                                      controller:
-                                                          elasticResponseController,
-                                                      maxLines: null,
-                                                      decoration:
-                                                          const InputDecoration(
-                                                        hintText:
-                                                            'Paste Elastic Response JSON here...',
-                                                        border:
-                                                            OutlineInputBorder(),
-                                                        contentPadding:
-                                                            EdgeInsets.all(8),
-                                                      ),
-                                                      style: const TextStyle(
-                                                        fontFamily: 'monospace',
-                                                        height: 1.5,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          top: BorderSide(
-                                              color: Colors.grey.shade300),
-                                        ),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            const Text('Records to load:'),
-                                            const SizedBox(width: 8),
-                                            DropdownButton<int>(
-                                              value: selectedRecordLimit,
-                                              items:
-                                                  recordLimits.map((int value) {
-                                                return DropdownMenuItem<int>(
-                                                  value: value,
-                                                  child: Text(value.toString()),
-                                                );
-                                              }).toList(),
-                                              onChanged: (int? newValue) {
-                                                if (newValue != null) {
-                                                  setState(() {
-                                                    selectedRecordLimit =
-                                                        newValue;
-                                                  });
-                                                }
-                                              },
-                                            ),
-                                            const SizedBox(width: 16),
-                                            TextButton.icon(
-                                              onPressed: _clearJson,
-                                              icon: const Icon(Icons.clear,
-                                                  size: 18),
-                                              label: const Text('Clear'),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            ElevatedButton.icon(
-                                              onPressed: _confirmAndParseJson,
-                                              icon: const Icon(Icons.check,
-                                                  size: 18),
-                                              label: const Text('Parse'),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Current Mappings
-                Expanded(
-                  flex: 2,
-                  child: Card(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Current Mappings',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: const Icon(Icons.visibility, size: 20),
-                                onPressed: _showJsonExportDialog,
-                                tooltip: 'View JSON',
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.download, size: 20),
-                                onPressed: _showExportOptions,
-                                tooltip: 'Export Mappings',
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(8),
-                            itemCount: sortedMappings.length,
-                            itemBuilder: (context, index) {
-                              final mapping = sortedMappings[index];
-                              final targetField = saasFields.firstWhere(
-                                (f) => f.name == mapping['target'],
-                                orElse: () => SaasField(
-                                  name: mapping['target'] ?? '',
-                                  required: false,
-                                  description: '',
-                                  type: 'string',
-                                  category: 'Standard',
-                                ),
-                              );
-                              return Card(
-                                child: ListTile(
-                                  leading: targetField.required
-                                      ? const Icon(Icons.star,
-                                          color: Colors.red)
-                                      : null,
-                                  title: Text(
-                                    mapping['isComplex'] == 'true'
-                                        ? '[Complex Mapping] → ${mapping['target']}'
-                                        : '${mapping['source'] ?? ''} → ${mapping['target']}',
-                                    style: TextStyle(
-                                      color: _hasRemovedFields(mapping)
-                                          ? Colors.red
-                                          : null,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    targetField.description,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (mapping['isComplex'] == 'true')
-                                        IconButton(
-                                          icon: const Icon(Icons.edit),
-                                          onPressed: () =>
-                                              _showComplexMappingEditor(
-                                                  targetField),
-                                          tooltip: 'Edit Complex Mapping',
-                                        ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete),
-                                        onPressed: () => _removeMapping(
-                                            mapping['target'] ?? ''),
-                                        tooltip: 'Remove Mapping',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    );
+
+    if (result == true) {
+      setState(() {
+        hasUnsavedChanges = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Unified Mapper'),
+        actions: [
+          IconButton(
+            key: const Key('save_button'),
+            icon: const Icon(Icons.save),
+            onPressed: _showSaveDialog,
           ),
-          const Divider(),
-          // Bottom section - Events Table
-          Expanded(
-            child: rcEvents.isEmpty
-                ? const Center(child: Text('Select an app to view events'))
-                : ScrollConfiguration(
-                    behavior: ScrollConfiguration.of(context).copyWith(
-                      physics: const ClampingScrollPhysics(),
-                      dragDevices: {
-                        PointerDeviceKind.touch,
-                        PointerDeviceKind.mouse,
-                        PointerDeviceKind.trackpad,
-                      },
-                    ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Event Fields',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.info_outline, size: 16),
-                              const SizedBox(width: 4),
-                              const Text(
-                                'These fields are used to map the RAW event data to the PROCESSED event data',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.star,
-                                  size: 12, color: Colors.red),
-                              const SizedBox(width: 4),
-                              const Text(
-                                'are required',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ],
+                        TextField(
+                          controller: elasticRequestController,
+                          maxLines: null,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            height: 1.5,
                           ),
-                        ),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            physics: const ClampingScrollPhysics(),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              physics: const ClampingScrollPhysics(),
-                              child: DataTable(
-                                horizontalMargin: 16,
-                                columnSpacing: 16,
-                                headingRowHeight: 100,
-                                columns: _buildDataColumns(),
-                                rows: rcEvents.map((event) {
-                                  return DataRow(
-                                    cells: standardFields.map((field) {
-                                      final mapping = mappings.firstWhere(
-                                        (m) => m['target'] == field.name,
-                                        orElse: () => {},
-                                      );
-                                      final value =
-                                          _evaluateMapping(event, mapping);
-                                      return DataCell(
-                                        Text(
-                                          value.isEmpty ? '' : value,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      );
-                                    }).toList(),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
+                          decoration: const InputDecoration(
+                            hintText: 'Paste Elastic Request JSON here...',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.all(8.0),
                           ),
                         ),
                       ],
                     ),
                   ),
-          ),
-          const Divider(),
-          rcEvents.isEmpty
-              ? const SizedBox.shrink()
-              : Column(
-                  children: [
-                    ConfigurationFieldsWidget(
-                      configFields: configFields,
-                      onConfigFieldChanged: _handleConfigFieldChange,
-                      configurationFields: configurationFieldsForWidget,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: elasticResponseController,
+                          maxLines: null,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            height: 1.5,
+                          ),
+                          decoration: const InputDecoration(
+                            hintText: 'Paste Elastic Response JSON here...',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.all(8.0),
+                          ),
+                        ),
+                      ],
                     ),
-                    const Divider(),
-                  ],
-                ),
-        ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // ... rest of the existing code ...
+            ],
+          ),
+        ),
       ),
     );
   }

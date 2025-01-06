@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sa_maverick_mapper/services/field_mapping_service.dart';
+import 'package:sa_rc_live/services/field_mapping_service.dart';
 
 void main() {
   group('Field Value Extraction Tests', () {
