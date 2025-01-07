@@ -2,6 +2,7 @@ class SavedMapping {
   final String name;
   final String product;
   final String query;
+  final String eventName;
   final List<Map<String, String>> mappings;
   final Map<String, dynamic> configFields;
   final int totalFieldsMapped;
@@ -14,6 +15,7 @@ class SavedMapping {
     required this.name,
     required this.product,
     required this.query,
+    this.eventName = '',
     required this.mappings,
     required this.configFields,
     required this.totalFieldsMapped,
@@ -35,6 +37,7 @@ class SavedMapping {
     String? name,
     String? product,
     String? query,
+    String? eventName,
     List<Map<String, String>>? mappings,
     Map<String, dynamic>? configFields,
     int? totalFieldsMapped,
@@ -47,6 +50,7 @@ class SavedMapping {
       name: name ?? this.name,
       product: product ?? this.product,
       query: query ?? this.query,
+      eventName: eventName ?? this.eventName,
       mappings: mappings ?? this.mappings,
       configFields: configFields ?? this.configFields,
       totalFieldsMapped: totalFieldsMapped ?? this.totalFieldsMapped,
@@ -62,6 +66,7 @@ class SavedMapping {
         'name': name,
         'product': product,
         'query': query,
+        'eventName': eventName,
         'mappings': mappings,
         'configFields': configFields,
         'totalFieldsMapped': totalFieldsMapped,
@@ -76,7 +81,10 @@ class SavedMapping {
         name: json['name'] as String,
         product: json['product'] as String,
         query: json['query'] as String,
-        mappings: (json['mappings'] as List).cast<Map<String, String>>(),
+        eventName: json['eventName'] as String? ?? '',
+        mappings: (json['mappings'] as List<dynamic>)
+            .map((e) => Map<String, String>.from(e as Map))
+            .toList(),
         configFields: json['configFields'] as Map<String, dynamic>,
         totalFieldsMapped: json['totalFieldsMapped'] as int,
         requiredFieldsMapped: json['requiredFieldsMapped'] as int,

@@ -17,6 +17,7 @@ import '../widgets/searchable_dropdown.dart';
 import '../services/field_mapping_service.dart';
 import '../widgets/saved_mappings/saved_mappings_section.dart';
 import '../models/saved_mapping.dart';
+import '../widgets/event_name_input.dart';
 
 class CustomScrollBehavior extends MaterialScrollBehavior {
   @override
@@ -162,6 +163,9 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   bool isLoadingRcApps = true;
   bool isLoadingRcEvents = false;
 
+  // Event name state
+  final TextEditingController eventNameController = TextEditingController();
+
   // SaaS Alerts fields state
   List<SaasField> saasFields = [];
   bool isLoadingSaasFields = true;
@@ -199,6 +203,9 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   // Single scroll controller
   final ScrollController _horizontalController = ScrollController();
 
+  // Add tracking for currently loaded mapping
+  SavedMapping? currentLoadedMapping;
+
   @override
   void initState() {
     super.initState();
@@ -221,6 +228,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     jsonInputController.dispose();
     elasticRequestController.dispose();
     elasticResponseController.dispose();
+    eventNameController.dispose();
     super.dispose();
   }
 
@@ -354,13 +362,13 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   Future<void> _loadRcEvents(String appId) async {
     setState(() {
       isLoadingRcEvents = true;
-      selectedRcAppId = appId;
       rcEvents.clear();
       rcFields.clear();
     });
 
     try {
-      final eventsData = await widget.apiService.getEvents(appId, pageSize: 20);
+      final eventsData = await widget.apiService
+          .getEvents(appId, pageSize: selectedRecordLimit);
       if (eventsData != null && eventsData['data'] != null) {
         final events = eventsData['data'] as List;
         if (events.isNotEmpty) {
@@ -1045,11 +1053,87 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     }
   }
 
+  void _saveMapping() {
+    if (selectedRcAppId == null || currentLoadedMapping == null) return;
+
+    if (eventNameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter an event name'),
+        ),
+      );
+      return;
+    }
+
+    final appInfo = rcApps.firstWhere(
+      (app) => app['id'].toString() == selectedRcAppId,
+      orElse: () => {'name': 'Unknown App'},
+    );
+
+    // Create updated mapping
+    final updatedMapping = currentLoadedMapping!.copyWith(
+      name: eventNameController.text,
+      eventName: eventNameController.text,
+      mappings: List<Map<String, String>>.from(mappings),
+      configFields: Map<String, dynamic>.from(configFields),
+      totalFieldsMapped: mappings.length,
+      requiredFieldsMapped: mappings
+          .where((m) => saasFields
+              .firstWhere(
+                (f) => f.name == m['target'],
+                orElse: () => SaasField(
+                  name: '',
+                  required: false,
+                  description: '',
+                  type: 'string',
+                  category: 'Standard',
+                  displayOrder: 999,
+                ),
+              )
+              .required)
+          .length,
+      modifiedAt: DateTime.now(),
+    );
+
+    // Update the mapping in SavedMappingsState
+    final state = Provider.of<SavedMappingsState>(context, listen: false);
+    if (state.selectedProduct != null) {
+      state.updateMapping(
+          state.selectedProduct!, currentLoadedMapping!.name, updatedMapping);
+
+      // Update the current loaded mapping reference
+      currentLoadedMapping = updatedMapping;
+    }
+
+    // Update MappingState
+    Provider.of<MappingState>(context, listen: false)
+        .setMappings(selectedRcAppId!, appInfo['name'], List.from(mappings));
+
+    setState(() {
+      hasUnsavedChanges = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Mapping updated successfully'),
+      ),
+    );
+  }
+
   void _saveCurrentMapping() async {
     if (selectedRcAppId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select an app first'),
+        ),
+      );
+      return;
+    }
+
+    if (eventNameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter an event name'),
         ),
       );
       return;
@@ -1062,9 +1146,10 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
     final now = DateTime.now();
     final savedMapping = SavedMapping(
-      name: 'Mapping for ${appInfo['name']}',
+      name: eventNameController.text,
       product: appInfo['name'],
       query: '',
+      eventName: eventNameController.text,
       mappings: List<Map<String, String>>.from(mappings),
       configFields: Map<String, dynamic>.from(configFields),
       totalFieldsMapped: mappings.length,
@@ -1091,6 +1176,9 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     try {
       Provider.of<SavedMappingsState>(context, listen: false)
           .createMapping(savedMapping);
+
+      // Set as current loaded mapping after successful save
+      currentLoadedMapping = savedMapping;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1121,44 +1209,14 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
             Text('Maverick Mapper'),
           ],
         ),
-        actions: [
-          if (hasUnsavedChanges)
-            TextButton.icon(
-              icon: const Icon(Icons.save),
-              label: const Text('Save'),
-              onPressed: () {
-                // Save mappings
-                if (selectedRcAppId != null) {
-                  final appInfo = rcApps.firstWhere(
-                    (app) => app['id'].toString() == selectedRcAppId,
-                    orElse: () => {'name': 'Unknown App'},
-                  );
-                  Provider.of<MappingState>(context, listen: false).setMappings(
-                      selectedRcAppId!, appInfo['name'], List.from(mappings));
-                  setState(() {
-                    hasUnsavedChanges = false;
-                  });
-                }
-              },
-              style: TextButton.styleFrom(foregroundColor: Colors.white),
-            ),
-          TextButton.icon(
-            icon: const Icon(Icons.save_as),
-            label: const Text('Save As'),
-            onPressed: _saveCurrentMapping,
-            style: TextButton.styleFrom(foregroundColor: Colors.white),
-          ),
-        ],
       ),
       body: Column(
         children: [
-          // Top section - Configuration Fields and Current Mappings
           Container(
             height: MediaQuery.of(context).size.height * 0.3,
             padding: const EdgeInsets.all(8),
             child: Row(
               children: [
-                // Configuration Fields
                 Expanded(
                   flex: 2,
                   child: Card(
@@ -1173,11 +1231,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                 value: 'elastic',
                                 label: Text('Elastic Raw'),
                                 icon: Icon(Icons.data_array),
-                              ),
-                              ButtonSegment(
-                                value: 'json',
-                                label: Text('JSON'),
-                                icon: Icon(Icons.code),
                               ),
                               ButtonSegment(
                                 value: 'rc',
@@ -1206,10 +1259,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                             selectedInputMode =
                                                 newSelection.first;
                                             selectedRcAppId = null;
-                                            jsonInputController.clear();
-                                            currentRcEvent = {};
-                                            rcFields = [];
-                                            rcEvents = [];
+                                            rcEvents.clear();
+                                            rcFields.clear();
                                           });
                                           if (newSelection.first == 'rc') {
                                             _loadRcApps();
@@ -1224,6 +1275,9 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                               } else {
                                 setState(() {
                                   selectedInputMode = newSelection.first;
+                                  selectedRcAppId = null;
+                                  rcEvents.clear();
+                                  rcFields.clear();
                                 });
                                 if (newSelection.first == 'rc') {
                                   _loadRcApps();
@@ -1231,181 +1285,235 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                               }
                             },
                           ),
-                          const SizedBox(height: 16),
-                          if (selectedInputMode == 'rc')
-                            DropdownButton<String>(
-                              value: selectedRcAppId,
-                              hint: const Text('Select an application'),
-                              isExpanded: true,
-                              items: rcApps.map((app) {
-                                return DropdownMenuItem(
-                                  value: app['id'].toString(),
-                                  child: Text(app['name']),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) _loadRcEvents(value);
-                              },
-                            )
-                          else if (selectedInputMode == 'elastic')
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border:
-                                      Border.all(color: Colors.grey.shade300),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Expanded(
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                const Padding(
-                                                  padding: EdgeInsets.all(8.0),
-                                                  child: Text(
-                                                    'Request',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: TextFormField(
-                                                      controller:
-                                                          elasticRequestController,
-                                                      maxLines: null,
-                                                      decoration:
-                                                          const InputDecoration(
-                                                        hintText:
-                                                            'Paste Elastic Request JSON here...',
-                                                        border:
-                                                            OutlineInputBorder(),
-                                                        contentPadding:
-                                                            EdgeInsets.all(8),
-                                                      ),
-                                                      style: const TextStyle(
-                                                        fontFamily: 'monospace',
-                                                        height: 1.5,
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: selectedInputMode == 'elastic'
+                                ? Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(
+                                          color: Colors.grey.shade300),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(8.0),
+                                                      child: Text(
+                                                        'Request',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
+                                                    Expanded(
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8.0),
+                                                        child: TextFormField(
+                                                          controller:
+                                                              elasticRequestController,
+                                                          maxLines: null,
+                                                          decoration:
+                                                              const InputDecoration(
+                                                            hintText:
+                                                                'Paste Elastic Request JSON here...',
+                                                            border:
+                                                                OutlineInputBorder(),
+                                                            contentPadding:
+                                                                EdgeInsets.all(
+                                                                    8),
+                                                          ),
+                                                          style:
+                                                              const TextStyle(
+                                                            fontFamily:
+                                                                'monospace',
+                                                            height: 1.5,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
+                                              ),
+                                              const VerticalDivider(),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(8.0),
+                                                      child: Text(
+                                                        'Response',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8.0),
+                                                        child: TextFormField(
+                                                          controller:
+                                                              elasticResponseController,
+                                                          maxLines: null,
+                                                          decoration:
+                                                              const InputDecoration(
+                                                            hintText:
+                                                                'Paste Elastic Response JSON here...',
+                                                            border:
+                                                                OutlineInputBorder(),
+                                                            contentPadding:
+                                                                EdgeInsets.all(
+                                                                    8),
+                                                          ),
+                                                          style:
+                                                              const TextStyle(
+                                                            fontFamily:
+                                                                'monospace',
+                                                            height: 1.5,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              top: BorderSide(
+                                                  color: Colors.grey.shade300),
                                             ),
                                           ),
-                                          const VerticalDivider(),
+                                          child: EventNameInput(
+                                            selectedRecordLimit:
+                                                selectedRecordLimit,
+                                            recordLimits: recordLimits,
+                                            onClear: () {
+                                              elasticRequestController.clear();
+                                              elasticResponseController.clear();
+                                              setState(() {
+                                                rcEvents.clear();
+                                                rcFields.clear();
+                                              });
+                                            },
+                                            onParse: _confirmAndParseJson,
+                                            onRecordLimitChanged: (value) {
+                                              setState(() {
+                                                selectedRecordLimit = value;
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : selectedInputMode == 'rc'
+                                    ? Column(
+                                        children: [
                                           Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                const Padding(
-                                                  padding: EdgeInsets.all(8.0),
-                                                  child: Text(
-                                                    'Response',
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text(
+                                                    'Select Application',
                                                     style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
                                                     ),
                                                   ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: TextFormField(
-                                                      controller:
-                                                          elasticResponseController,
-                                                      maxLines: null,
-                                                      decoration:
-                                                          const InputDecoration(
-                                                        hintText:
-                                                            'Paste Elastic Response JSON here...',
-                                                        border:
-                                                            OutlineInputBorder(),
-                                                        contentPadding:
-                                                            EdgeInsets.all(8),
-                                                      ),
-                                                      style: const TextStyle(
-                                                        fontFamily: 'monospace',
-                                                        height: 1.5,
-                                                      ),
-                                                    ),
+                                                  const SizedBox(height: 8),
+                                                  DropdownButton<String>(
+                                                    value: selectedRcAppId,
+                                                    hint: const Text(
+                                                        'Select an application'),
+                                                    isExpanded: true,
+                                                    items: rcApps.map((app) {
+                                                      return DropdownMenuItem(
+                                                        value: app['id']
+                                                            .toString(),
+                                                        child:
+                                                            Text(app['name']),
+                                                      );
+                                                    }).toList(),
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        selectedRcAppId = value;
+                                                      });
+                                                    },
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              border: Border(
+                                                top: BorderSide(
+                                                    color:
+                                                        Colors.grey.shade300),
+                                              ),
+                                            ),
+                                            child: EventNameInput(
+                                              selectedRecordLimit:
+                                                  selectedRecordLimit,
+                                              recordLimits: recordLimits,
+                                              onClear: () {
+                                                setState(() {
+                                                  selectedRcAppId = null;
+                                                  rcEvents.clear();
+                                                  rcFields.clear();
+                                                });
+                                              },
+                                              onParse: () {
+                                                if (selectedRcAppId != null) {
+                                                  _loadRcEvents(
+                                                      selectedRcAppId!);
+                                                } else {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          'Please select an application first'),
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                              onRecordLimitChanged: (value) {
+                                                setState(() {
+                                                  selectedRecordLimit = value;
+                                                });
+                                              },
                                             ),
                                           ),
                                         ],
-                                      ),
-                                    ),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          top: BorderSide(
-                                              color: Colors.grey.shade300),
-                                        ),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            const Text('Records to load:'),
-                                            const SizedBox(width: 8),
-                                            DropdownButton<int>(
-                                              value: selectedRecordLimit,
-                                              items:
-                                                  recordLimits.map((int value) {
-                                                return DropdownMenuItem<int>(
-                                                  value: value,
-                                                  child: Text(value.toString()),
-                                                );
-                                              }).toList(),
-                                              onChanged: (int? newValue) {
-                                                if (newValue != null) {
-                                                  setState(() {
-                                                    selectedRecordLimit =
-                                                        newValue;
-                                                  });
-                                                }
-                                              },
-                                            ),
-                                            const SizedBox(width: 16),
-                                            TextButton.icon(
-                                              onPressed: _clearJson,
-                                              icon: const Icon(Icons.clear,
-                                                  size: 18),
-                                              label: const Text('Clear'),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            ElevatedButton.icon(
-                                              onPressed: _confirmAndParseJson,
-                                              icon: const Icon(Icons.check,
-                                                  size: 18),
-                                              label: const Text('Parse'),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                                      )
+                                    : const SizedBox(),
+                          ),
                         ],
                       ),
                     ),
@@ -1422,7 +1530,10 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                       setState(() {
                         mappings.clear();
                         mappings.addAll(mapping.mappings);
-                        hasUnsavedChanges = true;
+                        eventNameController.text = mapping.eventName;
+                        currentLoadedMapping = mapping;
+                        hasUnsavedChanges =
+                            false; // Start with no unsaved changes
 
                         // Update state provider
                         if (selectedRcAppId != null) {
@@ -1495,6 +1606,74 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                               const Text(
                                 'are required',
                                 style: TextStyle(fontSize: 12),
+                              ),
+                              const Spacer(),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('Event Name:',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 250,
+                                    child: TextField(
+                                      controller: eventNameController,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Enter event name...',
+                                        isDense: true,
+                                        border: OutlineInputBorder(),
+                                        contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 8),
+                                      ),
+                                      onChanged: (_) {
+                                        setState(() {
+                                          hasUnsavedChanges = true;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Fixed-width container for buttons
+                                  SizedBox(
+                                    width: 180,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        if (hasUnsavedChanges &&
+                                            currentLoadedMapping != null)
+                                          TextButton.icon(
+                                            icon: const Icon(Icons.save,
+                                                size: 20),
+                                            label: const Text('Save'),
+                                            onPressed: _saveMapping,
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: Theme.of(context)
+                                                  .primaryColor,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8),
+                                            ),
+                                          ),
+                                        if (hasUnsavedChanges &&
+                                            currentLoadedMapping != null)
+                                          const SizedBox(width: 4),
+                                        TextButton.icon(
+                                          icon: const Icon(Icons.save_as,
+                                              size: 20),
+                                          label: const Text('Save As'),
+                                          onPressed: _saveCurrentMapping,
+                                          style: TextButton.styleFrom(
+                                            foregroundColor:
+                                                Theme.of(context).primaryColor,
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
