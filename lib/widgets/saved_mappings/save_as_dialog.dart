@@ -92,7 +92,7 @@ class _SaveAsDialogState extends State<SaveAsDialog> {
 
       // Create new saved mapping
       final newMapping = SavedMapping(
-        name: name,
+        eventName: name,
         product: widget.product,
         query: widget.query,
         mappings: widget.mappings,
