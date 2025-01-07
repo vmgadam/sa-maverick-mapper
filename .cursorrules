@@ -1,162 +1,63 @@
-# Maverick Mapper Project Rules
-
-# Test-Driven Development
-rule "Write tests first" {
-    description = "Tests must be written before implementing the feature code"
-    severity = "error"
-}
-
-rule "Test coverage" {
-    description = "Each new feature must have corresponding test cases"
-    pattern = "_test\\.dart$"
-    severity = "error"
-}
-
-rule "Mock dependencies" {
-    description = "Use mocks for external dependencies in tests"
-    pattern = "Mock|FakeMock"
-    severity = "warning"
-}
-
-rule "Test isolation" {
-    description = "Tests should be independent and not rely on other tests' state"
-    severity = "error"
-}
-
-# Package Management
-rule "Use well-maintained packages" {
-    description = "Utilize existing, popular, well-maintained packages for implementation"
-    severity = "warning"
-}
-
-rule "Package versioning" {
-    description = "All packages must specify version constraints in pubspec.yaml"
-    pattern = "^\\d+\\.\\d+\\.\\d+$"
-    severity = "error"
-}
-
-rule "Package documentation" {
-    description = "Document why each major package is being used in the README.md"
-    severity = "warning"
-}
-
-rule "Avoid duplicate packages" {
-    description = "Avoid packages that duplicate functionality of existing dependencies"
-    severity = "warning"
-}
-
-rule "Package stability" {
-    description = "Use only stable versions of packages (avoid beta/alpha versions)"
-    pattern = "beta|alpha|dev"
-    severity = "error"
-}
-
-# State Management
-rule "Use Riverpod for state" {
-    description = "State management must be implemented using Riverpod"
-    pattern = "import 'package:riverpod"
-    severity = "error"
-}
-
-# Code Organization
-rule "Modular design" {
-    description = "Code should be modular and standalone for future replacement"
-    severity = "warning"
-}
-
-# API Integration
-rule "API validation" {
-    description = "Ensure proper error handling for API connections"
-    pattern = "try|catch"
-    severity = "error"
-}
-
-# Data Validation
-rule "Required fields validation" {
-    description = "Validate required fields before export operations"
-    severity = "error"
-}
-
-rule "JSON format validation" {
-    description = "Validate JSON format during input operations"
-    severity = "error"
-}
-
-# Documentation
-rule "Document changes" {
-    description = "Major function changes must be documented in ai/changes.md"
-    severity = "warning"
-}
-
-rule "README maintenance" {
-    description = "README must be kept up to date with beginner-friendly setup and usage instructions"
-    severity = "error"
-}
-
-# Testing
-rule "JSONata format compliance" {
-    description = "Ensure exports follow JSONata format specifications"
-    severity = "error"
-}
-
-# UI Components
-rule "Drag-and-drop implementation" {
-    description = "UI must implement drag-and-drop functionality for field mapping"
-    severity = "error"
-}
-
-# Performance
-rule "MVP scope" {
-    description = "Avoid implementing unnecessary features beyond MVP scope unless specified in my instructions"
-    severity = "warning"
-}
-
-# File Structure
-rule "Test location" {
-    description = "Test files should be located next to the implementation files"
-    pattern = "^test/.+_test\\.dart$"
-    severity = "warning"
-}
-
-rule "Screen location" {
-    description = "New screen implementations should be in lib/screens/"
-    pattern = "^lib/screens/.+\\.dart$"
-    severity = "warning"
-}
-
-rule "Widget components" {
-    description = "Reusable widgets should be in lib/widgets/"
-    pattern = "^lib/widgets/.+\\.dart$"
-    severity = "warning"
-}
-
-rule "Services" {
-    description = "API and business logic services should be in lib/services/"
-    pattern = "^lib/services/.+\\.dart$"
-    severity = "warning"
-}
-
-# Documentation and Comments
-rule "Class documentation" {
-    description = "Each class must have a detailed doc comment explaining its purpose and usage for beginners"
-    pattern = "/// "
-    severity = "error"
-}
-
-rule "Method documentation" {
-    description = "Each method must have a doc comment explaining what it does, its parameters, and return value"
-    pattern = "/// "
-    severity = "error"
-}
-
-rule "Complex logic comments" {
-    description = "Complex logic sections must have inline comments explaining the steps for beginners"
-    pattern = "// "
-    severity = "warning"
-}
-
-rule "Example usage" {
-    description = "Public APIs and widgets should include example usage in their documentation"
-    pattern = "/// Example:"
-    severity = "warning"
-} 
+{
+    "Reusable Components": {
+      "Description": "Break the entire project into reusable components.",
+      "Steps": [
+        "Review the existing codebase to identify reusable components.",
+        "Create new reusable components where necessary.",
+        "Ensure all components align with the app's overall design language, prioritizing consistency."
+      ]
+    },
+    "Component-Driven Workflow": {
+      "Description": "Follow a structured workflow to build and integrate components.",
+      "Steps": [
+        "Identify and plan all reusable components needed before writing code.",
+        "Build each component individually and validate with tests.",
+        "Use completed components to assemble the screens.",
+        "Write and validate tests for the assembled screens.",
+        "Stitch the screens together into the full experience and validate with integration tests."
+      ]
+    },
+    "Branch and PR Management": {
+      "Description": "Maintain clean, specific, and manageable branches and pull requests.",
+      "Steps": [
+        "Keep branches and pull requests limited to around 500 lines of code.",
+        "Ensure each branch and PR is focused on a single feature or task.",
+        "For reusable components, create individual PRs when necessary based on their complexity.",
+        "Favor many smaller, specific PRs over one large PR for better reviewability and integration."
+      ]
+    },
+    "Mock Data and API Constraints": {
+      "Description": "Follow guidelines for handling mock data and API layer restrictions.",
+      "Steps": [
+        "Use 'data.dart' files for mock data and avoid touching any API layer or database functionality.",
+        "Do not modify or create functionality outside the mock data context."
+      ]
+    },
+    "Folder Structure": {
+      "Description": "Organize project files in a clear and consistent folder structure.",
+      "Steps": [
+        "Store models, data, services, widgets, screens, mocks, and tests in their respective folders under 'lib'.",
+        "For tests, create corresponding folders under 'test' to match the structure in 'lib'.",
+        "Where a feature or significant screen is large enough, consider creating its own subfolder within the appropriate category (e.g., 'screens', 'widgets').",
+        "Ensure all files and subfolders follow a naming convention consistent with the existing codebase."
+      ]
+    },
+    "Documentation": {
+      "Description": "Document progress at each step in the development process.",
+      "Steps": [
+        "Update the changelog file located at 'ai/changelog.md' with completed items.",
+        "If working on a speciifc feature where you are using a specs file, name the file as 'ai/-<feature-name>-changelog.md'.",
+        "List completed items in top-to-bottom order.",
+        "Include a summary overview at the top of the changelog for pull request comments.",
+        "if working from a specs file, ensure that the specs file is updated with the completed items."
+      ]
+    },
+    "Testing and Validation": {
+      "Description": "Ensure the application is robust and handles edge cases.",
+      "Steps": [
+        "Test the flow for edge cases, such as missing OAuth permissions or provider downtime.",
+        "Use mock data during development to simulate various scenarios."
+      ]
+    }
+  }
+  

@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../services/saas_alerts_api_service.dart';
 import 'package:provider/provider.dart';
 import '../state/mapping_state.dart';
+import '../state/saved_mappings_state.dart';
 import 'package:flutter/services.dart';
 import '../widgets/complex_mapping_editor.dart';
 import '../widgets/json_preview_widget.dart';
@@ -14,6 +15,8 @@ import '../services/export_service.dart';
 import '../widgets/export_options_dialog.dart';
 import '../widgets/searchable_dropdown.dart';
 import '../services/field_mapping_service.dart';
+import '../widgets/saved_mappings/saved_mappings_section.dart';
+import '../models/saved_mapping.dart';
 
 class CustomScrollBehavior extends MaterialScrollBehavior {
   @override
@@ -352,6 +355,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     setState(() {
       isLoadingRcEvents = true;
       selectedRcAppId = appId;
+      rcEvents.clear();
+      rcFields.clear();
     });
 
     try {
@@ -371,6 +376,10 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           );
           Provider.of<MappingState>(context, listen: false)
               .setSelectedApp(appId, appInfo['name']);
+
+          // Set the selected product in SavedMappingsState
+          Provider.of<SavedMappingsState>(context, listen: false)
+              .setSelectedProduct(appInfo['name']);
 
           final existingMappings =
               Provider.of<MappingState>(context, listen: false)
@@ -1036,6 +1045,68 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     }
   }
 
+  void _saveCurrentMapping() async {
+    if (selectedRcAppId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select an app first'),
+        ),
+      );
+      return;
+    }
+
+    final appInfo = rcApps.firstWhere(
+      (app) => app['id'].toString() == selectedRcAppId,
+      orElse: () => {'name': 'Unknown App'},
+    );
+
+    final now = DateTime.now();
+    final savedMapping = SavedMapping(
+      name: 'Mapping for ${appInfo['name']}',
+      product: appInfo['name'],
+      query: '',
+      mappings: List<Map<String, String>>.from(mappings),
+      configFields: Map<String, dynamic>.from(configFields),
+      totalFieldsMapped: mappings.length,
+      requiredFieldsMapped: mappings
+          .where((m) => saasFields
+              .firstWhere(
+                (f) => f.name == m['target'],
+                orElse: () => SaasField(
+                  name: '',
+                  required: false,
+                  description: '',
+                  type: 'string',
+                  category: 'Standard',
+                  displayOrder: 999,
+                ),
+              )
+              .required)
+          .length,
+      totalRequiredFields: saasFields.where((f) => f.required).length,
+      createdAt: now,
+      modifiedAt: now,
+    );
+
+    try {
+      Provider.of<SavedMappingsState>(context, listen: false)
+          .createMapping(savedMapping);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mapping saved successfully'),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving mapping: ${e.toString()}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final sortedMappings = List<Map<String, dynamic>>.from(mappings)
@@ -1071,6 +1142,12 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
               },
               style: TextButton.styleFrom(foregroundColor: Colors.white),
             ),
+          TextButton.icon(
+            icon: const Icon(Icons.save_as),
+            label: const Text('Save As'),
+            onPressed: _saveCurrentMapping,
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
+          ),
         ],
       ),
       body: Column(
@@ -1335,97 +1412,45 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Current Mappings
+                // Saved Mappings Section (replacing Current Mappings)
                 Expanded(
                   flex: 2,
-                  child: Card(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Current Mappings',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: const Icon(Icons.visibility, size: 20),
-                                onPressed: _showJsonExportDialog,
-                                tooltip: 'View JSON',
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.download, size: 20),
-                                onPressed: _showExportOptions,
-                                tooltip: 'Export Mappings',
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(8),
-                            itemCount: sortedMappings.length,
-                            itemBuilder: (context, index) {
-                              final mapping = sortedMappings[index];
-                              final targetField = saasFields.firstWhere(
-                                (f) => f.name == mapping['target'],
-                                orElse: () => SaasField(
-                                  name: mapping['target'] ?? '',
-                                  required: false,
-                                  description: '',
-                                  type: 'string',
-                                  category: 'Standard',
-                                ),
-                              );
-                              return Card(
-                                child: ListTile(
-                                  leading: targetField.required
-                                      ? const Icon(Icons.star,
-                                          color: Colors.red)
-                                      : null,
-                                  title: Text(
-                                    mapping['isComplex'] == 'true'
-                                        ? '[Complex Mapping] → ${mapping['target']}'
-                                        : '${mapping['source'] ?? ''} → ${mapping['target']}',
-                                    style: TextStyle(
-                                      color: _hasRemovedFields(mapping)
-                                          ? Colors.red
-                                          : null,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    targetField.description,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (mapping['isComplex'] == 'true')
-                                        IconButton(
-                                          icon: const Icon(Icons.edit),
-                                          onPressed: () =>
-                                              _showComplexMappingEditor(
-                                                  targetField),
-                                          tooltip: 'Edit Complex Mapping',
-                                        ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete),
-                                        onPressed: () => _removeMapping(
-                                            mapping['target'] ?? ''),
-                                        tooltip: 'Remove Mapping',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: SavedMappingsSection(
+                    onViewJson: _showJsonExportDialog,
+                    onExport: _showExportOptions,
+                    onLoadMapping: (mapping) {
+                      setState(() {
+                        mappings.clear();
+                        mappings.addAll(mapping.mappings);
+                        hasUnsavedChanges = true;
+
+                        // Update state provider
+                        if (selectedRcAppId != null) {
+                          final appInfo = rcApps.firstWhere(
+                            (app) => app['id'].toString() == selectedRcAppId,
+                            orElse: () => {'name': 'Unknown App'},
+                          );
+                          Provider.of<MappingState>(context, listen: false)
+                              .setMappings(selectedRcAppId!, appInfo['name'],
+                                  List.from(mappings));
+                        }
+                      });
+                    },
+                    onDuplicateMapping: (mapping) {
+                      final state = Provider.of<SavedMappingsState>(context,
+                          listen: false);
+                      if (state.selectedProduct != null) {
+                        state.duplicateMapping(
+                            state.selectedProduct!, mapping.name);
+                      }
+                    },
+                    onDeleteMapping: (name) {
+                      final state = Provider.of<SavedMappingsState>(context,
+                          listen: false);
+                      if (state.selectedProduct != null) {
+                        state.deleteMapping(state.selectedProduct!, name);
+                      }
+                    },
                   ),
                 ),
               ],
