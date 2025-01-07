@@ -4,133 +4,64 @@ import '../../models/saved_mapping.dart';
 class SavedMappingTableRow extends StatelessWidget {
   final SavedMapping mapping;
   final bool isSelected;
-  final bool hasDuplicateQuery;
-  final ValueChanged<bool>? onSelect;
-  final VoidCallback? onLoad;
-  final VoidCallback? onDuplicate;
-  final VoidCallback? onDelete;
+  final Function(bool?) onSelect;
+  final Function() onLoad;
+  final Function() onDuplicate;
+  final Function() onDelete;
+  final Function() onViewJson;
+  final Function() onExport;
 
   const SavedMappingTableRow({
     super.key,
     required this.mapping,
-    this.isSelected = false,
-    this.hasDuplicateQuery = false,
-    this.onSelect,
-    this.onLoad,
-    this.onDuplicate,
-    this.onDelete,
+    required this.isSelected,
+    required this.onSelect,
+    required this.onLoad,
+    required this.onDuplicate,
+    required this.onDelete,
+    required this.onViewJson,
+    required this.onExport,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isSelected ? theme.highlightColor : null,
-        border: Border(
-          bottom: BorderSide(
-            color: theme.dividerColor,
-            width: 1,
-          ),
-        ),
+    return ListTile(
+      leading: Checkbox(
+        value: isSelected,
+        onChanged: onSelect,
       ),
-      child: Row(
+      title: Text(mapping.eventName),
+      subtitle: Text('${mapping.totalFieldsMapped} fields mapped'),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Selection checkbox
-          if (onSelect != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Checkbox(
-                value: isSelected,
-                onChanged: (value) => onSelect?.call(value ?? false),
-              ),
-            ),
-
-          // Name and duplicate indicator
-          Expanded(
-            flex: 2,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    mapping.name,
-                    style: theme.textTheme.bodyLarge,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (hasDuplicateQuery)
-                  Tooltip(
-                    message: 'Duplicate query detected',
-                    child: Icon(
-                      Icons.warning_amber_rounded,
-                      color: Colors.orange,
-                      size: 20,
-                    ),
-                  ),
-              ],
-            ),
+          IconButton(
+            icon: const Icon(Icons.visibility),
+            tooltip: 'View JSON',
+            onPressed: onViewJson,
           ),
-
-          // Product
-          Expanded(
-            child: Text(
-              mapping.product,
-              style: theme.textTheme.bodyMedium,
-            ),
+          IconButton(
+            icon: const Icon(Icons.download),
+            tooltip: 'Export',
+            onPressed: onExport,
           ),
-
-          // Fields mapped
-          Expanded(
-            child: Text(
-              '${mapping.totalFieldsMapped}',
-              style: theme.textTheme.bodyMedium,
-            ),
+          IconButton(
+            icon: const Icon(Icons.play_arrow),
+            tooltip: 'Load',
+            onPressed: onLoad,
           ),
-
-          // Required fields
-          Expanded(
-            child: Text(
-              '${mapping.requiredFieldsMapped}/${mapping.totalRequiredFields}',
-              style: theme.textTheme.bodyMedium,
-            ),
+          IconButton(
+            icon: const Icon(Icons.copy),
+            tooltip: 'Duplicate',
+            onPressed: onDuplicate,
           ),
-
-          // Last modified
-          Expanded(
-            child: Text(
-              _formatDate(mapping.modifiedAt),
-              style: theme.textTheme.bodyMedium,
-            ),
-          ),
-
-          // Action buttons
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.play_arrow),
-                tooltip: 'Load mapping',
-                onPressed: onLoad,
-              ),
-              IconButton(
-                icon: const Icon(Icons.copy),
-                tooltip: 'Duplicate mapping',
-                onPressed: onDuplicate,
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: 'Delete mapping',
-                onPressed: onDelete,
-              ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.delete),
+            tooltip: 'Delete',
+            onPressed: onDelete,
           ),
         ],
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }

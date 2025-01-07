@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
 class ExportOptionsDialog extends StatelessWidget {
-  final VoidCallback onCSVExport;
-  final VoidCallback onJSONExport;
+  final Function(String format) onExport;
 
   const ExportOptionsDialog({
     super.key,
-    required this.onCSVExport,
-    required this.onJSONExport,
+    required this.onExport,
   });
 
   @override
@@ -26,7 +24,7 @@ class ExportOptionsDialog extends StatelessWidget {
             subtitle: const Text('Export as spreadsheet-compatible CSV'),
             onTap: () {
               Navigator.pop(context);
-              onCSVExport();
+              onExport('csv');
             },
           ),
           ListTile(
@@ -35,7 +33,7 @@ class ExportOptionsDialog extends StatelessWidget {
             subtitle: const Text('Export as structured JSON with metadata'),
             onTap: () {
               Navigator.pop(context);
-              onJSONExport();
+              onExport('json');
             },
           ),
         ],
@@ -52,14 +50,12 @@ class ExportOptionsDialog extends StatelessWidget {
   /// Shows the export options dialog
   static void show(
     BuildContext context, {
-    required VoidCallback onCSVExport,
-    required VoidCallback onJSONExport,
+    required Function(String format) onExport,
   }) {
     showDialog(
       context: context,
       builder: (context) => ExportOptionsDialog(
-        onCSVExport: onCSVExport,
-        onJSONExport: onJSONExport,
+        onExport: onExport,
       ),
     );
   }

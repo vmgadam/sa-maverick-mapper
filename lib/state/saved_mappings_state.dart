@@ -2,111 +2,110 @@ import 'package:flutter/foundation.dart';
 import '../models/saved_mapping.dart';
 
 class SavedMappingsState extends ChangeNotifier {
-  final Map<String, List<SavedMapping>> _savedMappings = {};
-  SavedMapping? _lastDeletedMapping;
-  String? _lastDeletedProduct;
-  String? _selectedProduct;
-
-  String? get selectedProduct => _selectedProduct;
+  final Map<String, List<SavedMapping>> _mappings = {};
+  String? selectedProduct;
+  final Set<String> _selectedMappings = {};
 
   void setSelectedProduct(String product) {
-    _selectedProduct = product;
+    selectedProduct = product;
+    _selectedMappings.clear();
     notifyListeners();
   }
 
-  // Get all mappings for a product
-  List<SavedMapping> getMappingsForProduct(String product) {
-    return _savedMappings[product] ?? [];
+  List<SavedMapping> getMappings(String product) {
+    return _mappings[product] ?? [];
   }
 
-  // Create new saved mapping
+  bool isSelected(String mappingName) {
+    return _selectedMappings.contains(mappingName);
+  }
+
+  void toggleSelection(String mappingName) {
+    if (_selectedMappings.contains(mappingName)) {
+      _selectedMappings.remove(mappingName);
+    } else {
+      _selectedMappings.add(mappingName);
+    }
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    _selectedMappings.clear();
+    notifyListeners();
+  }
+
   void createMapping(SavedMapping mapping) {
-    if (mapping.name.isEmpty) {
-      throw Exception('Name cannot be empty');
+    if (!_mappings.containsKey(mapping.product)) {
+      _mappings[mapping.product] = [];
     }
 
-    if (mapping.name.length > 200) {
-      throw Exception('Name must be 200 characters or less');
-    }
-
-    final productMappings = _savedMappings[mapping.product] ?? [];
-
-    // Check for duplicate name
-    if (productMappings.any((m) => m.name == mapping.name)) {
+    // Check for duplicate names
+    if (_mappings[mapping.product]!.any(
+        (m) => m.eventName.toLowerCase() == mapping.eventName.toLowerCase())) {
       throw Exception('A mapping with this name already exists');
     }
 
-    productMappings.add(mapping);
-    _savedMappings[mapping.product] = productMappings;
+    _mappings[mapping.product]!.add(mapping);
     notifyListeners();
   }
 
-  // Update existing mapping
   void updateMapping(
-      String product, String originalName, SavedMapping updatedMapping) {
-    final productMappings = _savedMappings[product] ?? [];
-    final index = productMappings.indexWhere((m) => m.name == originalName);
+      String product, String oldName, SavedMapping updatedMapping) {
+    if (!_mappings.containsKey(product)) return;
 
+    final index = _mappings[product]!
+        .indexWhere((m) => m.eventName.toLowerCase() == oldName.toLowerCase());
     if (index != -1) {
-      productMappings[index] = updatedMapping;
-      _savedMappings[product] = productMappings;
+      _mappings[product]![index] = updatedMapping;
       notifyListeners();
     }
   }
 
-  // Delete mapping
-  void deleteMapping(String product, String name) {
-    final productMappings = _savedMappings[product] ?? [];
-    final mapping = productMappings.firstWhere((m) => m.name == name);
+  void duplicateMapping(String product, String eventName) {
+    if (!_mappings.containsKey(product)) return;
 
-    productMappings.removeWhere((m) => m.name == name);
-    _savedMappings[product] = productMappings;
+    final mapping = _mappings[product]!.firstWhere(
+        (m) => m.eventName.toLowerCase() == eventName.toLowerCase());
+    var newName = '${mapping.eventName} (Copy)';
+    var counter = 1;
 
-    // Store for potential undo
-    _lastDeletedMapping = mapping;
-    _lastDeletedProduct = product;
+    // Ensure unique name
+    while (_mappings[product]!
+        .any((m) => m.eventName.toLowerCase() == newName.toLowerCase())) {
+      counter++;
+      newName = '${mapping.eventName} (Copy $counter)';
+    }
 
-    notifyListeners();
-  }
-
-  // Duplicate mapping
-  void duplicateMapping(String product, String name) {
-    final productMappings = _savedMappings[product] ?? [];
-    final originalMapping = productMappings.firstWhere((m) => m.name == name);
-
-    // Create copy with new name and timestamps
-    final now = DateTime.now();
-    final duplicatedMapping = originalMapping.copyWith(
-      name: 'Copy of ${originalMapping.name}',
-      createdAt: now,
-      modifiedAt: now,
+    final newMapping = mapping.copyWith(
+      eventName: newName,
+      createdAt: DateTime.now(),
+      modifiedAt: DateTime.now(),
     );
 
-    createMapping(duplicatedMapping);
-  }
-
-  // Bulk delete mappings
-  void deleteMappings(String product, List<String> names) {
-    final productMappings = _savedMappings[product] ?? [];
-    productMappings.removeWhere((m) => names.contains(m.name));
-    _savedMappings[product] = productMappings;
+    _mappings[product]!.add(newMapping);
     notifyListeners();
   }
 
-  // Find mappings with duplicate queries
-  List<SavedMapping> findDuplicateQueries(String product, String query) {
-    final productMappings = _savedMappings[product] ?? [];
-    return productMappings.where((m) => m.query == query).toList();
+  void deleteMapping(String product, String eventName) {
+    if (!_mappings.containsKey(product)) return;
+
+    _mappings[product]!.removeWhere(
+        (m) => m.eventName.toLowerCase() == eventName.toLowerCase());
+    notifyListeners();
   }
 
-  // Undo last delete
-  bool undoDelete() {
-    if (_lastDeletedMapping != null && _lastDeletedProduct != null) {
-      createMapping(_lastDeletedMapping!);
-      _lastDeletedMapping = null;
-      _lastDeletedProduct = null;
-      return true;
+  void deleteMappings(String product, List<String> eventNames) {
+    if (!_mappings.containsKey(product)) return;
+
+    for (final eventName in eventNames) {
+      _mappings[product]!.removeWhere(
+          (m) => m.eventName.toLowerCase() == eventName.toLowerCase());
     }
-    return false;
+    _selectedMappings.clear();
+    notifyListeners();
+  }
+
+  List<SavedMapping> findDuplicateQueries(String product, String query) {
+    return _mappings[product]?.where((m) => m.query == query).toList() ?? [];
   }
 }

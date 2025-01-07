@@ -617,25 +617,17 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   // Add this method to show JSON export dialog
-  void _showJsonExportDialog() {
+  void _showJsonExportDialog(dynamic mapping) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Current Mappings JSON'),
-        content: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.6,
-          height: MediaQuery.of(context).size.height * 0.6,
-          child: JsonPreviewWidget(
-            jsonData: _generateJsonPreview(),
-            showExportButton: false,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
+      builder: (context) => JsonPreviewWidget(
+        jsonContent: mapping is SavedMapping
+            ? const JsonEncoder.withIndent('  ').convert(mapping.toJson())
+            : const JsonEncoder.withIndent('  ').convert(
+                (mapping as List<SavedMapping>)
+                    .map((m) => m.toJson())
+                    .toList()),
+        title: mapping is SavedMapping ? 'Mapping JSON' : 'All Mappings JSON',
       ),
     );
   }
@@ -664,17 +656,25 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     ExportService.showJSONExportDialog(
       context,
       jsonPreviewWidget: JsonPreviewWidget(
-        jsonData: _generateJsonPreview(),
-        showExportButton: false,
+        jsonContent:
+            const JsonEncoder.withIndent('  ').convert(_generateJsonPreview()),
       ),
     );
   }
 
-  void _showExportOptions() {
-    ExportOptionsDialog.show(
-      context,
-      onCSVExport: _exportAsCSV,
-      onJSONExport: _exportAsJSON,
+  void _showExportOptions(dynamic mapping) {
+    showDialog(
+      context: context,
+      builder: (context) => ExportOptionsDialog(
+        onExport: (format) {
+          if (mapping is SavedMapping) {
+            ExportService.exportMapping(mapping, format);
+          } else {
+            ExportService.exportMappings(mapping as List<SavedMapping>, format);
+          }
+          Navigator.pop(context);
+        },
+      ),
     );
   }
 
@@ -1072,7 +1072,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
     // Create updated mapping
     final updatedMapping = currentLoadedMapping!.copyWith(
-      name: eventNameController.text,
       eventName: eventNameController.text,
       mappings: List<Map<String, String>>.from(mappings),
       configFields: Map<String, dynamic>.from(configFields),
@@ -1098,8 +1097,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     // Update the mapping in SavedMappingsState
     final state = Provider.of<SavedMappingsState>(context, listen: false);
     if (state.selectedProduct != null) {
-      state.updateMapping(
-          state.selectedProduct!, currentLoadedMapping!.name, updatedMapping);
+      state.updateMapping(state.selectedProduct!,
+          currentLoadedMapping!.eventName, updatedMapping);
 
       // Update the current loaded mapping reference
       currentLoadedMapping = updatedMapping;
@@ -1120,7 +1119,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     );
   }
 
-  void _saveCurrentMapping() async {
+  Future<void> _saveCurrentMapping() async {
     if (selectedRcAppId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1146,10 +1145,9 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
     final now = DateTime.now();
     final savedMapping = SavedMapping(
-      name: eventNameController.text,
+      eventName: eventNameController.text,
       product: appInfo['name'],
       query: '',
-      eventName: eventNameController.text,
       mappings: List<Map<String, String>>.from(mappings),
       configFields: Map<String, dynamic>.from(configFields),
       totalFieldsMapped: mappings.length,
@@ -1180,6 +1178,10 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
       // Set as current loaded mapping after successful save
       currentLoadedMapping = savedMapping;
 
+      setState(() {
+        hasUnsavedChanges = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Mapping saved successfully'),
@@ -1192,7 +1194,71 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
+      rethrow; // Re-throw the error so the caller knows the save failed
     }
+  }
+
+  void _handleLoadMapping(SavedMapping mappingToLoad) {
+    // If there are unsaved changes, show confirmation dialog
+    if (hasUnsavedChanges) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Unsaved Changes'),
+          content: const Text(
+              'You have unsaved changes. Would you like to save them before loading the selected mapping?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context); // Close dialog
+                try {
+                  await _saveCurrentMapping(); // Wait for save to complete
+                  _loadSelectedMapping(
+                      mappingToLoad); // Then load the selected mapping
+                } catch (e) {
+                  // Save failed, don't load the new mapping
+                }
+              },
+              child: const Text('Save'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                _loadSelectedMapping(mappingToLoad); // Load without saving
+              },
+              child: const Text('Discard'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      _loadSelectedMapping(mappingToLoad);
+    }
+  }
+
+  void _loadSelectedMapping(SavedMapping mapping) {
+    setState(() {
+      mappings.clear();
+      mappings.addAll(mapping.mappings);
+      eventNameController.text = mapping.eventName;
+      currentLoadedMapping = mapping;
+      hasUnsavedChanges = false;
+
+      if (selectedRcAppId != null) {
+        final appInfo = rcApps.firstWhere(
+          (app) => app['id'].toString() == selectedRcAppId,
+          orElse: () => {'name': 'Unknown App'},
+        );
+        Provider.of<MappingState>(context, listen: false).setMappings(
+            selectedRcAppId!, appInfo['name'], List.from(mappings));
+      }
+    });
   }
 
   @override
@@ -1524,35 +1590,33 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                 Expanded(
                   flex: 2,
                   child: SavedMappingsSection(
-                    onViewJson: _showJsonExportDialog,
-                    onExport: _showExportOptions,
-                    onLoadMapping: (mapping) {
-                      setState(() {
-                        mappings.clear();
-                        mappings.addAll(mapping.mappings);
-                        eventNameController.text = mapping.eventName;
-                        currentLoadedMapping = mapping;
-                        hasUnsavedChanges =
-                            false; // Start with no unsaved changes
-
-                        // Update state provider
-                        if (selectedRcAppId != null) {
-                          final appInfo = rcApps.firstWhere(
-                            (app) => app['id'].toString() == selectedRcAppId,
-                            orElse: () => {'name': 'Unknown App'},
-                          );
-                          Provider.of<MappingState>(context, listen: false)
-                              .setMappings(selectedRcAppId!, appInfo['name'],
-                                  List.from(mappings));
-                        }
-                      });
+                    onViewJson: (mapping) => _showJsonExportDialog(mapping),
+                    onExport: (mapping) => _showExportOptions(mapping),
+                    onViewAllJson: () {
+                      final state = Provider.of<SavedMappingsState>(context,
+                          listen: false);
+                      if (state.selectedProduct != null) {
+                        final mappings =
+                            state.getMappings(state.selectedProduct!);
+                        _showJsonExportDialog(mappings);
+                      }
                     },
+                    onExportAll: () {
+                      final state = Provider.of<SavedMappingsState>(context,
+                          listen: false);
+                      if (state.selectedProduct != null) {
+                        final mappings =
+                            state.getMappings(state.selectedProduct!);
+                        _showExportOptions(mappings);
+                      }
+                    },
+                    onLoadMapping: _handleLoadMapping,
                     onDuplicateMapping: (mapping) {
                       final state = Provider.of<SavedMappingsState>(context,
                           listen: false);
                       if (state.selectedProduct != null) {
                         state.duplicateMapping(
-                            state.selectedProduct!, mapping.name);
+                            state.selectedProduct!, mapping.eventName);
                       }
                     },
                     onDeleteMapping: (name) {

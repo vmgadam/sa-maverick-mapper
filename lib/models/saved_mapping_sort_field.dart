@@ -1,5 +1,5 @@
 enum SavedMappingSortField {
-  name,
+  eventName,
   product,
   totalFields,
   requiredFields,

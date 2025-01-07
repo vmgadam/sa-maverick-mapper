@@ -1,23 +1,63 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../screens/unified_mapper_screen.dart';
+import '../models/saved_mapping.dart';
+import '../widgets/json_preview_widget.dart';
 
 class ExportService {
-  /// Generates CSV content from mappings data
+  static void exportMapping(SavedMapping mapping, String format) {
+    switch (format) {
+      case 'json':
+        _exportMappingAsJson(mapping);
+        break;
+      case 'csv':
+        _exportMappingAsCsv(mapping);
+        break;
+    }
+  }
+
+  static void exportMappings(List<SavedMapping> mappings, String format) {
+    switch (format) {
+      case 'json':
+        _exportMappingsAsJson(mappings);
+        break;
+      case 'csv':
+        _exportMappingsAsCsv(mappings);
+        break;
+    }
+  }
+
+  static void _exportMappingAsJson(SavedMapping mapping) {
+    final jsonStr =
+        const JsonEncoder.withIndent('  ').convert(mapping.toJson());
+    // TODO: Implement file download
+  }
+
+  static void _exportMappingsAsJson(List<SavedMapping> mappings) {
+    final jsonList = mappings.map((m) => m.toJson()).toList();
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(jsonList);
+    // TODO: Implement file download
+  }
+
+  static void _exportMappingAsCsv(SavedMapping mapping) {
+    // TODO: Implement CSV export for single mapping
+  }
+
+  static void _exportMappingsAsCsv(List<SavedMapping> mappings) {
+    // TODO: Implement CSV export for multiple mappings
+  }
+
   static String generateCSVContent({
     required List<Map<String, dynamic>> mappings,
     required Map<String, dynamic> currentEvent,
     required String? selectedAppId,
     required List<dynamic> apps,
     required Function(Map<String, dynamic>, String) getNestedValue,
-    required List<SaasField> saasFields,
+    required List<dynamic> saasFields,
   }) {
     final csvRows = <String>[];
-
-    // Add header row
     csvRows.add(
         '"Product Name","Source App","Source Field Name","SaaS Alerts Field Name","SaaS Alerts Field Description"');
 
-    // Add data rows
     for (final mapping in mappings) {
       final targetField = mapping['target']!;
       final isComplex = mapping['isComplex'] == 'true';
@@ -26,19 +66,9 @@ class ExportService {
         orElse: () => {'name': 'Unknown App'},
       )['name'];
 
-      // Find the SaaS Alerts field description
       final saasField = saasFields.firstWhere(
-        (field) => field.name == targetField,
-        orElse: () => SaasField(
-          name: targetField,
-          required: false,
-          description: '',
-          type: 'string',
-          defaultMode: 'simple',
-          category: 'Standard',
-          displayOrder: 999,
-          options: null,
-        ),
+        (field) => field['name'] == targetField,
+        orElse: () => {'name': targetField, 'description': ''},
       );
 
       final sourceField =
@@ -49,7 +79,7 @@ class ExportService {
         appName,
         sourceField,
         targetField,
-        saasField.description,
+        saasField['description'],
       ]
           .map((field) => '"${field.toString().replaceAll('"', '""')}"')
           .join(','));
@@ -58,7 +88,6 @@ class ExportService {
     return csvRows.join('\n');
   }
 
-  /// Shows the CSV export dialog
   static void showCSVExportDialog(BuildContext context, String csvContent) {
     showDialog(
       context: context,
@@ -77,11 +106,8 @@ class ExportService {
     );
   }
 
-  /// Shows the JSON export dialog using the provided JsonPreviewWidget
-  static void showJSONExportDialog(
-    BuildContext context, {
-    required Widget jsonPreviewWidget,
-  }) {
+  static void showJSONExportDialog(BuildContext context,
+      {required Widget jsonPreviewWidget}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

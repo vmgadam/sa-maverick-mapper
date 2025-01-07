@@ -76,7 +76,7 @@ class SavedMappingTableHeader extends StatelessWidget {
           Expanded(
             flex: 2,
             child: _buildSortButton(
-              SavedMappingSortField.name,
+              SavedMappingSortField.eventName,
               'Name',
               context,
             ),
