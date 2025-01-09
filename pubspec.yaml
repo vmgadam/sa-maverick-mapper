@@ -1,5 +1,5 @@
-name: sa_rc_live
-description: "A new Flutter project."
+name: maverick_mapper
+description: "An app to map elastic raw events to their corresponding SaaS alerts."
 publish_to: 'none'
 version: 0.1.0
 

@@ -189,7 +189,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   final Map<String, String> configFields = {};
 
   // Input mode state
-  String selectedInputMode = 'elastic';
   int selectedRecordLimit = 5;
   final List<int> recordLimits = [1, 5, 10, 20, 50, 100, 200];
 
@@ -679,12 +678,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   void _clearJson() {
-    if (selectedInputMode == 'elastic') {
-      elasticRequestController.clear();
-      elasticResponseController.clear();
-    } else {
-      jsonInputController.clear();
-    }
+    elasticRequestController.clear();
+    elasticResponseController.clear();
   }
 
   void _confirmAndParseJson() {
@@ -717,167 +712,129 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
   void _parseJson() {
     try {
-      if (selectedInputMode == 'elastic') {
-        // Parse both request and response data
-        final requestData = elasticRequestController.text.isNotEmpty
-            ? json.decode(elasticRequestController.text)
-            : null;
-        final responseData = elasticResponseController.text.isNotEmpty
-            ? json.decode(elasticResponseController.text)
-            : null;
+      // Parse both request and response data
+      final requestData = elasticRequestController.text.isNotEmpty
+          ? json.decode(elasticRequestController.text)
+          : null;
+      final responseData = elasticResponseController.text.isNotEmpty
+          ? json.decode(elasticResponseController.text)
+          : null;
 
-        if (responseData == null) {
-          throw Exception('Response data is required for Elastic Raw format');
-        }
+      if (responseData == null) {
+        throw Exception('Response data is required for Elastic Raw format');
+      }
 
-        // Parse the rawResponse which contains the actual Elastic data
-        final rawResponse = responseData['rawResponse'];
-        if (rawResponse == null) {
-          throw Exception('No rawResponse found in Elastic data');
-        }
+      // Parse the rawResponse which contains the actual Elastic data
+      final rawResponse = responseData['rawResponse'];
+      if (rawResponse == null) {
+        throw Exception('No rawResponse found in Elastic data');
+      }
 
-        // Parse or use the raw response
-        final elasticData =
-            rawResponse is String ? json.decode(rawResponse) : rawResponse;
+      // Parse or use the raw response
+      final elasticData =
+          rawResponse is String ? json.decode(rawResponse) : rawResponse;
 
-        // Extract hits from response data
-        List? hits;
-        if (elasticData['hits']?['hits'] != null) {
-          hits = elasticData['hits']['hits'] as List?;
-        }
+      // Extract hits from response data
+      List? hits;
+      if (elasticData['hits']?['hits'] != null) {
+        hits = elasticData['hits']['hits'] as List?;
+      }
 
-        if (hits == null || hits.isEmpty) {
-          throw Exception(
-              'No records found in Elastic Response data. Please check the data format.');
-        }
+      if (hits == null || hits.isEmpty) {
+        throw Exception(
+            'No records found in Elastic Response data. Please check the data format.');
+      }
 
-        // Extract query from request if available
-        String? querySection;
-        if (requestData != null && requestData['query'] != null) {
-          querySection = json.encode(requestData['query']);
-        }
+      // Extract query from request if available
+      String? querySection;
+      if (requestData != null && requestData['query'] != null) {
+        querySection = json.encode(requestData['query']);
+      }
 
-        setState(() {
-          // Use only the fields object for mapping, not the Elasticsearch metadata
-          final firstHit = hits![0];
-          currentRcEvent = Map<String, dynamic>.from(firstHit['fields']);
-          final newRcFields = _getAllNestedFields([currentRcEvent]);
+      setState(() {
+        // Use only the fields object for mapping, not the Elasticsearch metadata
+        final firstHit = hits![0];
+        currentRcEvent = Map<String, dynamic>.from(firstHit['fields']);
+        final newRcFields = _getAllNestedFields([currentRcEvent]);
 
-          // Remove mappings where the source field no longer exists
-          mappings.removeWhere((mapping) {
-            if (mapping['isComplex'] == 'true') {
-              // For complex mappings, check each field in the tokens
-              if (mapping['tokens'] != null) {
-                try {
-                  final tokens = List<Map<String, String>>.from(json
-                      .decode(mapping['tokens']!)
-                      .map((t) => Map<String, String>.from(t)));
+        // Remove mappings where the source field no longer exists
+        mappings.removeWhere((mapping) {
+          if (mapping['isComplex'] == 'true') {
+            // For complex mappings, check each field in the tokens
+            if (mapping['tokens'] != null) {
+              try {
+                final tokens = List<Map<String, String>>.from(json
+                    .decode(mapping['tokens']!)
+                    .map((t) => Map<String, String>.from(t)));
 
-                  // Check each field token and mark removed fields
-                  bool hasChanges = false;
-                  for (var i = 0; i < tokens.length; i++) {
-                    if (tokens[i]['type'] == 'field') {
-                      final fieldPath = tokens[i]['value']!
-                          .substring(1); // Remove the $ prefix
-                      if (!newRcFields.contains(fieldPath)) {
-                        tokens[i]['value'] = '$fieldPath(removed)';
-                        tokens[i]['type'] = 'text';
-                        hasChanges = true;
-                      }
+                // Check each field token and mark removed fields
+                bool hasChanges = false;
+                for (var i = 0; i < tokens.length; i++) {
+                  if (tokens[i]['type'] == 'field') {
+                    final fieldPath =
+                        tokens[i]['value']!.substring(1); // Remove the $ prefix
+                    if (!newRcFields.contains(fieldPath)) {
+                      tokens[i]['value'] = '$fieldPath(removed)';
+                      tokens[i]['type'] = 'text';
+                      hasChanges = true;
                     }
                   }
-
-                  if (hasChanges) {
-                    mapping['tokens'] = json.encode(tokens);
-                    hasUnsavedChanges = true;
-                  }
-                } catch (e) {
-                  debugPrint('Error processing complex mapping tokens: $e');
                 }
-              }
-              return false; // Keep complex mappings
-            }
-            return !newRcFields.contains(mapping[
-                'source']); // Remove simple mappings if field doesn't exist
-          });
 
-          // Update rcFields and rcEvents
-          rcFields = newRcFields;
-          rcEvents = hits
-              .take(selectedRecordLimit)
-              .map((hit) => Map<String, dynamic>.from(hit['fields']))
-              .toList();
-          selectedRcAppId = null; // Clear selected app
-
-          // Auto-map matching fields that aren't already mapped
-          for (var sourceField in rcFields) {
-            for (var saasField in saasFields) {
-              final isMatching = saasField.name == sourceField;
-              final isAlreadyMapped =
-                  mappings.any((m) => m['target'] == saasField.name);
-
-              if (isMatching && !isAlreadyMapped) {
-                mappings.add({
-                  'source': sourceField,
-                  'target': saasField.name,
-                  'isComplex': 'false',
-                });
-                hasUnsavedChanges = true;
+                if (hasChanges) {
+                  mapping['tokens'] = json.encode(tokens);
+                  hasUnsavedChanges = true;
+                }
+              } catch (e) {
+                debugPrint('Error processing complex mapping tokens: $e');
               }
             }
+            return false; // Keep complex mappings
           }
-
-          // Auto-map special fields if they exist
-          if (currentRcEvent['product.endpoint.id'] != null) {
-            final endpointId =
-                _getNestedValue(currentRcEvent, 'product.endpoint.id');
-            if (endpointId != null) {
-              configFields['endpointId'] = endpointId.toString();
-            }
-          }
-
-          // Set the query section if available
-          if (querySection != null) {
-            configFields['eventFilter'] = querySection;
-          }
+          return !newRcFields.contains(mapping[
+              'source']); // Remove simple mappings if field doesn't exist
         });
-      } else {
-        // Handle JSON format
-        final jsonData = json.decode(jsonInputController.text);
-        setState(() {
-          currentRcEvent = Map<String, dynamic>.from(jsonData);
-          final newRcFields = _getAllNestedFields([currentRcEvent]);
 
-          // Remove mappings where the source field no longer exists
-          mappings.removeWhere((mapping) {
-            if (mapping['isComplex'] == 'true') return false;
-            return !newRcFields.contains(mapping['source']);
-          });
+        // Update rcFields and rcEvents
+        rcFields = newRcFields;
+        rcEvents = hits
+            .take(selectedRecordLimit)
+            .map((hit) => Map<String, dynamic>.from(hit['fields']))
+            .toList();
+        selectedRcAppId = null; // Clear selected app
 
-          // Update rcFields and rcEvents
-          rcFields = newRcFields;
-          rcEvents = [currentRcEvent];
-          selectedRcAppId = null;
+        // Auto-map matching fields that aren't already mapped
+        for (var sourceField in rcFields) {
+          for (var saasField in saasFields) {
+            final isMatching = saasField.name == sourceField;
+            final isAlreadyMapped =
+                mappings.any((m) => m['target'] == saasField.name);
 
-          // Auto-map matching fields that aren't already mapped
-          for (var sourceField in rcFields) {
-            for (var saasField in saasFields) {
-              final isMatching = saasField.name == sourceField;
-              final isAlreadyMapped =
-                  mappings.any((m) => m['target'] == saasField.name);
-
-              if (isMatching && !isAlreadyMapped) {
-                mappings.add({
-                  'source': sourceField,
-                  'target': saasField.name,
-                  'isComplex': 'false',
-                });
-                hasUnsavedChanges = true;
-              }
+            if (isMatching && !isAlreadyMapped) {
+              mappings.add({
+                'source': sourceField,
+                'target': saasField.name,
+                'isComplex': 'false',
+              });
+              hasUnsavedChanges = true;
             }
           }
-        });
-      }
+        }
+
+        // Auto-map special fields if they exist
+        if (currentRcEvent['product.endpoint.id'] != null) {
+          final endpointId =
+              _getNestedValue(currentRcEvent, 'product.endpoint.id');
+          if (endpointId != null) {
+            configFields['endpointId'] = endpointId.toString();
+          }
+        }
+
+        // Set the query section if available
+        if (querySection != null) {
+          configFields['eventFilter'] = querySection;
+        }
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Invalid JSON: $e')),
@@ -1291,294 +1248,143 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SegmentedButton<String>(
-                            segments: const [
-                              ButtonSegment(
-                                value: 'elastic',
-                                label: Text('Elastic Raw'),
-                                icon: Icon(Icons.data_array),
-                              ),
-                              ButtonSegment(
-                                value: 'rc',
-                                label: Text('RC'),
-                                icon: Icon(Icons.rocket_launch),
-                              ),
-                            ],
-                            selected: {selectedInputMode},
-                            onSelectionChanged: (Set<String> newSelection) {
-                              if (mappings.isNotEmpty) {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Warning'),
-                                    content: const Text(
-                                        'Changing input source will discard all current mappings. Do you want to continue?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            mappings.clear();
-                                            selectedInputMode =
-                                                newSelection.first;
-                                            selectedRcAppId = null;
-                                            rcEvents.clear();
-                                            rcFields.clear();
-                                          });
-                                          if (newSelection.first == 'rc') {
-                                            _loadRcApps();
-                                          }
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('Continue'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                setState(() {
-                                  selectedInputMode = newSelection.first;
-                                  selectedRcAppId = null;
-                                  rcEvents.clear();
-                                  rcFields.clear();
-                                });
-                                if (newSelection.first == 'rc') {
-                                  _loadRcApps();
-                                }
-                              }
-                            },
+                          const Text(
+                            'Elastic Request/Response',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Expanded(
-                            child: selectedInputMode == 'elastic'
-                                ? Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(
-                                          color: Colors.grey.shade300),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Column(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: Row(
                                       children: [
                                         Expanded(
-                                          child: Row(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Padding(
-                                                      padding:
-                                                          EdgeInsets.all(8.0),
-                                                      child: Text(
-                                                        'Request',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Expanded(
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(8.0),
-                                                        child: TextFormField(
-                                                          controller:
-                                                              elasticRequestController,
-                                                          maxLines: null,
-                                                          decoration:
-                                                              const InputDecoration(
-                                                            hintText:
-                                                                'Paste Elastic Request JSON here...',
-                                                            border:
-                                                                OutlineInputBorder(),
-                                                            contentPadding:
-                                                                EdgeInsets.all(
-                                                                    8),
-                                                          ),
-                                                          style:
-                                                              const TextStyle(
-                                                            fontFamily:
-                                                                'monospace',
-                                                            height: 1.5,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
+                                              const Padding(
+                                                padding: EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  'Request',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                                 ),
                                               ),
-                                              const VerticalDivider(),
                                               Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Padding(
-                                                      padding:
-                                                          EdgeInsets.all(8.0),
-                                                      child: Text(
-                                                        'Response',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: TextFormField(
+                                                    controller:
+                                                        elasticRequestController,
+                                                    maxLines: null,
+                                                    decoration:
+                                                        const InputDecoration(
+                                                      hintText:
+                                                          'Paste Elastic Request JSON here...',
+                                                      border:
+                                                          OutlineInputBorder(),
+                                                      contentPadding:
+                                                          EdgeInsets.all(8),
                                                     ),
-                                                    Expanded(
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(8.0),
-                                                        child: TextFormField(
-                                                          controller:
-                                                              elasticResponseController,
-                                                          maxLines: null,
-                                                          decoration:
-                                                              const InputDecoration(
-                                                            hintText:
-                                                                'Paste Elastic Response JSON here...',
-                                                            border:
-                                                                OutlineInputBorder(),
-                                                            contentPadding:
-                                                                EdgeInsets.all(
-                                                                    8),
-                                                          ),
-                                                          style:
-                                                              const TextStyle(
-                                                            fontFamily:
-                                                                'monospace',
-                                                            height: 1.5,
-                                                          ),
-                                                        ),
-                                                      ),
+                                                    style: const TextStyle(
+                                                      fontFamily: 'monospace',
+                                                      height: 1.5,
                                                     ),
-                                                  ],
+                                                  ),
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              top: BorderSide(
-                                                  color: Colors.grey.shade300),
-                                            ),
-                                          ),
-                                          child: EventNameInput(
-                                            selectedRecordLimit:
-                                                selectedRecordLimit,
-                                            recordLimits: recordLimits,
-                                            onClear: () {
-                                              elasticRequestController.clear();
-                                              elasticResponseController.clear();
-                                              setState(() {
-                                                rcEvents.clear();
-                                                rcFields.clear();
-                                              });
-                                            },
-                                            onParse: _confirmAndParseJson,
-                                            onRecordLimitChanged: (value) {
-                                              setState(() {
-                                                selectedRecordLimit = value;
-                                              });
-                                            },
+                                        const VerticalDivider(),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Padding(
+                                                padding: EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  'Response',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: TextFormField(
+                                                    controller:
+                                                        elasticResponseController,
+                                                    maxLines: null,
+                                                    decoration:
+                                                        const InputDecoration(
+                                                      hintText:
+                                                          'Paste Elastic Response JSON here...',
+                                                      border:
+                                                          OutlineInputBorder(),
+                                                      contentPadding:
+                                                          EdgeInsets.all(8),
+                                                    ),
+                                                    style: const TextStyle(
+                                                      fontFamily: 'monospace',
+                                                      height: 1.5,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],
                                     ),
-                                  )
-                                : selectedInputMode == 'rc'
-                                    ? Column(
-                                        children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    'Select Application',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 8),
-                                                  DropdownButton<String>(
-                                                    value: selectedRcAppId,
-                                                    hint: const Text(
-                                                        'Select an application'),
-                                                    isExpanded: true,
-                                                    items: rcApps.map((app) {
-                                                      return DropdownMenuItem(
-                                                        value: app['id']
-                                                            .toString(),
-                                                        child:
-                                                            Text(app['name']),
-                                                      );
-                                                    }).toList(),
-                                                    onChanged: (value) {
-                                                      setState(() {
-                                                        selectedRcAppId = value;
-                                                      });
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              border: Border(
-                                                top: BorderSide(
-                                                    color:
-                                                        Colors.grey.shade300),
-                                              ),
-                                            ),
-                                            child: EventNameInput(
-                                              selectedRecordLimit:
-                                                  selectedRecordLimit,
-                                              recordLimits: recordLimits,
-                                              onClear: () {
-                                                setState(() {
-                                                  selectedRcAppId = null;
-                                                  rcEvents.clear();
-                                                  rcFields.clear();
-                                                });
-                                              },
-                                              onParse: () {
-                                                if (selectedRcAppId != null) {
-                                                  _loadRcEvents(
-                                                      selectedRcAppId!);
-                                                } else {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text(
-                                                          'Please select an application first'),
-                                                    ),
-                                                  );
-                                                }
-                                              },
-                                              onRecordLimitChanged: (value) {
-                                                setState(() {
-                                                  selectedRecordLimit = value;
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    : const SizedBox(),
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        top: BorderSide(
+                                            color: Colors.grey.shade300),
+                                      ),
+                                    ),
+                                    child: EventNameInput(
+                                      selectedRecordLimit: selectedRecordLimit,
+                                      recordLimits: recordLimits,
+                                      onClear: () {
+                                        elasticRequestController.clear();
+                                        elasticResponseController.clear();
+                                        setState(() {
+                                          rcEvents.clear();
+                                          rcFields.clear();
+                                        });
+                                      },
+                                      onParse: _confirmAndParseJson,
+                                      onRecordLimitChanged: (value) {
+                                        setState(() {
+                                          selectedRecordLimit = value;
+                                        });
+                                      },
+                                      eventNameController: eventNameController,
+                                      hasUnsavedChanges: hasUnsavedChanges,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -1586,7 +1392,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Saved Mappings Section (replacing Current Mappings)
+                // Saved Mappings Section
                 Expanded(
                   flex: 2,
                   child: SavedMappingsSection(
@@ -1672,72 +1478,37 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                 style: TextStyle(fontSize: 12),
                               ),
                               const Spacer(),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('Event Name:',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  const SizedBox(width: 8),
-                                  SizedBox(
-                                    width: 250,
-                                    child: TextField(
-                                      controller: eventNameController,
-                                      decoration: const InputDecoration(
-                                        hintText: 'Enter event name...',
-                                        isDense: true,
-                                        border: OutlineInputBorder(),
-                                        contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 8),
-                                      ),
-                                      onChanged: (_) {
-                                        setState(() {
-                                          hasUnsavedChanges = true;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  // Fixed-width container for buttons
-                                  SizedBox(
-                                    width: 180,
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        if (hasUnsavedChanges &&
-                                            currentLoadedMapping != null)
-                                          TextButton.icon(
-                                            icon: const Icon(Icons.save,
-                                                size: 20),
-                                            label: const Text('Save'),
-                                            onPressed: _saveMapping,
-                                            style: TextButton.styleFrom(
-                                              foregroundColor: Theme.of(context)
-                                                  .primaryColor,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 8),
-                                            ),
-                                          ),
-                                        if (hasUnsavedChanges &&
-                                            currentLoadedMapping != null)
-                                          const SizedBox(width: 4),
-                                        TextButton.icon(
-                                          icon: const Icon(Icons.save_as,
-                                              size: 20),
-                                          label: const Text('Save As'),
-                                          onPressed: _saveCurrentMapping,
-                                          style: TextButton.styleFrom(
-                                            foregroundColor:
-                                                Theme.of(context).primaryColor,
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8),
-                                          ),
+                              SizedBox(
+                                width: 180,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    if (hasUnsavedChanges &&
+                                        currentLoadedMapping != null)
+                                      TextButton.icon(
+                                        icon: const Icon(Icons.save, size: 20),
+                                        label: const Text('Save'),
+                                        onPressed: _saveMapping,
+                                        style: TextButton.styleFrom(
+                                          foregroundColor:
+                                              Theme.of(context).primaryColor,
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8),
                                         ),
-                                      ],
+                                      ),
+                                    if (hasUnsavedChanges)
+                                      const SizedBox(width: 4),
+                                    TextButton.icon(
+                                      icon: const Icon(Icons.save_as, size: 20),
+                                      label: const Text('Save As'),
+                                      onPressed: _saveCurrentMapping,
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ],
                           ),
