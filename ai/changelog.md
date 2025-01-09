@@ -11,6 +11,7 @@ Implemented Phase 1 of the saved mappings feature and completed Phase 2 with reu
   - JSON serialization methods (toJson/fromJson)
   - CopyWith functionality for immutable updates
   - Name length validation (max 200 characters)
+  - Added raw samples storage for Elastic data
 - ✅ Implemented `SavedMappingsState` class with core functionality:
   - Create new saved mapping with unique name handling
   - Update existing mapping
@@ -45,28 +46,42 @@ Implemented Phase 1 of the saved mappings feature and completed Phase 2 with reu
   - Test bulk operations
   - All screen tests passing
 
-### Phase 3: Save/Load Flow (In Progress)
-- ✅ Created SaveAsDialog component:
-  - Name input with automatic length enforcement (max 200 chars)
-  - Loading state during save operation
-  - Error handling for duplicate names
-  - Form validation and error messages
-- ✅ Added comprehensive dialog tests:
-  - Test form validation
-  - Test name length enforcement
-  - Test duplicate name handling
-  - Test loading states
-  - All dialog tests passing
-- ✅ Integrated with UnifiedMapperScreen:
-  - Created SavedMappingsSection component to replace Current Mappings
-  - Added search and filter functionality with real-time updates
-  - Implemented sorting by name, product, fields, and dates
-  - Added selection management with bulk actions
-  - Integrated duplicate query detection
-  - Added comprehensive tests for all new functionality
+### Phase 3: Enhanced Input Handling ✅
+- ✅ Enhanced Request/Response input fields:
+  - Added required field validation
+  - Added visual indicators (red star) for required fields
+  - Disabled Parse button until all required fields are populated
+- ✅ Updated Parse functionality:
+  - Store raw sample records based on selected limit
+  - Clear Request/Response fields after successful parse
+  - Maintain current mapping until new Parse or Load action
+  - Validate Event Name is populated
+- ✅ Enhanced save/load workflow:
+  - Store raw samples with mapping
+  - Load and display raw samples in table
+  - Maintain re-mapping capability
+  - Handle field mapping updates
+
+### Phase 4: Bulk Operations ✅
+- ✅ Implemented bulk delete functionality:
+  - Added `BulkDeleteDialog` component for confirmation
+  - Enhanced `SavedMappingsState` with bulk delete methods
+  - Added undo capability for bulk deletes
+  - Added success feedback via snackbar
+- ✅ Added selection management:
+  - Implemented select/deselect all functionality
+  - Added individual selection toggles
+  - Added selection count display
+  - Added clear selection capability
+- ✅ Enhanced UI for bulk operations:
+  - Added visual feedback for selected items
+  - Added bulk action buttons in selection header
+  - Added disabled states for empty selections
+  - Maintained consistent styling with app theme
 
 ## Next Steps
-- Continue Phase 3: Save/Load Flow
-  - Implement DuplicateQueryDialog component
-  - Add mapping switch confirmation
-  - Complete integration tests for save/load workflows 
+- Implement browser persistence:
+  - Add localStorage integration
+  - Add state recovery on app load
+  - Handle version migrations
+  - Add error recovery 

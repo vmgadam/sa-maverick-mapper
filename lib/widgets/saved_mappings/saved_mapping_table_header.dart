@@ -3,10 +3,10 @@ import '../../models/saved_mapping_sort_field.dart';
 
 class SavedMappingTableHeader extends StatelessWidget {
   final bool hasSelection;
-  final bool? allSelected;
-  final SavedMappingSortField? sortField;
+  final bool allSelected;
+  final SavedMappingSortField sortField;
   final bool sortAscending;
-  final ValueChanged<bool?> onSelectAll;
+  final VoidCallback onSelectAll;
   final ValueChanged<SavedMappingSortField> onSort;
 
   const SavedMappingTableHeader({
@@ -19,97 +19,76 @@ class SavedMappingTableHeader extends StatelessWidget {
     required this.onSort,
   });
 
-  Widget _buildSortIcon(SavedMappingSortField field) {
-    if (sortField != field) {
-      return const SizedBox(width: 24);
-    }
-    return Icon(
-      sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-      size: 16,
-    );
-  }
-
-  Widget _buildSortButton(
-    SavedMappingSortField field,
-    String label,
-    BuildContext context,
-  ) {
-    return TextButton(
-      onPressed: () => onSort(field),
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(width: 4),
-          _buildSortIcon(field),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-          ),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
       ),
       child: Row(
         children: [
-          if (hasSelection)
-            Checkbox(
-              value: allSelected,
-              tristate: true,
-              onChanged: onSelectAll,
+          Checkbox(
+            value: allSelected,
+            onChanged: hasSelection ? (bool? value) => onSelectAll() : null,
+            tristate: false,
+          ),
+          Expanded(
+            flex: 3,
+            child: _buildSortableHeader(
+              'Event Name',
+              SavedMappingSortField.eventName,
             ),
+          ),
           Expanded(
             flex: 2,
-            child: _buildSortButton(
-              SavedMappingSortField.eventName,
-              'Name',
-              context,
-            ),
-          ),
-          Expanded(
-            child: _buildSortButton(
-              SavedMappingSortField.product,
+            child: _buildSortableHeader(
               'Product',
-              context,
+              SavedMappingSortField.product,
             ),
           ),
           Expanded(
-            child: _buildSortButton(
+            flex: 2,
+            child: _buildSortableHeader(
+              'Total Fields',
               SavedMappingSortField.totalFields,
-              'Fields',
-              context,
             ),
           ),
           Expanded(
-            child: _buildSortButton(
+            flex: 2,
+            child: _buildSortableHeader(
+              'Required Fields',
               SavedMappingSortField.requiredFields,
-              'Required',
-              context,
             ),
           ),
           Expanded(
-            child: _buildSortButton(
+            flex: 2,
+            child: _buildSortableHeader(
+              'Last Modified',
               SavedMappingSortField.lastModified,
-              'Modified',
-              context,
             ),
           ),
-          const SizedBox(width: 120), // Space for action buttons
+          const SizedBox(width: 120), // Actions column
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSortableHeader(String text, SavedMappingSortField field) {
+    return InkWell(
+      onTap: () => onSort(field),
+      child: Row(
+        children: [
+          Text(
+            text,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          if (sortField == field)
+            Icon(
+              sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+              size: 16,
+            ),
         ],
       ),
     );

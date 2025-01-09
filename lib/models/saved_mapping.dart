@@ -19,6 +19,7 @@ class SavedMapping {
   final Map<String, dynamic>? eventFilter;
   final Map<String, dynamic>? schema;
   final Map<String, dynamic>? params;
+  final List<Map<String, dynamic>> rawSamples;
 
   SavedMapping({
     required this.eventName,
@@ -31,6 +32,7 @@ class SavedMapping {
     required this.totalRequiredFields,
     required this.createdAt,
     required this.modifiedAt,
+    required this.rawSamples,
     this.productType,
     this.endpointId,
     this.endpointName,
@@ -68,6 +70,7 @@ class SavedMapping {
     Map<String, dynamic>? eventFilter,
     Map<String, dynamic>? schema,
     Map<String, dynamic>? params,
+    List<Map<String, dynamic>>? rawSamples,
   }) {
     return SavedMapping(
       eventName: eventName ?? this.eventName,
@@ -80,6 +83,7 @@ class SavedMapping {
       totalRequiredFields: totalRequiredFields ?? this.totalRequiredFields,
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? this.modifiedAt,
+      rawSamples: rawSamples ?? this.rawSamples,
       productType: productType ?? this.productType,
       endpointId: endpointId ?? this.endpointId,
       endpointName: endpointName ?? this.endpointName,
@@ -103,6 +107,7 @@ class SavedMapping {
         'totalRequiredFields': totalRequiredFields,
         'createdAt': createdAt.toIso8601String(),
         'modifiedAt': modifiedAt.toIso8601String(),
+        'rawSamples': rawSamples,
         'productType': productType,
         'endpointId': endpointId,
         'endpointName': endpointName,
@@ -128,6 +133,10 @@ class SavedMapping {
         totalRequiredFields: json['totalRequiredFields'] as int,
         createdAt: DateTime.parse(json['createdAt'] as String),
         modifiedAt: DateTime.parse(json['modifiedAt'] as String),
+        rawSamples: (json['rawSamples'] as List<dynamic>?)
+                ?.map((e) => Map<String, dynamic>.from(e as Map))
+                .toList() ??
+            [],
         productType: json['productType'] as String?,
         endpointId: json['endpointId'] as int?,
         endpointName: json['endpointName'] as String?,
@@ -186,6 +195,7 @@ class SavedMapping {
           (json['meta']['creationTime'] as int) * 1000),
       modifiedAt: DateTime.fromMillisecondsSinceEpoch(
           (json['meta']['creationTime'] as int) * 1000),
+      rawSamples: [], // Initialize with empty list as this is from config
       productType: mapping['productType'] as String?,
       endpointId: mapping['endpointId'] as int?,
       endpointName: mapping['endpointName'] as String?,

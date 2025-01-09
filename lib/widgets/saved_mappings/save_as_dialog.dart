@@ -12,6 +12,7 @@ class SaveAsDialog extends StatefulWidget {
   final int totalFieldsMapped;
   final int requiredFieldsMapped;
   final int totalRequiredFields;
+  final List<Map<String, dynamic>> rawSamples;
 
   const SaveAsDialog({
     super.key,
@@ -22,6 +23,7 @@ class SaveAsDialog extends StatefulWidget {
     required this.totalFieldsMapped,
     required this.requiredFieldsMapped,
     required this.totalRequiredFields,
+    required this.rawSamples,
   });
 
   static Future<String?> show({
@@ -33,9 +35,11 @@ class SaveAsDialog extends StatefulWidget {
     required int totalFieldsMapped,
     required int requiredFieldsMapped,
     required int totalRequiredFields,
+    required List<Map<String, dynamic>> rawSamples,
   }) {
     return showDialog<String>(
       context: context,
+      barrierDismissible: false,
       builder: (context) => SaveAsDialog(
         product: product,
         query: query,
@@ -44,6 +48,7 @@ class SaveAsDialog extends StatefulWidget {
         totalFieldsMapped: totalFieldsMapped,
         requiredFieldsMapped: requiredFieldsMapped,
         totalRequiredFields: totalRequiredFields,
+        rawSamples: rawSamples,
       ),
     );
   }
@@ -65,12 +70,19 @@ class _SaveAsDialogState extends State<SaveAsDialog> {
   }
 
   Future<void> _handleSave() async {
+    if (_isSaving) return;
+
     final formState = _formKey.currentState;
-    if (formState == null) {
+    if (formState == null) return;
+
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter a name';
+      });
       return;
     }
 
-    final name = _nameController.text;
     if (name.length > 200) {
       setState(() {
         _errorMessage = 'Name must be 200 characters or less';
@@ -78,9 +90,7 @@ class _SaveAsDialogState extends State<SaveAsDialog> {
       return;
     }
 
-    if (!formState.validate()) {
-      return;
-    }
+    if (!formState.validate()) return;
 
     setState(() {
       _isSaving = true;
@@ -88,36 +98,36 @@ class _SaveAsDialogState extends State<SaveAsDialog> {
     });
 
     try {
+      if (!mounted) return;
+
       final state = Provider.of<SavedMappingsState>(context, listen: false);
 
-      // Create new saved mapping
+      // Create a copy of the raw samples to avoid reference issues
+      final rawSamplesCopy = List<Map<String, dynamic>>.from(widget.rawSamples);
+
       final newMapping = SavedMapping(
         eventName: name,
         product: widget.product,
         query: widget.query,
-        mappings: widget.mappings,
-        configFields: widget.configFields,
+        mappings: List<Map<String, String>>.from(widget.mappings),
+        configFields: Map<String, dynamic>.from(widget.configFields),
         totalFieldsMapped: widget.totalFieldsMapped,
         requiredFieldsMapped: widget.requiredFieldsMapped,
         totalRequiredFields: widget.totalRequiredFields,
+        rawSamples: rawSamplesCopy,
         createdAt: DateTime.now(),
         modifiedAt: DateTime.now(),
       );
 
-      try {
-        state.createMapping(newMapping);
-        if (mounted) {
-          Navigator.of(context).pop(name);
-        }
-      } catch (e) {
-        setState(() {
-          _errorMessage = e.toString();
-          _isSaving = false;
-        });
-      }
+      // Use a microtask to avoid blocking the UI
+      await Future.microtask(() => state.createMapping(newMapping));
+
+      if (!mounted) return;
+      Navigator.of(context).pop(name);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
         _isSaving = false;
       });
     }
@@ -125,64 +135,67 @@ class _SaveAsDialogState extends State<SaveAsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Save Mapping As'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Mapping Name',
-                hintText: 'Enter a name for this mapping',
-                helperText: 'Maximum 200 characters',
+    return WillPopScope(
+      onWillPop: () async => !_isSaving,
+      child: AlertDialog(
+        title: const Text('Save Mapping As'),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Mapping Name',
+                  hintText: 'Enter a name for this mapping',
+                  helperText: 'Maximum 200 characters',
+                ),
+                maxLength: 200,
+                maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                enabled: !_isSaving,
+                autofocus: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a name';
+                  }
+                  return null;
+                },
+                autovalidateMode: AutovalidateMode.onUserInteraction,
               ),
-              maxLength: 200,
-              maxLengthEnforcement: MaxLengthEnforcement.enforced,
-              enabled: !_isSaving,
-              autofocus: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a name';
-                }
-                return null;
-              },
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-            ),
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  _errorMessage!,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    _errorMessage!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: _isSaving ? null : _handleSave,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text('Save'),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _isSaving ? null : _handleSave,
-          child: _isSaving
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                  ),
-                )
-              : const Text('Save'),
-        ),
-      ],
     );
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'dart:isolate';
 import 'package:flutter/gestures.dart';
 import '../services/api_service.dart';
 import '../services/saas_alerts_api_service.dart';
@@ -205,10 +208,17 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   // Add tracking for currently loaded mapping
   SavedMapping? currentLoadedMapping;
 
+  // Add timer for debouncing
+  Timer? _debounceTimer;
+  bool _isProcessingResponse = false;
+
   @override
   void initState() {
     super.initState();
     _loadSaasFields();
+
+    // Add listener with debounce for response text
+    elasticResponseController.addListener(_handleResponseChange);
 
     // Synchronize horizontal scrolling
     _horizontalController.addListener(() {
@@ -217,10 +227,17 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
         _horizontalController.jumpTo(_horizontalController.position.pixels);
       }
     });
+
+    // Add listeners to update canParse state
+    elasticRequestController.addListener(_updateCanParse);
+    elasticResponseController.addListener(_updateCanParse);
+    eventNameController.addListener(_updateCanParse);
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
+    elasticResponseController.removeListener(_handleResponseChange);
     _horizontalController.dispose();
     sourceSearchController.dispose();
     saasSearchController.dispose();
@@ -228,7 +245,17 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     elasticRequestController.dispose();
     elasticResponseController.dispose();
     eventNameController.dispose();
+    // Remove listeners
+    elasticRequestController.removeListener(_updateCanParse);
+    elasticResponseController.removeListener(_updateCanParse);
+    eventNameController.removeListener(_updateCanParse);
     super.dispose();
+  }
+
+  void _updateCanParse() {
+    setState(() {
+      // This will trigger a rebuild with the updated canParse value
+    });
   }
 
   // Helper getters
@@ -710,6 +737,12 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     }
   }
 
+  // Add this getter to control Parse button state
+  bool get canParse =>
+      elasticRequestController.text.isNotEmpty &&
+      elasticResponseController.text.isNotEmpty &&
+      eventNameController.text.isNotEmpty;
+
   void _parseJson() {
     try {
       // Parse both request and response data
@@ -751,9 +784,23 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
         querySection = json.encode(requestData['query']);
       }
 
+      // Get the first hit's fields to extract product type
+      final firstHit = hits[0];
+      final fields = firstHit['fields'] as Map<String, dynamic>;
+      final productType = fields['product.type']?[0] as String? ?? 'Elastic';
+
+      // Set the selected product in SavedMappingsState
+      Provider.of<SavedMappingsState>(context, listen: false)
+          .setSelectedProduct(productType);
+
       setState(() {
+        // Store raw samples
+        final rawSamples = hits!
+            .take(selectedRecordLimit)
+            .map((hit) => Map<String, dynamic>.from(hit['fields']))
+            .toList();
+
         // Use only the fields object for mapping, not the Elasticsearch metadata
-        final firstHit = hits![0];
         currentRcEvent = Map<String, dynamic>.from(firstHit['fields']);
         final newRcFields = _getAllNestedFields([currentRcEvent]);
 
@@ -797,11 +844,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
         // Update rcFields and rcEvents
         rcFields = newRcFields;
-        rcEvents = hits
-            .take(selectedRecordLimit)
-            .map((hit) => Map<String, dynamic>.from(hit['fields']))
-            .toList();
-        selectedRcAppId = null; // Clear selected app
+        rcEvents = rawSamples;
 
         // Auto-map matching fields that aren't already mapped
         for (var sourceField in rcFields) {
@@ -835,6 +878,10 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           configFields['eventFilter'] = querySection;
         }
       });
+
+      // Clear input fields after successful parse
+      elasticRequestController.clear();
+      elasticResponseController.clear();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Invalid JSON: $e')),
@@ -1077,15 +1124,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   Future<void> _saveCurrentMapping() async {
-    if (selectedRcAppId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select an app first'),
-        ),
-      );
-      return;
-    }
-
     if (eventNameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1095,17 +1133,30 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
       return;
     }
 
-    final appInfo = rcApps.firstWhere(
-      (app) => app['id'].toString() == selectedRcAppId,
-      orElse: () => {'name': 'Unknown App'},
-    );
-
     final now = DateTime.now();
+
+    // Extract product type from current event
+    String productType = 'Elastic';
+    if (currentRcEvent.containsKey('product.type')) {
+      final types = currentRcEvent['product.type'];
+      if (types is List && types.isNotEmpty) {
+        productType = types[0].toString();
+      }
+    }
+
     final savedMapping = SavedMapping(
       eventName: eventNameController.text,
-      product: appInfo['name'],
+      product: productType,
       query: '',
-      mappings: List<Map<String, String>>.from(mappings),
+      mappings: mappings
+          .map((m) => Map<String, String>.from({
+                'source': m['source']?.toString() ?? '',
+                'target': m['target']?.toString() ?? '',
+                'isComplex': m['isComplex']?.toString() ?? 'false',
+                'tokens': m['tokens']?.toString() ?? '[]',
+                'jsonataExpr': m['jsonataExpr']?.toString() ?? '',
+              }))
+          .toList(),
       configFields: Map<String, dynamic>.from(configFields),
       totalFieldsMapped: mappings.length,
       requiredFieldsMapped: mappings
@@ -1124,6 +1175,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
               .required)
           .length,
       totalRequiredFields: saasFields.where((f) => f.required).length,
+      rawSamples: List<Map<String, dynamic>>.from(rcEvents),
       createdAt: now,
       modifiedAt: now,
     );
@@ -1151,7 +1203,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
-      rethrow; // Re-throw the error so the caller knows the save failed
+      rethrow;
     }
   }
 
@@ -1207,15 +1259,48 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
       currentLoadedMapping = mapping;
       hasUnsavedChanges = false;
 
-      if (selectedRcAppId != null) {
-        final appInfo = rcApps.firstWhere(
-          (app) => app['id'].toString() == selectedRcAppId,
-          orElse: () => {'name': 'Unknown App'},
-        );
-        Provider.of<MappingState>(context, listen: false).setMappings(
-            selectedRcAppId!, appInfo['name'], List.from(mappings));
+      // Load raw samples into rcEvents and extract fields
+      rcEvents = List<Map<String, dynamic>>.from(mapping.rawSamples);
+      if (rcEvents.isNotEmpty) {
+        currentRcEvent = Map<String, dynamic>.from(rcEvents.first);
+        rcFields = _getAllNestedFields([currentRcEvent]);
+      }
+
+      // Update state provider
+      Provider.of<MappingState>(context, listen: false)
+          .setMappings('Elastic', mapping.product, List.from(mappings));
+    });
+  }
+
+  void _handleResponseChange() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (elasticResponseController.text.length > 1000) {
+        setState(() => _isProcessingResponse = true);
+        // Process in next frame to allow loading indicator to show
+        Future.microtask(() async {
+          try {
+            // Validate JSON in background
+            await compute(jsonTryParse, elasticResponseController.text);
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Invalid JSON: $e')),
+              );
+            }
+          } finally {
+            if (mounted) {
+              setState(() => _isProcessingResponse = false);
+            }
+          }
+        });
       }
     });
+  }
+
+  // Helper function for compute
+  static dynamic jsonTryParse(String text) {
+    return json.decode(text);
   }
 
   @override
@@ -1325,27 +1410,49 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                                 ),
                                               ),
                                               Expanded(
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: TextFormField(
-                                                    controller:
-                                                        elasticResponseController,
-                                                    maxLines: null,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                      hintText:
-                                                          'Paste Elastic Response JSON here...',
-                                                      border:
-                                                          OutlineInputBorder(),
-                                                      contentPadding:
-                                                          EdgeInsets.all(8),
+                                                child: Stack(
+                                                  children: [
+                                                    TextFormField(
+                                                      controller:
+                                                          elasticResponseController,
+                                                      maxLines: null,
+                                                      enabled:
+                                                          !_isProcessingResponse,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                        hintText:
+                                                            'Paste Elastic Response JSON here...',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                        contentPadding:
+                                                            EdgeInsets.all(8),
+                                                      ),
+                                                      style: const TextStyle(
+                                                        fontFamily: 'monospace',
+                                                        height: 1.5,
+                                                      ),
                                                     ),
-                                                    style: const TextStyle(
-                                                      fontFamily: 'monospace',
-                                                      height: 1.5,
-                                                    ),
-                                                  ),
+                                                    if (_isProcessingResponse)
+                                                      Positioned.fill(
+                                                        child: Container(
+                                                          color: Colors.black12,
+                                                          child: const Center(
+                                                            child: Column(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              children: [
+                                                                CircularProgressIndicator(),
+                                                                SizedBox(
+                                                                    height: 8),
+                                                                Text(
+                                                                    'Processing large JSON...'),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
                                                 ),
                                               ),
                                             ],
@@ -1380,6 +1487,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                       },
                                       eventNameController: eventNameController,
                                       hasUnsavedChanges: hasUnsavedChanges,
+                                      canParse: canParse,
                                     ),
                                   ),
                                 ],

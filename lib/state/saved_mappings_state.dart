@@ -6,6 +6,8 @@ class SavedMappingsState extends ChangeNotifier {
   String? selectedProduct;
   final Set<String> _selectedMappings = {};
 
+  Set<String> get selectedMappings => Set.from(_selectedMappings);
+
   void setSelectedProduct(String product) {
     selectedProduct = product;
     _selectedMappings.clear();
@@ -35,17 +37,29 @@ class SavedMappingsState extends ChangeNotifier {
   }
 
   void createMapping(SavedMapping mapping) {
+    // Initialize the product list if it doesn't exist
     if (!_mappings.containsKey(mapping.product)) {
       _mappings[mapping.product] = [];
     }
 
-    // Check for duplicate names
-    if (_mappings[mapping.product]!.any(
-        (m) => m.eventName.toLowerCase() == mapping.eventName.toLowerCase())) {
-      throw Exception('A mapping with this name already exists');
+    // Check for existing mapping with same name (case-insensitive)
+    final exists = _mappings[mapping.product]!.any(
+        (m) => m.eventName.toLowerCase() == mapping.eventName.toLowerCase());
+    if (exists) {
+      throw Exception(
+          'A mapping with the name "${mapping.eventName}" already exists. Please choose a different name.');
     }
 
+    // Add the new mapping
     _mappings[mapping.product]!.add(mapping);
+
+    // Set the selected product if not already set or if it's different
+    if (selectedProduct != mapping.product) {
+      selectedProduct = mapping.product;
+      _selectedMappings.clear();
+    }
+
+    // Notify listeners after all state changes are complete
     notifyListeners();
   }
 
@@ -107,5 +121,18 @@ class SavedMappingsState extends ChangeNotifier {
 
   List<SavedMapping> findDuplicateQueries(String product, String query) {
     return _mappings[product]?.where((m) => m.query == query).toList() ?? [];
+  }
+
+  void selectAll(String product) {
+    if (!_mappings.containsKey(product)) return;
+    _selectedMappings.addAll(_mappings[product]!.map((m) => m.eventName));
+    notifyListeners();
+  }
+
+  bool get hasSelection => _selectedMappings.isNotEmpty;
+  bool isAllSelected(String product) {
+    if (!_mappings.containsKey(product)) return false;
+    return _mappings[product]!
+        .every((m) => _selectedMappings.contains(m.eventName));
   }
 }

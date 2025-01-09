@@ -8,6 +8,7 @@ class EventNameInput extends StatelessWidget {
   final ValueChanged<int> onRecordLimitChanged;
   final TextEditingController eventNameController;
   final bool hasUnsavedChanges;
+  final bool canParse;
 
   const EventNameInput({
     super.key,
@@ -18,6 +19,7 @@ class EventNameInput extends StatelessWidget {
     required this.onRecordLimitChanged,
     required this.eventNameController,
     required this.hasUnsavedChanges,
+    required this.canParse,
   });
 
   @override
@@ -26,17 +28,23 @@ class EventNameInput extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Row(
         children: [
-          const Text('Event Name:'),
+          Row(
+            children: [
+              const Text('Event Name'),
+              const SizedBox(width: 4),
+              const Icon(Icons.star, size: 12, color: Colors.red),
+            ],
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: eventNameController,
               decoration: const InputDecoration(
-                hintText: 'Enter event name...',
                 isDense: true,
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 border: OutlineInputBorder(),
+                errorStyle: TextStyle(color: Colors.red),
               ),
             ),
           ),
@@ -65,7 +73,7 @@ class EventNameInput extends StatelessWidget {
           ElevatedButton.icon(
             icon: const Icon(Icons.check, size: 18),
             label: const Text('Parse'),
-            onPressed: onParse,
+            onPressed: canParse ? onParse : null,
           ),
         ],
       ),

@@ -112,16 +112,24 @@ class _SavedMappingsScreenState extends State<SavedMappingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hasSelection = _selectedMappings.isNotEmpty;
+    final allSelected = _selectedMappings.length == _sortedMappings.length;
+
     return Column(
       children: [
-        if (_selectedMappings.isNotEmpty)
+        if (hasSelection)
           SelectionHeader(
+            hasSelection: hasSelection,
+            allSelected: allSelected,
             selectedCount: _selectedMappings.length,
+            onSelectAll: _selectAll,
             onClearSelection: () {
               setState(() {
                 _selectedMappings.clear();
               });
             },
+            onViewAllJson: widget.onViewAllJson,
+            onExportAll: widget.onExportAll,
             onDeleteSelected: _deleteSelected,
           ),
         SavedMappingTableHeader(
@@ -129,16 +137,8 @@ class _SavedMappingsScreenState extends State<SavedMappingsScreen> {
           sortField: _sortField,
           sortAscending: _sortAscending,
           onSort: _toggleSort,
-          onSelectAll: (selected) {
-            if (selected ?? false) {
-              _selectAll();
-            } else {
-              setState(() {
-                _selectedMappings.clear();
-              });
-            }
-          },
-          allSelected: _selectedMappings.length == _sortedMappings.length,
+          onSelectAll: _selectAll,
+          allSelected: allSelected,
         ),
         Expanded(
           child: ListView.builder(
@@ -148,14 +148,7 @@ class _SavedMappingsScreenState extends State<SavedMappingsScreen> {
               return SavedMappingTableRow(
                 mapping: mapping,
                 isSelected: _selectedMappings.contains(mapping.eventName),
-                onSelect: (selected) {
-                  if (selected ?? false) {
-                    _selectedMappings.add(mapping.eventName);
-                  } else {
-                    _selectedMappings.remove(mapping.eventName);
-                  }
-                  setState(() {});
-                },
+                onSelect: () => _toggleSelection(mapping.eventName),
                 onViewJson: () => widget.onViewJson(mapping),
                 onExport: () => widget.onExport(mapping),
                 onLoad: () => widget.onLoadMapping(mapping),
