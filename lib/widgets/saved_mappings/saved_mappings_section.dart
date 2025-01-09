@@ -16,6 +16,7 @@ class SavedMappingsSection extends StatefulWidget {
   final Function(SavedMapping) onExport;
   final Function() onViewAllJson;
   final Function() onExportAll;
+  final Function(SavedMapping) onViewConfig;
 
   const SavedMappingsSection({
     super.key,
@@ -26,6 +27,7 @@ class SavedMappingsSection extends StatefulWidget {
     required this.onExport,
     required this.onViewAllJson,
     required this.onExportAll,
+    required this.onViewConfig,
   });
 
   @override
@@ -146,6 +148,7 @@ class _SavedMappingsSectionState extends State<SavedMappingsSection> {
                       onDelete: () => widget.onDeleteMapping(mapping.eventName),
                       onViewJson: () => widget.onViewJson(mapping),
                       onExport: () => widget.onExport(mapping),
+                      onViewConfig: () => widget.onViewConfig(mapping),
                     );
                   },
                 ),

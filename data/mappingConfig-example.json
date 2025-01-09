@@ -1,0 +1,50 @@
+{
+  "accountFromEvent": {
+    "email": "data.user_email",
+    "id": "data.user_id"
+  },
+  "accountKey": {
+    "field": "data.user_id",
+    "type": "id"
+  },
+  "dateKeyField": "data.created_at",
+  "endpointId": 0,
+  "endpointName": "activity_logs",
+  "eventFilter": {
+    "query": {
+      "bool": {
+        "filter": [
+          {
+            "match_phrase": {
+              "data.record_type": "User"
+            }
+          },
+          {
+            "match_phrase": {
+              "data.action.keyword": "updated"
+            }
+          }
+        ],
+        "must": [],
+        "must_not": [],
+        "should": []
+      }
+    }
+  },
+  "eventType": "IAM_USER_ACCOUNT_UPDATED",
+  "eventTypeKey": "IAM_USER_ACCOUNT_UPDATED",
+  "params": {
+    "skipOAL": false
+  },
+  "productRef": {
+    "__ref__": "products/cgIb3mxq1azbieouAynH"
+  },
+  "productType": "HUDU",
+  "schema": {
+    "eventId": "data.id",
+    "ip": "data.ip_address",
+    "jointDescAdditional": "data.user_name & '  ' & data.action & ' ' & data.record_type & ' ' & data.record_name & '. Record URL: ' & data.record_url",
+    "result": "data.action",
+    "time": "data.created_at"
+  }
+}

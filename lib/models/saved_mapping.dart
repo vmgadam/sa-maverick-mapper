@@ -1,5 +1,52 @@
 import 'package:collection/collection.dart';
 
+// New class to represent the schema structure
+class SchemaDefinition {
+  final String eventId;
+  final String? ip;
+  final String? jointDescAdditional;
+  final String? result;
+  final String time;
+
+  SchemaDefinition({
+    required this.eventId,
+    this.ip,
+    this.jointDescAdditional,
+    this.result,
+    required this.time,
+  });
+
+  // Convert to JSON
+  Map<String, dynamic> toJson() => {
+        'eventId': eventId,
+        if (ip != null) 'ip': ip,
+        if (jointDescAdditional != null)
+          'jointDescAdditional': jointDescAdditional,
+        if (result != null) 'result': result,
+        'time': time,
+      };
+
+  // Create from JSON
+  factory SchemaDefinition.fromJson(Map<String, dynamic> json) {
+    return SchemaDefinition(
+      eventId: json['eventId'] as String,
+      ip: json['ip'] as String?,
+      jointDescAdditional: json['jointDescAdditional'] as String?,
+      result: json['result'] as String?,
+      time: json['time'] as String,
+    );
+  }
+
+  // Check if this schema is equal to another schema
+  bool isEquivalentTo(SchemaDefinition other) {
+    return eventId == other.eventId &&
+        ip == other.ip &&
+        jointDescAdditional == other.jointDescAdditional &&
+        result == other.result &&
+        time == other.time;
+  }
+}
+
 class SavedMapping {
   final String eventName;
   final String product;
@@ -17,9 +64,10 @@ class SavedMapping {
   final Map<String, dynamic>? accountKey;
   final String? dateKeyField;
   final Map<String, dynamic>? eventFilter;
-  final Map<String, dynamic>? schema;
+  final SchemaDefinition? schema;
   final Map<String, dynamic>? params;
   final List<Map<String, dynamic>> rawSamples;
+  final String? eventTypeKey;
 
   SavedMapping({
     required this.eventName,
@@ -41,12 +89,20 @@ class SavedMapping {
     this.eventFilter,
     this.schema,
     this.params,
+    this.eventTypeKey,
   }) {
     if (eventName.isEmpty) {
       throw ArgumentError('Event name cannot be empty');
     }
     if (eventName.length > 200) {
       throw ArgumentError('Event name must be 200 characters or less');
+    }
+    if (accountKey != null) {
+      if (!accountKey!.containsKey('field') ||
+          !accountKey!.containsKey('type')) {
+        throw ArgumentError(
+            'accountKey must contain "field" and "type" properties');
+      }
     }
   }
 
@@ -68,9 +124,10 @@ class SavedMapping {
     Map<String, dynamic>? accountKey,
     String? dateKeyField,
     Map<String, dynamic>? eventFilter,
-    Map<String, dynamic>? schema,
+    SchemaDefinition? schema,
     Map<String, dynamic>? params,
     List<Map<String, dynamic>>? rawSamples,
+    String? eventTypeKey,
   }) {
     return SavedMapping(
       eventName: eventName ?? this.eventName,
@@ -92,6 +149,7 @@ class SavedMapping {
       eventFilter: eventFilter ?? this.eventFilter,
       schema: schema ?? this.schema,
       params: params ?? this.params,
+      eventTypeKey: eventTypeKey ?? this.eventTypeKey,
     );
   }
 
@@ -114,14 +172,14 @@ class SavedMapping {
         'accountKey': accountKey,
         'dateKeyField': dateKeyField,
         'eventFilter': eventFilter,
-        'schema': schema,
+        'schema': schema?.toJson(),
         'params': params,
+        'eventTypeKey': eventTypeKey,
       };
 
   // Create from JSON
   factory SavedMapping.fromJson(Map<String, dynamic> json) => SavedMapping(
-        eventName: json['eventName'] as String? ??
-            json['name'] as String, // Handle legacy format
+        eventName: json['eventName'] as String? ?? json['name'] as String,
         product: json['product'] as String,
         query: json['query'] as String,
         mappings: (json['mappings'] as List<dynamic>)
@@ -143,8 +201,11 @@ class SavedMapping {
         accountKey: json['accountKey'] as Map<String, dynamic>?,
         dateKeyField: json['dateKeyField'] as String?,
         eventFilter: json['eventFilter'] as Map<String, dynamic>?,
-        schema: json['schema'] as Map<String, dynamic>?,
+        schema: json['schema'] != null
+            ? SchemaDefinition.fromJson(json['schema'] as Map<String, dynamic>)
+            : null,
         params: json['params'] as Map<String, dynamic>?,
+        eventTypeKey: json['eventTypeKey'] as String?,
       );
 
   // Export to mappingConfig.json format
@@ -167,8 +228,10 @@ class SavedMapping {
           'endpointId': endpointId,
           'endpointName': endpointName,
           'eventFilter': eventFilter,
+          'eventType': eventTypeKey ?? 'EVENT',
+          'eventTypeKey': eventTypeKey ?? 'EVENT',
           'productType': productType,
-          'schema': schema,
+          'schema': schema?.toJson(),
           'params': params ?? {'skipOAL': false},
           '__collections__': {}
         }
@@ -186,24 +249,27 @@ class SavedMapping {
       eventName: firstKey,
       product: mapping['productType'] as String? ?? '',
       query: mapping['eventFilter']?.toString() ?? '',
-      mappings: [], // This will need to be populated from the schema
-      configFields: {}, // This will need to be populated from the full config
-      totalFieldsMapped: 0, // This will need to be calculated
-      requiredFieldsMapped: 0, // This will need to be calculated
-      totalRequiredFields: 0, // This will need to be calculated
+      mappings: [],
+      configFields: {},
+      totalFieldsMapped: 0,
+      requiredFieldsMapped: 0,
+      totalRequiredFields: 0,
       createdAt: DateTime.fromMillisecondsSinceEpoch(
           (json['meta']['creationTime'] as int) * 1000),
       modifiedAt: DateTime.fromMillisecondsSinceEpoch(
           (json['meta']['creationTime'] as int) * 1000),
-      rawSamples: [], // Initialize with empty list as this is from config
+      rawSamples: [],
       productType: mapping['productType'] as String?,
       endpointId: mapping['endpointId'] as int?,
       endpointName: mapping['endpointName'] as String?,
       accountKey: mapping['accountKey'] as Map<String, dynamic>?,
       dateKeyField: mapping['dateKeyField'] as String?,
       eventFilter: mapping['eventFilter'] as Map<String, dynamic>?,
-      schema: mapping['schema'] as Map<String, dynamic>?,
+      schema: mapping['schema'] != null
+          ? SchemaDefinition.fromJson(mapping['schema'] as Map<String, dynamic>)
+          : null,
       params: mapping['params'] as Map<String, dynamic>?,
+      eventTypeKey: mapping['eventTypeKey'] as String?,
     );
   }
 
@@ -224,7 +290,8 @@ class SavedMapping {
         const DeepCollectionEquality().equals(accountKey, other.accountKey) &&
         dateKeyField == other.dateKeyField &&
         const DeepCollectionEquality().equals(eventFilter, other.eventFilter) &&
-        const DeepCollectionEquality().equals(schema, other.schema) &&
-        const DeepCollectionEquality().equals(params, other.params);
+        (schema?.isEquivalentTo(other.schema!) ?? other.schema == null) &&
+        const DeepCollectionEquality().equals(params, other.params) &&
+        eventTypeKey == other.eventTypeKey;
   }
 }

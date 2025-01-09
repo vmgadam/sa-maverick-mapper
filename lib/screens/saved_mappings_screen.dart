@@ -14,6 +14,7 @@ class SavedMappingsScreen extends StatefulWidget {
   final Function(SavedMapping) onLoadMapping;
   final Function(SavedMapping) onDuplicateMapping;
   final Function(String) onDeleteMapping;
+  final Function(SavedMapping) onViewConfig;
 
   const SavedMappingsScreen({
     super.key,
@@ -25,6 +26,7 @@ class SavedMappingsScreen extends StatefulWidget {
     required this.onLoadMapping,
     required this.onDuplicateMapping,
     required this.onDeleteMapping,
+    required this.onViewConfig,
   });
 
   @override
@@ -154,6 +156,7 @@ class _SavedMappingsScreenState extends State<SavedMappingsScreen> {
                 onLoad: () => widget.onLoadMapping(mapping),
                 onDuplicate: () => widget.onDuplicateMapping(mapping),
                 onDelete: () => widget.onDeleteMapping(mapping.eventName),
+                onViewConfig: () => widget.onViewConfig(mapping),
               );
             },
           ),

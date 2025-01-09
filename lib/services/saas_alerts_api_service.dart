@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:developer' as developer;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:maverick_mapper/config/field_definitions.dart';
 
 class SaasAlertsApiService {
   final String baseUrl;
@@ -403,9 +404,36 @@ class SaasAlertsApiService {
 
   Future<Map<String, dynamic>?> getFields() async {
     try {
-      // Load fields from local JSON file
-      final jsonString = await rootBundle.loadString('config/fields.json');
-      return json.decode(jsonString);
+      // Convert field definitions to the expected format
+      final fields = <String, dynamic>{};
+
+      // Add standard fields
+      FieldDefinitions.standardFields.forEach((key, field) {
+        fields[key] = {
+          'name': field.name,
+          'required': field.required,
+          'description': field.description,
+          'type': field.type.toString().split('.').last.toLowerCase(),
+          'category': field.category.toString().split('.').last,
+          'displayOrder': field.displayOrder,
+          if (field.options != null) 'options': field.options,
+        };
+      });
+
+      // Add configuration fields
+      FieldDefinitions.configurationFields.forEach((key, field) {
+        fields[key] = {
+          'name': field.name,
+          'required': field.required,
+          'description': field.description,
+          'type': field.type.toString().split('.').last.toLowerCase(),
+          'category': field.category.toString().split('.').last,
+          'displayOrder': field.displayOrder,
+          if (field.options != null) 'options': field.options,
+        };
+      });
+
+      return {'fields': fields};
     } catch (e) {
       debugPrint('Error loading SaaS Alerts fields: $e');
       return null;

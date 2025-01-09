@@ -10,6 +10,7 @@ class SavedMappingTableRow extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onViewJson;
   final VoidCallback onExport;
+  final VoidCallback onViewConfig;
 
   const SavedMappingTableRow({
     super.key,
@@ -21,6 +22,7 @@ class SavedMappingTableRow extends StatelessWidget {
     required this.onDelete,
     required this.onViewJson,
     required this.onExport,
+    required this.onViewConfig,
   });
 
   @override
@@ -71,10 +73,15 @@ class SavedMappingTableRow extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  width: 120,
+                  width: 160,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      IconButton(
+                        icon: const Icon(Icons.visibility),
+                        tooltip: 'View Config',
+                        onPressed: onViewConfig,
+                      ),
                       IconButton(
                         icon: const Icon(Icons.play_arrow),
                         tooltip: 'Load',

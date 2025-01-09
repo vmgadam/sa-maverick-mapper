@@ -99,35 +99,16 @@ class SaasField {
   });
 
   factory SaasField.fromJson(String name, Map<String, dynamic> json) {
-    int displayOrder = 999;
-    final rawDisplayOrder = json['displayOrder'];
-    if (rawDisplayOrder != null) {
-      if (rawDisplayOrder is int) {
-        displayOrder = rawDisplayOrder;
-      } else if (rawDisplayOrder is String) {
-        try {
-          displayOrder = int.parse(rawDisplayOrder);
-        } catch (e) {
-          debugPrint('Error parsing displayOrder for $name: $e');
-        }
-      }
-    }
-
     final required = json['required'] == true;
     final description = json['description']?.toString() ?? '';
     final type = json['type']?.toString().toLowerCase() ?? 'string';
     final defaultMode = json['defaultMode']?.toString() ?? 'simple';
     final category = json['category']?.toString() ?? 'Standard';
+    final displayOrder = json['displayOrder'] as int? ?? 999;
 
     List<String>? options;
-    if (type == 'picklist') {
-      try {
-        if (json['options'] is List) {
-          options = (json['options'] as List).map((e) => e.toString()).toList();
-        }
-      } catch (e) {
-        debugPrint('Error parsing options: $e');
-      }
+    if (json['options'] is List) {
+      options = (json['options'] as List).map((e) => e.toString()).toList();
     }
 
     return SaasField(
@@ -297,8 +278,9 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
   }
 
   List<SaasField> get standardFields {
-    final fields =
-        saasFields.where((field) => field.category == 'Standard').toList();
+    final fields = saasFields
+        .where((field) => field.category.toLowerCase() == 'standard')
+        .toList();
     fields.sort((a, b) {
       // First sort by displayOrder
       final orderComparison = a.displayOrder.compareTo(b.displayOrder);
@@ -313,7 +295,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
   List<SaasField> get configurationFields {
     final fields = saasFields
-        .where((field) => field.category == 'Configuration')
+        .where((field) => field.category.toLowerCase() == 'configuration')
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
     return fields;
@@ -368,6 +350,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
         saasFields = loadedFields;
         isLoadingSaasFields = false;
 
+        // Initialize configuration fields with default values
         for (var field in loadedFields) {
           if (field.type == 'picklist' &&
               field.options != null &&
@@ -893,6 +876,12 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     final List<DataColumn> columns = [];
     final sortedFields = standardFields;
 
+    if (sortedFields.isEmpty) {
+      // Return a single empty column to avoid the assertion error
+      columns.add(const DataColumn(label: Text('')));
+      return columns;
+    }
+
     columns.addAll(sortedFields.map((field) => DataColumn(
           label: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -1303,6 +1292,18 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     return json.decode(text);
   }
 
+  // Add this method to show mapping config
+  void _showMappingConfig(SavedMapping mapping) {
+    showDialog(
+      context: context,
+      builder: (context) => JsonPreviewWidget(
+        jsonContent: const JsonEncoder.withIndent('  ')
+            .convert(mapping.toMappingConfig()),
+        title: 'Mapping Configuration',
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sortedMappings = List<Map<String, dynamic>>.from(mappings)
@@ -1540,6 +1541,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                         state.deleteMapping(state.selectedProduct!, name);
                       }
                     },
+                    onViewConfig: _showMappingConfig,
                   ),
                 ),
               ],
@@ -1621,41 +1623,45 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                             ],
                           ),
                         ),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            physics: const ClampingScrollPhysics(),
+                        if (isLoadingSaasFields)
+                          const Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        else if (standardFields.isEmpty)
+                          const Center(
+                            child: Text('No fields available'),
+                          )
+                        else
+                          Expanded(
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
-                              physics: const ClampingScrollPhysics(),
-                              child: DataTable(
-                                horizontalMargin: 16,
-                                columnSpacing: 16,
-                                headingRowHeight: 100,
-                                columns: _buildDataColumns(),
-                                rows: rcEvents.map((event) {
-                                  return DataRow(
-                                    cells: standardFields.map((field) {
-                                      final mapping = mappings.firstWhere(
-                                        (m) => m['target'] == field.name,
-                                        orElse: () => {},
-                                      );
-                                      final value =
-                                          _evaluateMapping(event, mapping);
-                                      return DataCell(
-                                        Text(
-                                          value.isEmpty ? '' : value,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      );
-                                    }).toList(),
-                                  );
-                                }).toList(),
+                              controller: _horizontalController,
+                              child: SingleChildScrollView(
+                                child: DataTable(
+                                  columns: _buildDataColumns(),
+                                  rows: rcEvents.map((event) {
+                                    return DataRow(
+                                      cells: standardFields.map((field) {
+                                        final mapping = mappings.firstWhere(
+                                          (m) => m['target'] == field.name,
+                                          orElse: () => {},
+                                        );
+                                        final value =
+                                            _evaluateMapping(event, mapping);
+                                        return DataCell(
+                                          Text(
+                                            value.isEmpty ? '' : value,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        );
+                                      }).toList(),
+                                    );
+                                  }).toList(),
+                                ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),
