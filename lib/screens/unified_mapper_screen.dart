@@ -22,6 +22,7 @@ import '../widgets/event_name_input.dart';
 import '../widgets/behaviors/custom_scroll_behavior.dart';
 import '../widgets/elastic/elastic_input_section.dart';
 import '../mixins/elastic_data_mixin.dart';
+import '../mixins/mapping_state_mixin.dart';
 
 class UnifiedMapperScreen extends StatefulWidget {
   final ApiService apiService;
@@ -38,7 +39,7 @@ class UnifiedMapperScreen extends StatefulWidget {
 }
 
 class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
-    with ElasticDataMixin {
+    with ElasticDataMixin, MappingStateMixin {
   // Source data state
   final List<dynamic> rcApps = [];
   String? selectedRcAppId;
@@ -1097,8 +1098,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
                 Navigator.pop(context); // Close dialog
                 try {
                   await _saveCurrentMapping(); // Wait for save to complete
-                  _loadSelectedMapping(
-                      mappingToLoad); // Then load the selected mapping
+                  loadMapping(mappingToLoad); // Then load the selected mapping
                 } catch (e) {
                   // Save failed, don't load the new mapping
                 }
@@ -1108,7 +1108,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close dialog
-                _loadSelectedMapping(mappingToLoad); // Load without saving
+                loadMapping(mappingToLoad); // Load without saving
               },
               child: const Text('Discard'),
             ),
@@ -1116,7 +1116,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
         ),
       );
     } else {
-      _loadSelectedMapping(mappingToLoad);
+      loadMapping(mappingToLoad);
     }
   }
 

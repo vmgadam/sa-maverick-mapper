@@ -63,6 +63,25 @@ interface SavedMapping {
   - [x] Individual selection toggles
   - [x] Selection count display
 
+### Phase 5: Code Refactoring 🚧
+- [x] Create reusable mixins:
+  - [x] ElasticDataMixin for handling elastic data
+  - [x] MappingStateMixin for mapping operations
+  - [ ] ConfigurationMixin for config fields
+- [x] Extract UI components:
+  - [x] ElasticInputSection component
+  - [x] CustomScrollBehavior component
+  - [ ] MappingTableSection component
+  - [ ] ConfigurationSection component
+- [ ] Optimize performance:
+  - [ ] Reduce unnecessary rebuilds
+  - [ ] Implement memoization where needed
+  - [ ] Optimize state updates
+- [ ] Enhance error handling:
+  - [ ] Add comprehensive error states
+  - [ ] Improve error recovery
+  - [ ] Add error logging
+
 ## UI/UX Requirements
 
 ### Input Section ✅
@@ -98,6 +117,12 @@ interface SavedMapping {
 - [x] State persistence
 - [x] Sample record handling
 
+### Component Tests 🚧
+- [x] ElasticInputSection tests
+- [x] CustomScrollBehavior tests
+- [ ] MappingTableSection tests
+- [ ] ConfigurationSection tests
+
 ### User Acceptance Criteria
 - [x] Parse Elastic Request/Response successfully
 - [x] Save multiple mappings with unique names
@@ -115,4 +140,6 @@ interface SavedMapping {
 ## Performance Considerations
 - [x] Efficient state updates
 - [x] Optimized bulk operations
-- [x] Responsive UI during operations 
+- [x] Responsive UI during operations
+- [ ] Memoization of expensive computations
+- [ ] Optimized component rebuilds 

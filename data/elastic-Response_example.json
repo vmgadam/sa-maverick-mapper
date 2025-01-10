@@ -1,0 +1,1332 @@
+{
+    "id": "FklNTFJ2MTBsVFYtbDlNNzVHSG5XUEEhTk8xN2dBaDZSYW1FMXNvSnZyRFJNUToxNzc2MDE5OTc4",
+    "rawResponse": {
+      "took": 23,
+      "timed_out": false,
+      "_shards": {
+        "total": 428,
+        "successful": 428,
+        "skipped": 378,
+        "failed": 0
+      },
+      "hits": {
+        "max_score": null,
+        "hits": [
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "kZdtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Missouri"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "75.132.21.33"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              "data.attributes.user-name": [
+                "Nathan Setlich"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T17:47:25.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Missouri"
+              ],
+              "data.id": [
+                "1034026988748221830"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "!Domain Admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-name.keyword": [
+                "Nathan Setlich"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "75.132.21.33"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                6803215
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "!Domain Admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              "data.attributes.user-id": [
+                506472
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          },
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "mpdtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Missouri"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "71.81.83.164"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              "data.attributes.user-name": [
+                "Eric Buck"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T17:56:38.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Missouri"
+              ],
+              "data.id": [
+                "1034029306658960790"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "365 global admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-name.keyword": [
+                "Eric Buck"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "71.81.83.164"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                7919372
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "365 global admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              "data.attributes.user-id": [
+                719223
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          },
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "nJdtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Georgia"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "208.116.142.241"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Atlanta"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              "data.attributes.user-name": [
+                "Deborah Huyler"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T18:00:04.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Georgia"
+              ],
+              "data.id": [
+                "1034030170765301956"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "NVR 1 & 2 Admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Atlanta"
+              ],
+              "data.attributes.user-name.keyword": [
+                "Deborah Huyler"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "208.116.142.241"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                6803215
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "NVR 1 & 2 Admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              "data.attributes.user-id": [
+                743659
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          },
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "jpdtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Missouri"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "75.132.21.33"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              "data.attributes.user-name": [
+                "Nathan Setlich"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T17:42:12.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Missouri"
+              ],
+              "data.id": [
+                "1034025678116262064"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "!Domain Admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-name.keyword": [
+                "Nathan Setlich"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "75.132.21.33"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                6803215
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "!Domain Admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              "data.attributes.user-id": [
+                506472
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          },
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "j5dtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Missouri"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "75.132.21.33"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              "data.attributes.user-name": [
+                "Nathan Setlich"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T17:42:42.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Missouri"
+              ],
+              "data.id": [
+                "1034025802515128392"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "!Domain Admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-name.keyword": [
+                "Nathan Setlich"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "75.132.21.33"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                6803215
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "!Domain Admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+              ],
+              "data.attributes.user-id": [
+                506472
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          },
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "k5dtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Missouri"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "99.157.250.130"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-name": [
+                "John Brinker"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T17:48:50.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Missouri"
+              ],
+              "data.id": [
+                "1034027344261634123"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "!M365 Admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-name.keyword": [
+                "John Brinker"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "99.157.250.130"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                5928252
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "!M365 Admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-id": [
+                12729
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          },
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "lJdtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Missouri"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "99.157.250.130"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-name": [
+                "John Brinker"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T17:48:50.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Missouri"
+              ],
+              "data.id": [
+                "1034027345477982314"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "!M365 Admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-name.keyword": [
+                "John Brinker"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "99.157.250.130"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                5928252
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "!M365 Admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-id": [
+                12729
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          },
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "lZdtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Missouri"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "99.157.250.130"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-name": [
+                "John Brinker"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T17:49:00.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Missouri"
+              ],
+              "data.id": [
+                "1034027388314410327"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "!M365 Admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-name.keyword": [
+                "John Brinker"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "99.157.250.130"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                5928252
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "!M365 Admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-id": [
+                12729
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          },
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "lpdtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Missouri"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "99.157.250.130"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-name": [
+                "John Brinker"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T17:49:30.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Missouri"
+              ],
+              "data.id": [
+                "1034027515070475110"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "!M365 Admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-name.keyword": [
+                "John Brinker"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "99.157.250.130"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                5928252
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "!M365 Admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-id": [
+                12729
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          },
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "l5dtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Missouri"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "99.157.250.130"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-name": [
+                "John Brinker"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T17:50:01.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Missouri"
+              ],
+              "data.id": [
+                "1034027641822345541"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "!M365 Admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-name.keyword": [
+                "John Brinker"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "99.157.250.130"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                5928252
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "!M365 Admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-id": [
+                12729
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          },
+          {
+            "_index": ".ds-prod_events_raw_it_glue_001-2025.01.10-001691",
+            "_type": "_doc",
+            "_id": "mJdtUZQB-8r8Ud9M8QqQ",
+            "_version": 1,
+            "_score": null,
+            "fields": {
+              "data.attributes.ip-region": [
+                "Missouri"
+              ],
+              "data.attributes.account-id": [
+                1022
+              ],
+              "data.attributes.ip-address": [
+                "99.157.250.130"
+              ],
+              "data.attributes.level": [
+                3
+              ],
+              "data.attributes.resource-type": [
+                "Password"
+              ],
+              "data.attributes.ip-city": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-agent.keyword": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-name": [
+                "John Brinker"
+              ],
+              "product.endpoint.id": [
+                1
+              ],
+              "data.attributes.action": [
+                "access"
+              ],
+              "data.attributes.created-at": [
+                "2025-01-10T17:50:30.000Z"
+              ],
+              "data.attributes.ip-region.keyword": [
+                "Missouri"
+              ],
+              "data.id": [
+                "1034027764300220142"
+              ],
+              "data.type": [
+                "logs"
+              ],
+              "data.attributes.resource-name": [
+                "!M365 Admin"
+              ],
+              "product.type": [
+                "IT_GLUE"
+              ],
+              "partner.id": [
+                "3qCDZB1fUTxFnFrECZO6"
+              ],
+              "data.attributes.ip-city.keyword": [
+                "Saint Louis"
+              ],
+              "data.attributes.user-name.keyword": [
+                "John Brinker"
+              ],
+              "data.attributes.resource-type.keyword": [
+                "Password"
+              ],
+              "data.attributes.ip-country": [
+                "United States of America"
+              ],
+              "data.attributes.ip-address.keyword": [
+                "99.157.250.130"
+              ],
+              "data.attributes.ip-country.keyword": [
+                "United States of America"
+              ],
+              "data.attributes.organization-id": [
+                5928252
+              ],
+              "data.attributes.action.keyword": [
+                "access"
+              ],
+              "@timestamp": [
+                "2025-01-10T18:15:47.339Z"
+              ],
+              "data.attributes.resource-name.keyword": [
+                "!M365 Admin"
+              ],
+              "organization.id": [
+                "vyO6dBMZndlEDlYnvu8v"
+              ],
+              "data.attributes.user-agent": [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+              ],
+              "data.attributes.user-id": [
+                12729
+              ],
+              "data.type.keyword": [
+                "logs"
+              ]
+            },
+            "highlight": {
+              "partner.id": [
+                "@kibana-highlighted-field@3qCDZB1fUTxFnFrECZO6@/kibana-highlighted-field@"
+              ],
+              "data.attributes.action": [
+                "@kibana-highlighted-field@access@/kibana-highlighted-field@"
+              ],
+              "data.attributes.resource-type": [
+                "@kibana-highlighted-field@Password@/kibana-highlighted-field@"
+              ],
+              "product.type": [
+                "@kibana-highlighted-field@IT_GLUE@/kibana-highlighted-field@"
+              ]
+            },
+            "sort": [
+              1736532947339
+            ]
+          }
+        ]
+      }
+    },
+    "isPartial": false,
+    "isRunning": false,
+    "total": 428,
+    "loaded": 428,
+    "isRestored": false
+  }
