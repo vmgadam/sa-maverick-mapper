@@ -173,7 +173,7 @@ class FieldDefinitions {
       required: true,
       description: 'Id of the SaaS Alerts Partner',
       type: FieldType.string,
-      category: FieldCategory.standard,
+      category: FieldCategory.configuration,
       displayOrder: 12,
     ),
     'userKeyField': FieldDefinition(

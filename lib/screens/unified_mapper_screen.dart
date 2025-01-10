@@ -191,6 +191,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
 
   // Add timer for debouncing
   Timer? _debounceTimer;
+  bool _isProcessingRequest = false;
   bool _isProcessingResponse = false;
 
   @override
@@ -198,10 +199,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     super.initState();
     _loadSaasFields();
 
-    // Add listener with debounce for response text
-    elasticResponseController.addListener(_handleResponseChange);
-
-    // Synchronize horizontal scrolling
+    // Remove text change listeners
     _horizontalController.addListener(() {
       if (_horizontalController.position.pixels !=
           _horizontalController.position.pixels) {
@@ -209,16 +207,12 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
       }
     });
 
-    // Add listeners to update canParse state
-    elasticRequestController.addListener(_updateCanParse);
-    elasticResponseController.addListener(_updateCanParse);
     eventNameController.addListener(_updateCanParse);
   }
 
   @override
   void dispose() {
     _debounceTimer?.cancel();
-    elasticResponseController.removeListener(_handleResponseChange);
     _horizontalController.dispose();
     sourceSearchController.dispose();
     saasSearchController.dispose();
@@ -226,12 +220,12 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     elasticRequestController.dispose();
     elasticResponseController.dispose();
     eventNameController.dispose();
-    // Remove listeners
-    elasticRequestController.removeListener(_updateCanParse);
-    elasticResponseController.removeListener(_updateCanParse);
     eventNameController.removeListener(_updateCanParse);
     super.dispose();
   }
+
+  // Simplify canParse to only check if fields have content
+  bool get canParse => eventNameController.text.isNotEmpty;
 
   void _updateCanParse() {
     setState(() {
@@ -720,12 +714,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     }
   }
 
-  // Add this getter to control Parse button state
-  bool get canParse =>
-      elasticRequestController.text.isNotEmpty &&
-      elasticResponseController.text.isNotEmpty &&
-      eventNameController.text.isNotEmpty;
-
   void _parseJson() {
     try {
       // Parse both request and response data
@@ -777,6 +765,9 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
           .setSelectedProduct(productType);
 
       setState(() {
+        // Store productType in configFields
+        configFields['productType'] = productType;
+
         // Store raw samples
         final rawSamples = hits!
             .take(selectedRecordLimit)
@@ -796,63 +787,52 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                 final tokens = List<Map<String, String>>.from(json
                     .decode(mapping['tokens']!)
                     .map((t) => Map<String, String>.from(t)));
-
-                // Check each field token and mark removed fields
-                bool hasChanges = false;
-                for (var i = 0; i < tokens.length; i++) {
-                  if (tokens[i]['type'] == 'field') {
-                    final fieldPath =
-                        tokens[i]['value']!.substring(1); // Remove the $ prefix
-                    if (!newRcFields.contains(fieldPath)) {
-                      tokens[i]['value'] = '$fieldPath(removed)';
-                      tokens[i]['type'] = 'text';
-                      hasChanges = true;
-                    }
-                  }
-                }
-
-                if (hasChanges) {
-                  mapping['tokens'] = json.encode(tokens);
-                  hasUnsavedChanges = true;
-                }
+                return tokens.any((token) =>
+                    token['field'] != null &&
+                    !newRcFields.contains(token['field']));
               } catch (e) {
-                debugPrint('Error processing complex mapping tokens: $e');
+                return true; // Remove if tokens can't be parsed
               }
             }
-            return false; // Keep complex mappings
+            return true; // Remove if no tokens
           }
-          return !newRcFields.contains(mapping[
-              'source']); // Remove simple mappings if field doesn't exist
+          // For simple mappings, check if the source field exists
+          return !newRcFields.contains(mapping['source']);
         });
 
-        // Update rcFields and rcEvents
         rcFields = newRcFields;
         rcEvents = rawSamples;
 
-        // Auto-map matching fields that aren't already mapped
-        for (var sourceField in rcFields) {
-          for (var saasField in saasFields) {
-            final isMatching = saasField.name == sourceField;
+        // Auto-map fields based on exact matches
+        for (final sourceField in rcFields) {
+          // Get the value from the current event
+          final sourceValue = _getNestedValue(currentRcEvent, sourceField);
+          if (sourceValue == null) continue;
+
+          // Check against all fields (both standard and configuration)
+          for (final saasField in saasFields) {
             final isAlreadyMapped =
                 mappings.any((m) => m['target'] == saasField.name);
+            if (isAlreadyMapped) continue;
 
-            if (isMatching && !isAlreadyMapped) {
-              mappings.add({
-                'source': sourceField,
-                'target': saasField.name,
-                'isComplex': 'false',
-              });
+            // Check for exact field name match
+            final isMatching =
+                sourceField.toLowerCase() == saasField.name.toLowerCase();
+
+            if (isMatching) {
+              if (saasField.category.toLowerCase() == 'configuration') {
+                // For configuration fields, store in configFields
+                configFields[saasField.name] = sourceValue.toString();
+              } else {
+                // For standard fields, add to mappings
+                mappings.add({
+                  'source': sourceField,
+                  'target': saasField.name,
+                  'isComplex': 'false',
+                });
+              }
               hasUnsavedChanges = true;
             }
-          }
-        }
-
-        // Auto-map special fields if they exist
-        if (currentRcEvent['product.endpoint.id'] != null) {
-          final endpointId =
-              _getNestedValue(currentRcEvent, 'product.endpoint.id');
-          if (endpointId != null) {
-            configFields['endpointId'] = endpointId.toString();
           }
         }
 
@@ -1261,32 +1241,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
     });
   }
 
-  void _handleResponseChange() {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      if (elasticResponseController.text.length > 1000) {
-        setState(() => _isProcessingResponse = true);
-        // Process in next frame to allow loading indicator to show
-        Future.microtask(() async {
-          try {
-            // Validate JSON in background
-            await compute(jsonTryParse, elasticResponseController.text);
-          } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Invalid JSON: $e')),
-              );
-            }
-          } finally {
-            if (mounted) {
-              setState(() => _isProcessingResponse = false);
-            }
-          }
-        });
-      }
-    });
-  }
-
   // Helper function for compute
   static dynamic jsonTryParse(String text) {
     return json.decode(text);
@@ -1369,26 +1323,22 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                                 ),
                                               ),
                                               Expanded(
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: TextFormField(
-                                                    controller:
-                                                        elasticRequestController,
-                                                    maxLines: null,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                      hintText:
-                                                          'Paste Elastic Request JSON here...',
-                                                      border:
-                                                          OutlineInputBorder(),
-                                                      contentPadding:
-                                                          EdgeInsets.all(8),
-                                                    ),
-                                                    style: const TextStyle(
-                                                      fontFamily: 'monospace',
-                                                      height: 1.5,
-                                                    ),
+                                                child: TextFormField(
+                                                  controller:
+                                                      elasticRequestController,
+                                                  maxLines: null,
+                                                  decoration:
+                                                      const InputDecoration(
+                                                    hintText:
+                                                        'Paste Elastic Request JSON here...',
+                                                    border:
+                                                        OutlineInputBorder(),
+                                                    contentPadding:
+                                                        EdgeInsets.all(8),
+                                                  ),
+                                                  style: const TextStyle(
+                                                    fontFamily: 'monospace',
+                                                    height: 1.5,
                                                   ),
                                                 ),
                                               ),
@@ -1411,49 +1361,23 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
                                                 ),
                                               ),
                                               Expanded(
-                                                child: Stack(
-                                                  children: [
-                                                    TextFormField(
-                                                      controller:
-                                                          elasticResponseController,
-                                                      maxLines: null,
-                                                      enabled:
-                                                          !_isProcessingResponse,
-                                                      decoration:
-                                                          const InputDecoration(
-                                                        hintText:
-                                                            'Paste Elastic Response JSON here...',
-                                                        border:
-                                                            OutlineInputBorder(),
-                                                        contentPadding:
-                                                            EdgeInsets.all(8),
-                                                      ),
-                                                      style: const TextStyle(
-                                                        fontFamily: 'monospace',
-                                                        height: 1.5,
-                                                      ),
-                                                    ),
-                                                    if (_isProcessingResponse)
-                                                      Positioned.fill(
-                                                        child: Container(
-                                                          color: Colors.black12,
-                                                          child: const Center(
-                                                            child: Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .min,
-                                                              children: [
-                                                                CircularProgressIndicator(),
-                                                                SizedBox(
-                                                                    height: 8),
-                                                                Text(
-                                                                    'Processing large JSON...'),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                  ],
+                                                child: TextFormField(
+                                                  controller:
+                                                      elasticResponseController,
+                                                  maxLines: null,
+                                                  decoration:
+                                                      const InputDecoration(
+                                                    hintText:
+                                                        'Paste Elastic Response JSON here...',
+                                                    border:
+                                                        OutlineInputBorder(),
+                                                    contentPadding:
+                                                        EdgeInsets.all(8),
+                                                  ),
+                                                  style: const TextStyle(
+                                                    fontFamily: 'monospace',
+                                                    height: 1.5,
+                                                  ),
                                                 ),
                                               ),
                                             ],
