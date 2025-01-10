@@ -20,6 +20,7 @@ import '../widgets/searchable_dropdown.dart';
 import '../services/field_mapping_service.dart';
 import '../widgets/saved_mappings/saved_mappings_section.dart';
 import '../models/saved_mapping.dart';
+import '../models/saas_field.dart';
 import '../widgets/event_name_input.dart';
 import '../data/event_data_source.dart';
 
@@ -75,53 +76,6 @@ class CustomScrollBehavior extends MaterialScrollBehavior {
   Widget buildOverscrollIndicator(
       BuildContext context, Widget child, ScrollableDetails details) {
     return child;
-  }
-}
-
-class SaasField {
-  final String name;
-  final bool required;
-  final String description;
-  final String type;
-  final String defaultMode;
-  final String category;
-  final int displayOrder;
-  final List<String>? options;
-
-  SaasField({
-    required this.name,
-    required this.required,
-    required this.description,
-    required this.type,
-    this.defaultMode = 'simple',
-    required this.category,
-    this.displayOrder = 999,
-    this.options,
-  });
-
-  factory SaasField.fromJson(String name, Map<String, dynamic> json) {
-    final required = json['required'] == true;
-    final description = json['description']?.toString() ?? '';
-    final type = json['type']?.toString().toLowerCase() ?? 'string';
-    final defaultMode = json['defaultMode']?.toString() ?? 'simple';
-    final category = json['category']?.toString() ?? 'Standard';
-    final displayOrder = json['displayOrder'] as int? ?? 999;
-
-    List<String>? options;
-    if (json['options'] is List) {
-      options = (json['options'] as List).map((e) => e.toString()).toList();
-    }
-
-    return SaasField(
-      name: name,
-      required: required,
-      description: description,
-      type: type,
-      defaultMode: defaultMode,
-      category: category,
-      displayOrder: displayOrder,
-      options: options,
-    );
   }
 }
 
