@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'dart:math';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'dart:isolate';
 import 'package:flutter/gestures.dart';
 import '../services/api_service.dart';
 import '../services/saas_alerts_api_service.dart';
 import 'package:provider/provider.dart';
 import '../state/mapping_state.dart';
 import '../state/saved_mappings_state.dart';
-import 'package:flutter/services.dart';
 import '../widgets/complex_mapping_editor.dart';
 import '../widgets/json_preview_widget.dart';
 import '../widgets/configuration_fields_widget.dart';
@@ -22,62 +19,9 @@ import '../widgets/saved_mappings/saved_mappings_section.dart';
 import '../models/saved_mapping.dart';
 import '../models/saas_field.dart';
 import '../widgets/event_name_input.dart';
-import '../data/event_data_source.dart';
-
-class CustomScrollBehavior extends MaterialScrollBehavior {
-  @override
-  Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-      };
-
-  @override
-  ScrollBehavior copyWith({
-    bool? scrollbars,
-    ScrollPhysics? physics,
-    bool? overscroll,
-    Set<PointerDeviceKind>? dragDevices,
-    TargetPlatform? platform,
-    Set<LogicalKeyboardKey>? pointerAxisModifiers,
-    MultitouchDragStrategy? multitouchDragStrategy,
-  }) {
-    return CustomScrollBehavior();
-  }
-
-  @override
-  ScrollPhysics getScrollPhysics(BuildContext context) {
-    return const AlwaysScrollableScrollPhysics();
-  }
-
-  @override
-  Widget buildScrollbar(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) {
-    switch (getPlatform(context)) {
-      case TargetPlatform.linux:
-      case TargetPlatform.macOS:
-      case TargetPlatform.windows:
-        return Scrollbar(
-          controller: details.controller,
-          thumbVisibility: true,
-          child: child,
-        );
-      case TargetPlatform.android:
-      case TargetPlatform.fuchsia:
-      case TargetPlatform.iOS:
-        return child;
-    }
-  }
-
-  @override
-  Widget buildOverscrollIndicator(
-      BuildContext context, Widget child, ScrollableDetails details) {
-    return child;
-  }
-}
+import '../widgets/behaviors/custom_scroll_behavior.dart';
+import '../widgets/elastic/elastic_input_section.dart';
+import '../mixins/elastic_data_mixin.dart';
 
 class UnifiedMapperScreen extends StatefulWidget {
   final ApiService apiService;
@@ -93,7 +37,8 @@ class UnifiedMapperScreen extends StatefulWidget {
   State<UnifiedMapperScreen> createState() => _UnifiedMapperScreenState();
 }
 
-class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
+class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
+    with ElasticDataMixin {
   // Source data state
   final List<dynamic> rcApps = [];
   String? selectedRcAppId;
@@ -1222,8 +1167,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
       appBar: AppBar(
         title: Row(
           children: const [
-            Icon(Icons.flight_takeoff, size: 24), // Fighter plane icon
-            SizedBox(width: 8), // Space between icon and text
+            Icon(Icons.flight_takeoff, size: 24),
+            SizedBox(width: 8),
             Text('Maverick Mapper'),
           ],
         ),
@@ -1237,146 +1182,21 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen> {
               children: [
                 Expanded(
                   flex: 2,
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Elastic Request/Response',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Column(
-                                children: [
-                                  Expanded(
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Padding(
-                                                padding: EdgeInsets.all(8.0),
-                                                child: Text(
-                                                  'Request',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: TextFormField(
-                                                  controller:
-                                                      elasticRequestController,
-                                                  maxLines: null,
-                                                  decoration:
-                                                      const InputDecoration(
-                                                    hintText:
-                                                        'Paste Elastic Request JSON here...',
-                                                    border:
-                                                        OutlineInputBorder(),
-                                                    contentPadding:
-                                                        EdgeInsets.all(8),
-                                                  ),
-                                                  style: const TextStyle(
-                                                    fontFamily: 'monospace',
-                                                    height: 1.5,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const VerticalDivider(),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Padding(
-                                                padding: EdgeInsets.all(8.0),
-                                                child: Text(
-                                                  'Response',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: TextFormField(
-                                                  controller:
-                                                      elasticResponseController,
-                                                  maxLines: null,
-                                                  decoration:
-                                                      const InputDecoration(
-                                                    hintText:
-                                                        'Paste Elastic Response JSON here...',
-                                                    border:
-                                                        OutlineInputBorder(),
-                                                    contentPadding:
-                                                        EdgeInsets.all(8),
-                                                  ),
-                                                  style: const TextStyle(
-                                                    fontFamily: 'monospace',
-                                                    height: 1.5,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        top: BorderSide(
-                                            color: Colors.grey.shade300),
-                                      ),
-                                    ),
-                                    child: EventNameInput(
-                                      selectedRecordLimit: selectedRecordLimit,
-                                      recordLimits: recordLimits,
-                                      onClear: () {
-                                        elasticRequestController.clear();
-                                        elasticResponseController.clear();
-                                        setState(() {
-                                          rcEvents.clear();
-                                          rcFields.clear();
-                                        });
-                                      },
-                                      onParse: _confirmAndParseJson,
-                                      onRecordLimitChanged: (value) {
-                                        setState(() {
-                                          selectedRecordLimit = value;
-                                        });
-                                      },
-                                      eventNameController: eventNameController,
-                                      hasUnsavedChanges: hasUnsavedChanges,
-                                      canParse: canParse,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: ElasticInputSection(
+                    requestController: elasticRequestController,
+                    responseController: elasticResponseController,
+                    eventNameController: eventNameController,
+                    selectedRecordLimit: selectedRecordLimit,
+                    recordLimits: recordLimits,
+                    onClear: clearJson,
+                    onParse: _confirmAndParseJson,
+                    onRecordLimitChanged: (value) {
+                      setState(() {
+                        selectedRecordLimit = value;
+                      });
+                    },
+                    hasUnsavedChanges: hasUnsavedChanges,
+                    canParse: canParse,
                   ),
                 ),
                 const SizedBox(width: 8),
