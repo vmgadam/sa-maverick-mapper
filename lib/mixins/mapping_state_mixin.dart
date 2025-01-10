@@ -84,20 +84,6 @@ mixin MappingStateMixin<T extends StatefulWidget> on State<T> {
     });
   }
 
-  /// Loads a saved mapping
-  void loadMapping(SavedMapping mapping) {
-    setState(() {
-      mappings.clear();
-      mappings.addAll(mapping.mappings);
-      currentLoadedMapping = mapping;
-      hasUnsavedChanges = false;
-
-      // Update state provider
-      Provider.of<MappingState>(context, listen: false)
-          .setMappings('Elastic', mapping.product, List.from(mappings));
-    });
-  }
-
   /// Auto-maps fields based on name matching
   void autoMapFields(
     List<String> sourceFields,

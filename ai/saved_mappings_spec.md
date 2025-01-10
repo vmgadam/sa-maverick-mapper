@@ -5,38 +5,9 @@ This feature allows users to save multiple event mappings, manage them through a
 
 ## Data Structure
 ```typescript
-// Type-safe enums and constants
-enum FieldCategory {
-  Standard = 'Standard',
-  Configuration = 'Configuration'
-}
-
-enum MappingMode {
-  Simple = 'false',
-  Complex = 'true'
-}
-
-enum TokenType {
-  Field = 'field',
-  Text = 'text'
-}
-
-enum ProductType {
-  Elastic = 'Elastic'
-}
-
-enum FieldType {
-  String = 'string',
-  Number = 'number',
-  Boolean = 'boolean',
-  Date = 'date',
-  Object = 'object',
-  Array = 'array'
-}
-
 interface SavedMapping {
   name: string;           // Event name (max 200 chars, required)
-  product: ProductType;   // product identifier (type-safe enum)
+  product: string;        // product identifier
   query: string;          // from Elastic request
   mappings: Mapping[];    // field mappings
   configFields: any;      // configuration fields
@@ -46,21 +17,6 @@ interface SavedMapping {
   rawSamples: any[];     // raw sample records from Elastic
   createdAt: DateTime;    // creation timestamp
   modifiedAt: DateTime;   // last modification timestamp
-}
-
-interface Mapping {
-  source: string;
-  target: string;
-  isComplex: boolean;
-  tokens: Token[];
-  jsonataExpr?: string;
-  fieldType: FieldType;
-  category: FieldCategory;
-}
-
-interface Token {
-  type: TokenType;
-  value: string;
 }
 ```
 
@@ -117,12 +73,6 @@ interface Token {
   - [x] CustomScrollBehavior component
   - [ ] MappingTableSection component
   - [ ] ConfigurationSection component
-- [x] Enhance type safety:
-  - [x] Create type-safe enums for field categories, mapping modes, token types
-  - [x] Add product types and field types enums
-  - [x] Implement structured classes for mapping keys and elastic fields
-  - [x] Create record-like classes for configuration (table, animation, API, cache)
-  - [x] Refactor constants to use type-safe definitions
 - [ ] Optimize performance:
   - [ ] Reduce unnecessary rebuilds
   - [ ] Implement memoization where needed
@@ -160,8 +110,6 @@ interface Token {
 - [x] Parse functionality
 - [x] State management
 - [x] Bulk operations
-- [x] Type-safe enum conversions
-- [x] Configuration class validations
 
 ### Integration Tests ✅
 - [x] Save/load flow

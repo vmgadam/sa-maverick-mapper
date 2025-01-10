@@ -21,6 +21,7 @@ import '../models/saas_field.dart';
 import '../widgets/event_name_input.dart';
 import '../widgets/behaviors/custom_scroll_behavior.dart';
 import '../widgets/elastic/elastic_input_section.dart';
+import '../widgets/mapping_table/mapping_table_section.dart';
 import '../mixins/elastic_data_mixin.dart';
 import '../mixins/mapping_state_mixin.dart';
 
@@ -42,7 +43,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
     with ElasticDataMixin, MappingStateMixin {
   // Source data state
   final List<dynamic> rcApps = [];
-  String? selectedRcAppId;
   Map<String, dynamic> currentRcEvent = {};
   List<String> rcFields = [];
   bool isLoadingRcApps = true;
@@ -337,7 +337,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
       // Remove any existing mapping for this target field
       mappings.removeWhere((m) => m['target'] == targetField);
 
-      // Create the new mapping - always create a simple mapping when using the dropdown
+      // Create the new mapping
       final mapping = {
         'source': sourceField,
         'target': targetField,
@@ -349,14 +349,13 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
       mappings.add(mapping);
       hasUnsavedChanges = true;
 
-      // Update state provider
-      if (selectedRcAppId != null) {
-        final appInfo = rcApps.firstWhere(
-          (app) => app['id'].toString() == selectedRcAppId,
-          orElse: () => {'name': 'Unknown App'},
-        );
+      // Update state provider if we have a current loaded mapping
+      if (currentLoadedMapping != null) {
         Provider.of<MappingState>(context, listen: false).setMappings(
-            selectedRcAppId!, appInfo['name'], List.from(mappings));
+          'Elastic',
+          currentLoadedMapping!.product,
+          List.from(mappings),
+        );
       }
     });
   }
@@ -364,13 +363,12 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
   void _removeMapping(String fieldName) {
     setState(() {
       mappings.removeWhere((m) => m['target'] == fieldName);
-      if (selectedRcAppId != null) {
-        final appInfo = rcApps.firstWhere(
-          (app) => app['id'].toString() == selectedRcAppId,
-          orElse: () => {'name': 'Unknown App'},
-        );
+      if (currentLoadedMapping != null) {
         Provider.of<MappingState>(context, listen: false).setMappings(
-            selectedRcAppId!, appInfo['name'], List.from(mappings));
+          'Elastic',
+          currentLoadedMapping!.product,
+          List.from(mappings),
+        );
       }
       hasUnsavedChanges = true;
     });
@@ -474,13 +472,12 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
                 mappings.add(newMapping);
 
                 // Update state provider
-                if (selectedRcAppId != null) {
-                  final appInfo = rcApps.firstWhere(
-                    (app) => app['id'].toString() == selectedRcAppId,
-                    orElse: () => {'name': 'Unknown App'},
-                  );
+                if (currentLoadedMapping != null) {
                   Provider.of<MappingState>(context, listen: false).setMappings(
-                      selectedRcAppId!, appInfo['name'], List.from(mappings));
+                    'Elastic',
+                    currentLoadedMapping!.product,
+                    List.from(mappings),
+                  );
                 }
 
                 hasUnsavedChanges = true;
@@ -548,7 +545,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
     final csvContent = ExportService.generateCSVContent(
       mappings: mappings,
       currentEvent: currentRcEvent,
-      selectedAppId: selectedRcAppId,
+      selectedAppId: currentLoadedMapping?.product ?? 'Elastic',
       apps: rcApps,
       getNestedValue: _getNestedValue,
       saasFields: saasFields,
@@ -753,246 +750,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
     }
   }
 
-  List<DataColumn> _buildDataColumns() {
-    final List<DataColumn> columns = [];
-    final sortedFields = standardFields;
-
-    if (sortedFields.isEmpty) {
-      // Return a single empty column to avoid the assertion error
-      columns.add(const DataColumn(label: Text('')));
-      return columns;
-    }
-
-    columns.addAll(sortedFields.map((field) => DataColumn(
-          label: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      field.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: field.required ? Colors.red : null,
-                      ),
-                    ),
-                    if (field.required)
-                      const Padding(
-                        padding: EdgeInsets.only(left: 4),
-                        child: Icon(Icons.star, size: 12, color: Colors.red),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  width: 180,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: _buildMappingControl(field),
-                ),
-              ],
-            ),
-          ),
-        )));
-
-    return columns;
-  }
-
-  Widget _buildMappingControl(SaasField field) {
-    return Row(
-      children: [
-        Expanded(
-          child: mappings.any((m) => m['target'] == field.name)
-              ? Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          mappings.firstWhere((m) => m['target'] == field.name)[
-                                      'isComplex'] ==
-                                  'true'
-                              ? _getComplexMappingPreview(mappings
-                                  .firstWhere((m) => m['target'] == field.name))
-                              : mappings.firstWhere(
-                                  (m) => m['target'] == field.name)['source']!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _hasRemovedFields(mappings.firstWhere(
-                                    (m) => m['target'] == field.name))
-                                ? Colors.red
-                                : null,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                    if (mappings.firstWhere(
-                            (m) => m['target'] == field.name)['isComplex'] ==
-                        'true')
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 16),
-                        tooltip: 'Edit Complex Mapping',
-                        onPressed: () => _showComplexMappingEditor(field),
-                      ),
-                  ],
-                )
-              : SearchableDropdown(
-                  items: rcFields.map((sourceField) {
-                    String sampleValue =
-                        _getNestedValue(rcEvents.first, sourceField).toString();
-                    // Limit sample value length to prevent rendering issues
-                    if (sampleValue.length > 50) {
-                      sampleValue = '${sampleValue.substring(0, 47)}...';
-                    }
-                    return SearchableDropdownItem(
-                      value: sourceField,
-                      label: sourceField,
-                      subtitle: sampleValue,
-                    );
-                  }).toList(),
-                  hint: Text(
-                    'Select field to map',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: field.required ? Colors.red : Colors.grey,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                  onChanged: (value) {
-                    if (value != null) {
-                      _addMapping(value, field.name, false);
-                    }
-                  },
-                ),
-        ),
-        if (!mappings.any((m) => m['target'] == field.name))
-          IconButton(
-            icon: const Icon(Icons.code),
-            tooltip: 'Create Complex Mapping',
-            onPressed: () => _showComplexMappingEditor(field),
-            iconSize: 16,
-          ),
-        if (mappings.any((m) => m['target'] == field.name))
-          IconButton(
-            icon: const Icon(Icons.clear),
-            onPressed: () => _removeMapping(field.name),
-            iconSize: 16,
-          ),
-      ],
-    );
-  }
-
-  String _getComplexMappingPreview(Map<String, dynamic> mapping) {
-    if (mapping['tokens'] == null) return '[Complex Mapping]';
-    try {
-      final tokens = List<Map<String, String>>.from(json
-          .decode(mapping['tokens']!)
-          .map((t) => Map<String, String>.from(t)));
-
-      final preview = tokens.map((token) {
-        if (token['type'] == 'field') {
-          return '\$${token['value']!.substring(1)}'; // Add back the $ for fields
-        } else if (token['value']!.endsWith('(removed)')) {
-          return token['value']; // Keep the removal marker as is
-        } else {
-          return token['value']!.substring(
-              1, token['value']!.length - 1); // Remove quotes for text
-        }
-      }).join(' ');
-
-      return preview;
-    } catch (e) {
-      return '[Complex Mapping]';
-    }
-  }
-
-  bool _hasRemovedFields(Map<String, dynamic> mapping) {
-    if (mapping['isComplex'] != 'true' || mapping['tokens'] == null)
-      return false;
-    try {
-      final tokens = List<Map<String, String>>.from(json
-          .decode(mapping['tokens']!)
-          .map((t) => Map<String, String>.from(t)));
-      return tokens.any((t) => t['value']?.endsWith('(removed)') ?? false);
-    } catch (e) {
-      return false;
-    }
-  }
-
-  void _saveMapping() {
-    if (selectedRcAppId == null || currentLoadedMapping == null) return;
-
-    if (eventNameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter an event name'),
-        ),
-      );
-      return;
-    }
-
-    final appInfo = rcApps.firstWhere(
-      (app) => app['id'].toString() == selectedRcAppId,
-      orElse: () => {'name': 'Unknown App'},
-    );
-
-    // Create updated mapping
-    final updatedMapping = currentLoadedMapping!.copyWith(
-      eventName: eventNameController.text,
-      mappings: List<Map<String, String>>.from(mappings),
-      configFields: Map<String, dynamic>.from(configFields),
-      totalFieldsMapped: mappings.length,
-      requiredFieldsMapped: mappings
-          .where((m) => saasFields
-              .firstWhere(
-                (f) => f.name == m['target'],
-                orElse: () => SaasField(
-                  name: '',
-                  required: false,
-                  description: '',
-                  type: 'string',
-                  category: 'Standard',
-                  displayOrder: 999,
-                ),
-              )
-              .required)
-          .length,
-      modifiedAt: DateTime.now(),
-    );
-
-    // Update the mapping in SavedMappingsState
-    final state = Provider.of<SavedMappingsState>(context, listen: false);
-    if (state.selectedProduct != null) {
-      state.updateMapping(state.selectedProduct!,
-          currentLoadedMapping!.eventName, updatedMapping);
-
-      // Update the current loaded mapping reference
-      currentLoadedMapping = updatedMapping;
-    }
-
-    // Update MappingState
-    Provider.of<MappingState>(context, listen: false)
-        .setMappings(selectedRcAppId!, appInfo['name'], List.from(mappings));
-
-    setState(() {
-      hasUnsavedChanges = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Mapping updated successfully'),
-      ),
-    );
-  }
-
   Future<void> _saveCurrentMapping() async {
     if (eventNameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1055,9 +812,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
           .createMapping(savedMapping);
 
       // Set as current loaded mapping after successful save
-      currentLoadedMapping = savedMapping;
-
       setState(() {
+        currentLoadedMapping = savedMapping;
         hasUnsavedChanges = false;
       });
 
@@ -1074,6 +830,74 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
         ),
       );
       rethrow;
+    }
+  }
+
+  void _saveMapping() {
+    if (currentLoadedMapping == null) return;
+
+    if (eventNameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter an event name'),
+        ),
+      );
+      return;
+    }
+
+    // Create updated mapping
+    final updatedMapping = currentLoadedMapping!.copyWith(
+      eventName: eventNameController.text,
+      mappings: mappings
+          .map((m) => Map<String, String>.from({
+                'source': m['source']?.toString() ?? '',
+                'target': m['target']?.toString() ?? '',
+                'isComplex': m['isComplex']?.toString() ?? 'false',
+                'tokens': m['tokens']?.toString() ?? '[]',
+                'jsonataExpr': m['jsonataExpr']?.toString() ?? '',
+              }))
+          .toList(),
+      configFields: Map<String, dynamic>.from(configFields),
+      totalFieldsMapped: mappings.length,
+      requiredFieldsMapped: mappings
+          .where((m) => saasFields
+              .firstWhere(
+                (f) => f.name == m['target'],
+                orElse: () => SaasField(
+                  name: '',
+                  required: false,
+                  description: '',
+                  type: 'string',
+                  category: 'Standard',
+                  displayOrder: 999,
+                ),
+              )
+              .required)
+          .length,
+      modifiedAt: DateTime.now(),
+    );
+
+    // Update the mapping in SavedMappingsState
+    final state = Provider.of<SavedMappingsState>(context, listen: false);
+    if (state.selectedProduct != null) {
+      state.updateMapping(state.selectedProduct!,
+          currentLoadedMapping!.eventName, updatedMapping);
+
+      setState(() {
+        // Update the current loaded mapping reference
+        currentLoadedMapping = updatedMapping;
+        hasUnsavedChanges = false;
+      });
+
+      // Update MappingState
+      Provider.of<MappingState>(context, listen: false)
+          .setMappings('Elastic', updatedMapping.product, List.from(mappings));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mapping updated successfully'),
+        ),
+      );
     }
   }
 
@@ -1098,7 +922,8 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
                 Navigator.pop(context); // Close dialog
                 try {
                   await _saveCurrentMapping(); // Wait for save to complete
-                  loadMapping(mappingToLoad); // Then load the selected mapping
+                  _loadSelectedMapping(
+                      mappingToLoad); // Then load the selected mapping
                 } catch (e) {
                   // Save failed, don't load the new mapping
                 }
@@ -1108,7 +933,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close dialog
-                loadMapping(mappingToLoad); // Load without saving
+                _loadSelectedMapping(mappingToLoad); // Load without saving
               },
               child: const Text('Discard'),
             ),
@@ -1116,7 +941,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
         ),
       );
     } else {
-      loadMapping(mappingToLoad);
+      _loadSelectedMapping(mappingToLoad);
     }
   }
 
@@ -1138,6 +963,10 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
       // Update state provider
       Provider.of<MappingState>(context, listen: false)
           .setMappings('Elastic', mapping.product, List.from(mappings));
+
+      // Also load configuration fields
+      configFields.clear();
+      configFields.addAll(Map<String, String>.from(mapping.configFields));
     });
   }
 
@@ -1188,7 +1017,7 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
                     eventNameController: eventNameController,
                     selectedRecordLimit: selectedRecordLimit,
                     recordLimits: recordLimits,
-                    onClear: clearJson,
+                    onClear: _clearJson,
                     onParse: _confirmAndParseJson,
                     onRecordLimitChanged: (value) {
                       setState(() {
@@ -1200,7 +1029,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Saved Mappings Section
                 Expanded(
                   flex: 2,
                   child: SavedMappingsSection(
@@ -1247,7 +1075,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
             ),
           ),
           const Divider(),
-          // Bottom section - Events Table
           Expanded(
             child: rcEvents.isEmpty
                 ? const Center(child: Text('Select an app to view events'))
@@ -1332,33 +1159,18 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
                           )
                         else
                           Expanded(
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              controller: _horizontalController,
-                              child: SingleChildScrollView(
-                                child: DataTable(
-                                  columns: _buildDataColumns(),
-                                  rows: rcEvents.map((event) {
-                                    return DataRow(
-                                      cells: standardFields.map((field) {
-                                        final mapping = mappings.firstWhere(
-                                          (m) => m['target'] == field.name,
-                                          orElse: () => {},
-                                        );
-                                        final value =
-                                            _evaluateMapping(event, mapping);
-                                        return DataCell(
-                                          Text(
-                                            value.isEmpty ? '' : value,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        );
-                                      }).toList(),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
+                            child: MappingTableSection(
+                              sourceFields: rcFields,
+                              saasFields: saasFields,
+                              currentEvent: currentRcEvent,
+                              mappings: mappings,
+                              onAddMapping: _addMapping,
+                              onRemoveMapping: _removeMapping,
+                              sourceSearchController: sourceSearchController,
+                              saasSearchController: saasSearchController,
+                              horizontalController: _horizontalController,
+                              rcEvents: rcEvents,
+                              onShowComplexEditor: _showComplexMappingEditor,
                             ),
                           ),
                       ],
