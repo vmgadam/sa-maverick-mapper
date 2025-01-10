@@ -1,3 +1,5 @@
+import 'type_definitions.dart';
+
 /// Constants related to mapping functionality and configuration
 class MappingConstants {
   // Record limits for data display
@@ -5,38 +7,35 @@ class MappingConstants {
   static const int defaultRecordLimit = 5;
 
   // Field categories
-  static const String standardCategory = 'Standard';
-  static const String configurationCategory = 'Configuration';
+  static const FieldCategory defaultCategory = FieldCategory.standard;
+  static const List<FieldCategory> availableCategories = FieldCategory.values;
 
   // Mapping types
-  static const String simpleMapping = 'false';
-  static const String complexMapping = 'true';
-  static const String defaultMappingMode = 'simple';
+  static const MappingMode defaultMappingMode = MappingMode.simple;
 
   // Default values
   static const int defaultDisplayOrder = 999;
-  static const String defaultProductType = 'Elastic';
-  static const String defaultFieldType = 'string';
+  static const ProductType defaultProductType = ProductType.elastic;
+  static const FieldType defaultFieldType = FieldType.string;
 
-  // Field keys
-  static const String sourceKey = 'source';
-  static const String targetKey = 'target';
-  static const String isComplexKey = 'isComplex';
-  static const String tokensKey = 'tokens';
-  static const String jsonataExprKey = 'jsonataExpr';
+  // Field keys - using MappingKeys class
+  static const String sourceKey = MappingKeys.source;
+  static const String targetKey = MappingKeys.target;
+  static const String isComplexKey = MappingKeys.isComplex;
+  static const String tokensKey = MappingKeys.tokens;
+  static const String jsonataExprKey = MappingKeys.jsonataExpr;
 
-  // Token types
-  static const String fieldTokenType = 'field';
-  static const String textTokenType = 'text';
+  // Token types - using TokenType enum
+  static const TokenType defaultTokenType = TokenType.field;
+  static const List<TokenType> availableTokenTypes = TokenType.values;
 
-  // Elastic specific fields
-  static const String timestampField = '@timestamp';
-  static const String productTypeField = 'product.type';
-  static const String rawResponseField = 'rawResponse';
-  static const String hitsField = 'hits';
+  // Elastic specific fields - using ElasticFields class
+  static const String timestampField = ElasticFields.timestamp;
+  static const String productTypeField = ElasticFields.productType;
+  static const String rawResponseField = ElasticFields.rawResponse;
+  static const String hitsField = ElasticFields.hits;
 
-  // Validation
-  static const int maxEventNameLength = 200;
+  // Empty values
   static const String emptyTokens = '[]';
   static const String emptyExpression = '';
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'type_definitions.dart';
 
 /// Constants related to UI configuration and styling
 class UIConstants {
@@ -44,16 +45,16 @@ class UIConstants {
   static const EdgeInsets contentPadding = EdgeInsets.all(8.0);
   static const OutlineInputBorder defaultBorder = OutlineInputBorder();
 
-  // Animation durations
-  static const Duration shortAnimation = Duration(milliseconds: 200);
-  static const Duration mediumAnimation = Duration(milliseconds: 300);
-  static const Duration longAnimation = Duration(milliseconds: 500);
+  // Animation durations - using AnimationDurations class
+  static const Duration shortAnimation = AnimationDurations.short;
+  static const Duration mediumAnimation = AnimationDurations.medium;
+  static const Duration longAnimation = AnimationDurations.long;
 
-  // Table constants
-  static const double tableRowHeight = 48.0;
-  static const double tableHeaderHeight = 56.0;
-  static const double columnWidth = 180.0;
-  static const int maxTableRows = 50;
+  // Table constants - using TableConfig class
+  static const double tableRowHeight = TableConfig.rowHeight;
+  static const double tableHeaderHeight = TableConfig.headerHeight;
+  static const double columnWidth = TableConfig.columnWidth;
+  static const int maxTableRows = TableConfig.maxRows;
 
   // Scroll behavior
   static const ScrollPhysics defaultScrollPhysics =
