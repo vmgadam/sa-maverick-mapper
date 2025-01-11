@@ -10,7 +10,13 @@ interface SavedMapping {
   product: string;        // product identifier
   query: string;          // from Elastic request
   mappings: Mapping[];    // field mappings
-  configFields: any;      // configuration fields
+  configFields: {         // configuration fields
+    endpointId: string;   // endpoint identifier
+    eventType: string;    // event type
+    accountKeyField: string; // account key field
+    userKeyField: string;   // user key field
+    [key: string]: string;  // other configuration fields
+  };
   totalFieldsMapped: number;
   requiredFieldsMapped: number;
   totalRequiredFields: number;
@@ -82,6 +88,24 @@ interface SavedMapping {
   - [ ] Improve error recovery
   - [ ] Add error logging
 
+### Phase 6: Configuration Field State Management 🚧
+- [ ] Configuration Field Independence:
+  - [ ] Ensure each saved mapping maintains its own configuration fields
+  - [ ] Prevent global state interference between mappings
+  - [ ] Implement proper scoping of configuration fields
+- [ ] State Management:
+  - [ ] Update SavedMapping model to handle configuration fields
+  - [ ] Enhance SavedMappingsState for mapping-specific fields
+  - [ ] Add validation in state management layer
+- [ ] UI Components:
+  - [ ] Update ConfigurationSection to reflect current mapping
+  - [ ] Implement proper field initialization on load
+  - [ ] Add field clearing on unload
+- [ ] Testing:
+  - [ ] Add unit tests for configuration field independence
+  - [ ] Create UI tests for field persistence
+  - [ ] Implement integration tests for save/load cycles
+
 ## UI/UX Requirements
 
 ### Input Section ✅
@@ -110,18 +134,40 @@ interface SavedMapping {
 - [x] Parse functionality
 - [x] State management
 - [x] Bulk operations
+- [ ] Configuration field independence
+- [ ] Configuration field persistence
 
 ### Integration Tests ✅
 - [x] Save/load flow
 - [x] Bulk operations
 - [x] State persistence
 - [x] Sample record handling
+- [ ] Configuration field state management
+- [ ] Multiple mapping configuration tests
 
 ### Component Tests 🚧
 - [x] ElasticInputSection tests
 - [x] CustomScrollBehavior tests
 - [ ] MappingTableSection tests
 - [ ] ConfigurationSection tests
+- [ ] Configuration field state tests
+
+### Configuration Field Tests 🚧
+- [ ] State Management Tests:
+  - [ ] Verify field independence between mappings
+  - [ ] Test save/load cycles for multiple mappings
+  - [ ] Validate field persistence
+  - [ ] Test field updates
+- [ ] UI Tests:
+  - [ ] Verify correct field display
+  - [ ] Test loading/unloading
+  - [ ] Validate field changes
+  - [ ] Test save/load cycles
+- [ ] Integration Tests:
+  - [ ] Test complete save/load cycles
+  - [ ] Verify UI state consistency
+  - [ ] Validate field persistence
+  - [ ] Test multiple mapping scenarios
 
 ### User Acceptance Criteria
 - [x] Parse Elastic Request/Response successfully

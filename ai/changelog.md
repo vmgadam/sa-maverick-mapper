@@ -102,6 +102,37 @@ Implemented Phase 1 of the saved mappings feature and completed Phase 2 with reu
   - Code organization
   - Component isolation
 
+## Changelog
+
+### Configuration Field State Management Investigation
+- Identified issue with configuration fields not being saved correctly within each saved mapping
+- Added unit tests to validate state management for saved mappings
+- Added UI tests to verify configuration field persistence
+- Discovered that only eventType configuration field is saving correctly per-mapping
+- Created test cases to verify loading and unloading of mappings with different configuration fields
+
+### High Priority TODOs
+- [HIGH] Fix configuration field state management to ensure all fields (not just eventType) are properly scoped to each mapping
+  - Issue: Configuration fields are behaving globally instead of being specific to each saved mapping
+  - Impact: Configuration fields are not persisting correctly when switching between mappings
+  - Required Changes:
+    - Review and update _handleConfigFieldChange method
+    - Ensure proper initialization of configuration fields in _loadMappingData
+    - Verify configuration field persistence in _saveMapping and _saveCurrentMapping
+    - Add additional validation in state management layer
+
+### Test Coverage
+- Added comprehensive test suite for saved mappings state management
+- Created UI tests for configuration field persistence
+- Implemented test cases for save, load, change, save, load cycle
+- Added tests to verify independent configuration field values across mappings
+
+### Code Improvements
+- Updated SavedMapping model to properly handle configuration fields
+- Enhanced SavedMappingsState to manage mapping-specific configuration fields
+- Improved configuration field initialization and loading logic
+- Added proper state management for configuration field changes
+
 ## Next Steps
 - Complete Phase 5 refactoring:
   - Create configuration mixin

@@ -1,3 +1,13 @@
+// TODO: [HIGH PRIORITY] Fix configuration field state management
+// Issue: Configuration fields are behaving globally instead of being specific to each saved mapping
+// Impact: Only eventType is saving correctly per-mapping, other fields are not persisting correctly
+// Required Changes:
+// - Review and update _handleConfigFieldChange method to ensure proper scoping
+// - Fix initialization of configuration fields in _loadMappingData
+// - Verify configuration field persistence in _saveMapping and _saveCurrentMapping
+// - Add validation in state management layer
+// See ai/specs.md and ai/changelog.md for detailed requirements and testing specifications
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:async';
@@ -24,6 +34,7 @@ import '../widgets/elastic/elastic_input_section.dart';
 import '../widgets/mapping_table/mapping_table_section.dart';
 import '../mixins/elastic_data_mixin.dart';
 import '../mixins/mapping_state_mixin.dart';
+import '../widgets/configuration/configuration_section.dart';
 
 class UnifiedMapperScreen extends StatefulWidget {
   final ApiService apiService;
@@ -196,20 +207,6 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
     return fields;
   }
 
-  List<Map<String, dynamic>> get configurationFieldsForWidget {
-    final fields = configurationFields.map((field) {
-      final Map<String, dynamic> fieldData = {
-        'name': field.name,
-        'required': field.required,
-        'description': field.description,
-        'type': field.type,
-        'options': field.options,
-      };
-      return fieldData;
-    }).toList();
-    return fields;
-  }
-
   // Loading functions
   Future<void> _loadRcApps() async {
     try {
@@ -245,12 +242,16 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
         saasFields = loadedFields;
         isLoadingSaasFields = false;
 
-        // Initialize configuration fields with default values
-        for (var field in loadedFields) {
-          if (field.type == 'picklist' &&
-              field.options != null &&
-              field.options!.isNotEmpty) {
-            configFields[field.name] = field.options!.first;
+        // Only initialize configuration fields if we don't have a current loaded mapping
+        if (currentLoadedMapping == null) {
+          // Initialize configuration fields with default values
+          for (var field in loadedFields) {
+            if (field.type == 'picklist' &&
+                field.options != null &&
+                field.options!.isNotEmpty &&
+                !configFields.containsKey(field.name)) {
+              configFields[field.name] = field.options!.first;
+            }
           }
         }
       });
@@ -500,19 +501,20 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
       }
     }
 
+    // Create the preview using actual configuration field values
     return {
-      'accountKey': {'field': 'data.id', 'type': 'id'},
-      'dateKeyField': 'data.createdAt',
-      'endpointId': int.tryParse(configFields['endpointId'] ?? '0') ?? 0,
-      'endpointName': 'events',
-      'eventFilter':
-          '{\n  "query": {\n    "bool": {\n      "must": [],\n      "filter": [],\n      "should": [],\n      "must_not": []\n    }\n  }\n}',
-      'eventType': configFields['eventType'] ?? 'EVENT',
-      'eventTypeKey': configFields['eventType'] ?? 'EVENT',
-      'productRef': {
-        '__ref__': configFields['productRef'] ?? 'products/default'
+      'accountKey': {
+        'field': configFields['accountKeyField'] ?? '',
+        'type': configFields['accountKeyType'] ?? ''
       },
-      'userKeyField': 'data.userId',
+      'dateKeyField': configFields['dateKeyField'] ?? '',
+      'endpointId': int.tryParse(configFields['endpointId'] ?? '') ?? 0,
+      'endpointName': configFields['endpointName'] ?? '',
+      'eventFilter': configFields['eventFilter'] ?? '{}',
+      'eventType': configFields['eventType'] ?? '',
+      'eventTypeKey': configFields['eventType'] ?? '',
+      'productRef': {'__ref__': configFields['productRef'] ?? ''},
+      'userKeyField': configFields['userKeyField'] ?? '',
       'schema': mappingSchema,
     };
   }
@@ -537,6 +539,25 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
   void _handleConfigFieldChange(String key, String value) {
     setState(() {
       configFields[key] = value;
+      hasUnsavedChanges = true;
+
+      // If we have a current loaded mapping, update its config fields
+      if (currentLoadedMapping != null) {
+        currentLoadedMapping = currentLoadedMapping!.copyWith(
+          configFields: Map<String, dynamic>.from(configFields),
+          modifiedAt: DateTime.now(),
+        );
+
+        // Update the mapping in SavedMappingsState
+        final state = Provider.of<SavedMappingsState>(context, listen: false);
+        if (state.selectedProduct != null) {
+          state.updateMapping(
+            state.selectedProduct!,
+            currentLoadedMapping!.eventName,
+            currentLoadedMapping!,
+          );
+        }
+      }
     });
   }
 
@@ -580,8 +601,42 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
   }
 
   void _clearJson() {
-    elasticRequestController.clear();
-    elasticResponseController.clear();
+    setState(() {
+      elasticRequestController.clear();
+      elasticResponseController.clear();
+      eventNameController.clear();
+      rcEvents.clear();
+      rcFields.clear();
+      currentRcEvent.clear();
+      mappings.clear();
+
+      // Reset configuration fields to defaults
+      configFields.clear();
+      for (var field in saasFields) {
+        if (field.category.toLowerCase() == 'configuration') {
+          if (field.type == 'picklist' &&
+              field.options != null &&
+              field.options!.isNotEmpty) {
+            configFields[field.name] = field.options!.first;
+          } else {
+            // Set default values based on field type
+            switch (field.type.toLowerCase()) {
+              case 'number':
+                configFields[field.name] = '0';
+                break;
+              case 'boolean':
+                configFields[field.name] = 'false';
+                break;
+              default:
+                configFields[field.name] = '';
+            }
+          }
+        }
+      }
+
+      currentLoadedMapping = null;
+      hasUnsavedChanges = false;
+    });
   }
 
   void _confirmAndParseJson() {
@@ -663,6 +718,30 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
           .setSelectedProduct(productType);
 
       setState(() {
+        // Initialize configuration fields with default values for new mapping
+        configFields.clear();
+        for (var field in saasFields) {
+          if (field.category.toLowerCase() == 'configuration') {
+            if (field.type == 'picklist' &&
+                field.options != null &&
+                field.options!.isNotEmpty) {
+              configFields[field.name] = field.options!.first;
+            } else {
+              // Set default values based on field type
+              switch (field.type.toLowerCase()) {
+                case 'number':
+                  configFields[field.name] = '0';
+                  break;
+                case 'boolean':
+                  configFields[field.name] = 'false';
+                  break;
+                default:
+                  configFields[field.name] = '';
+              }
+            }
+          }
+        }
+
         // Store productType in configFields
         configFields['productType'] = productType;
 
@@ -761,19 +840,9 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
     }
 
     final now = DateTime.now();
-
-    // Extract product type from current event
-    String productType = 'Elastic';
-    if (currentRcEvent.containsKey('product.type')) {
-      final types = currentRcEvent['product.type'];
-      if (types is List && types.isNotEmpty) {
-        productType = types[0].toString();
-      }
-    }
-
     final savedMapping = SavedMapping(
       eventName: eventNameController.text,
-      product: productType,
+      product: 'Elastic',
       query: '',
       mappings: mappings
           .map((m) => Map<String, String>.from({
@@ -807,41 +876,28 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
       modifiedAt: now,
     );
 
-    try {
-      Provider.of<SavedMappingsState>(context, listen: false)
-          .createMapping(savedMapping);
+    // Create the mapping in SavedMappingsState
+    final state = Provider.of<SavedMappingsState>(context, listen: false);
+    state.createMapping(savedMapping);
 
-      // Set as current loaded mapping after successful save
-      setState(() {
-        currentLoadedMapping = savedMapping;
-        hasUnsavedChanges = false;
-      });
+    setState(() {
+      currentLoadedMapping = savedMapping;
+      hasUnsavedChanges = false;
+    });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mapping saved successfully'),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving mapping: ${e.toString()}'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-      rethrow;
-    }
+    // Update MappingState
+    Provider.of<MappingState>(context, listen: false)
+        .setMappings('Elastic', savedMapping.product, List.from(mappings));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Mapping saved successfully'),
+      ),
+    );
   }
 
   void _saveMapping() {
-    if (currentLoadedMapping == null) return;
-
-    if (eventNameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter an event name'),
-        ),
-      );
+    if (currentLoadedMapping == null) {
       return;
     }
 
@@ -880,8 +936,11 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
     // Update the mapping in SavedMappingsState
     final state = Provider.of<SavedMappingsState>(context, listen: false);
     if (state.selectedProduct != null) {
-      state.updateMapping(state.selectedProduct!,
-          currentLoadedMapping!.eventName, updatedMapping);
+      state.updateMapping(
+        state.selectedProduct!,
+        currentLoadedMapping!.eventName,
+        updatedMapping,
+      );
 
       setState(() {
         // Update the current loaded mapping reference
@@ -909,45 +968,36 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
         builder: (context) => AlertDialog(
           title: const Text('Unsaved Changes'),
           content: const Text(
-              'You have unsaved changes. Would you like to save them before loading the selected mapping?'),
+              'You have unsaved changes. Are you sure you want to load a different mapping?'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog
+                Navigator.of(context).pop();
               },
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () async {
-                Navigator.pop(context); // Close dialog
-                try {
-                  await _saveCurrentMapping(); // Wait for save to complete
-                  _loadSelectedMapping(
-                      mappingToLoad); // Then load the selected mapping
-                } catch (e) {
-                  // Save failed, don't load the new mapping
-                }
-              },
-              child: const Text('Save'),
-            ),
-            TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog
-                _loadSelectedMapping(mappingToLoad); // Load without saving
+                Navigator.of(context).pop();
+                _loadMappingData(mappingToLoad);
               },
-              child: const Text('Discard'),
+              child: const Text('Continue'),
             ),
           ],
         ),
       );
     } else {
-      _loadSelectedMapping(mappingToLoad);
+      _loadMappingData(mappingToLoad);
     }
   }
 
-  void _loadSelectedMapping(SavedMapping mapping) {
+  void _loadMappingData(SavedMapping mapping) {
     setState(() {
+      // Clear existing data
       mappings.clear();
+      configFields.clear();
+
+      // Load the mapping data
       mappings.addAll(mapping.mappings);
       eventNameController.text = mapping.eventName;
       currentLoadedMapping = mapping;
@@ -964,9 +1014,41 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
       Provider.of<MappingState>(context, listen: false)
           .setMappings('Elastic', mapping.product, List.from(mappings));
 
-      // Also load configuration fields
-      configFields.clear();
-      configFields.addAll(Map<String, String>.from(mapping.configFields));
+      // Load configuration fields from the mapping
+      if (mapping.configFields.isNotEmpty) {
+        // Convert all values to strings since configFields expects string values
+        configFields.addAll(mapping.configFields.map((key, value) {
+          // Handle different value types
+          if (value == null) return MapEntry(key, '');
+          if (value is bool) return MapEntry(key, value.toString());
+          if (value is num) return MapEntry(key, value.toString());
+          return MapEntry(key, value.toString());
+        }));
+      }
+
+      // Ensure all configuration fields have values
+      for (var field in saasFields) {
+        if (field.category.toLowerCase() == 'configuration' &&
+            !configFields.containsKey(field.name)) {
+          if (field.type == 'picklist' &&
+              field.options != null &&
+              field.options!.isNotEmpty) {
+            configFields[field.name] = field.options!.first;
+          } else {
+            // Set default values based on field type
+            switch (field.type.toLowerCase()) {
+              case 'number':
+                configFields[field.name] = '0';
+                break;
+              case 'boolean':
+                configFields[field.name] = 'false';
+                break;
+              default:
+                configFields[field.name] = '';
+            }
+          }
+        }
+      }
     });
   }
 
@@ -1180,15 +1262,11 @@ class _UnifiedMapperScreenState extends State<UnifiedMapperScreen>
           const Divider(),
           rcEvents.isEmpty
               ? const SizedBox.shrink()
-              : Column(
-                  children: [
-                    ConfigurationFieldsWidget(
-                      configFields: configFields,
-                      onConfigFieldChanged: _handleConfigFieldChange,
-                      configurationFields: configurationFieldsForWidget,
-                    ),
-                    const Divider(),
-                  ],
+              : ConfigurationSection(
+                  configFields: configFields,
+                  onConfigFieldChanged: _handleConfigFieldChange,
+                  saasFields: saasFields,
+                  showConfiguration: rcEvents.isNotEmpty,
                 ),
         ],
       ),
